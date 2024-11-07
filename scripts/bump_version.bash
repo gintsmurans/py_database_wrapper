@@ -82,3 +82,4 @@ done
 echo "$NEW_VERSION" > "$VERSION_FILE"
 git add "$VERSION_FILE"
 echo "Version bumped to $NEW_VERSION"
+echo

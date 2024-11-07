@@ -30,4 +30,5 @@ for FILE in "${FILES_TO_UPDATE[@]}"; do
     fi
 done
 
-echo "Done"
+echo "Updated commit to $COMMIT_HASH, $COMMIT_DATE"
+echo
