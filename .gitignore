@@ -1,0 +1,71 @@
+################################
+### Password sensitive files ###
+################################
+.env
+.env.staging
+.env.prod
+
+docker/*/data/
+
+################################
+### Tmp, Cache and Bootstrap ###
+################################
+tests/
+
+################################
+### Tmp, Cache and Bootstrap ###
+################################
+/tmp/
+
+##############
+### Python ###
+##############
+__pycache__/
+*.py[cod]
+*$py.class
+
+/build/
+/dist/
+/*.egg-info
+
+# C extensions
+*.so
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+############
+### IDEs ###
+############
+*.code-workspace
+
+##########################
+### OS generated files ###
+##########################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+################################
+### Office hidden temp files ###
+################################
+~$*
+
+############
+### Node ###
+############
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+node_modules/
+.npm

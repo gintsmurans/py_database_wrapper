@@ -1,0 +1,10 @@
+# Development
+black
+
+psycopg[binary]
+psycopg[pool]
+mysqlclient
+pymssql
+
+# Types
+types-pymssql

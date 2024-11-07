@@ -1,0 +1,20 @@
+services:
+  # Develop
+  develop:
+    image: py_db_wrapper
+    container_name: py_db_wrapper_develop
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile
+      target: development
+      args:
+        - GIT_NAME
+        - GIT_EMAIL
+    secrets:
+      - user_ssh_key
+    volumes:
+      - ./:/srv/app
+
+secrets:
+  user_ssh_key:
+    file: $LOCAL_SSH_KEY_PATH

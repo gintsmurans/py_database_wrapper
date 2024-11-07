@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=49.2.0", "wheel>=0.37"]
+build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+files = [
+    "src/db_wrapper/db_wrapper_pgsql",
+    "src/db_wrapper/db_wrapper_mysql",
+    "src/db_wrapper/db_wrapper_mssql",
+    "src/db_wrapper/db_wrapper_sqlite",
+]
+warn_unused_ignores = true
+show_error_codes = true
+strict = true

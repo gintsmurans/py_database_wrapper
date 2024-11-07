@@ -1,0 +1,39 @@
+{
+    "name": "dbWrapper",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "develop",
+    "runServices": [
+        "develop"
+    ],
+    "shutdownAction": "none",
+    "workspaceFolder": "/srv/app",
+    "remoteEnv": {
+        "PATH": "${containerEnv:PATH}"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.env.linux": {
+                    "PATH": "${containerEnv:PATH}"
+                },
+
+                "python.defaultInterpreterPath": "/srv/venv/bin/python3",
+                "python.languageServer": "Pylance",
+                "python.analysis.typeCheckingMode": "strict",
+                "python.analysis.autoImportCompletions": true,
+                "[python]": {
+                    "editor.formatOnSave": true,
+                    "editor.defaultFormatter": "ms-python.black-formatter"
+                }
+            },
+            "extensions": [
+                "ms-python.python", // Python
+                "ms-python.vscode-pylance", // Python autocomplete
+                "ms-python.black-formatter", // Python formatter
+                "github.copilot" // Github co-pilot
+            ]
+        }
+    }
+}
