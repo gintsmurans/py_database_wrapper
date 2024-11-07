@@ -49,7 +49,7 @@ fi
 
 # Bump patch version
 echo "*Bumping patch version.. "
-./scripts/bump_version.bash
+./scripts/bump_version.bash patch
 ./scripts/update_commit_info.bash
 
 # Test for whitespace errors

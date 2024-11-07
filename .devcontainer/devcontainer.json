@@ -1,5 +1,5 @@
 {
-    "name": "dbWrapper",
+    "name": "db_wrapper",
     "dockerComposeFile": [
         "../docker-compose.yml"
     ],
@@ -23,6 +23,13 @@
                 "python.languageServer": "Pylance",
                 "python.analysis.typeCheckingMode": "strict",
                 "python.analysis.autoImportCompletions": true,
+                "python.analysis.extraPaths": [
+                    "src/db_wrapper/",
+                    "src/db_wrapper_pgsql/",
+                    "src/db_wrapper_mysql/",
+                    "src/db_wrapper_mssql/",
+                    "src/db_wrapper_sqlite/"
+                ],
                 "[python]": {
                     "editor.formatOnSave": true,
                     "editor.defaultFormatter": "ms-python.black-formatter"
@@ -32,6 +39,7 @@
                 "ms-python.python", // Python
                 "ms-python.vscode-pylance", // Python autocomplete
                 "ms-python.black-formatter", // Python formatter
+                "tamasfe.even-better-toml", // TOML
                 "github.copilot" // Github co-pilot
             ]
         }

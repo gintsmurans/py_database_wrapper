@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools >= 61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "db_wrapper_pgsql"
+version = "0.1.5"
+description = "db_wrapper for PostgreSQL database"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
+authors = [
+    {name = "Gints Murans", email = "gm@gm.lv"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3.0 (GPL-3.0)",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Database",
+    "Topic :: Database :: Front-Ends",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+keywords = ["database", "wrapper", "python"]
+dependencies = [
+    "db_wrapper == 0.1.5",
+    "psycopg[binary] >= 3.2.0",
+    "psycopg[pool] >= 3.2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/gintsmurans/db_wrapper"
+Documentation = "https://github.com/gintsmurans/db_wrapper/src/db_wrapper_pgsql"
+Changes = "https://github.com/gintsmurans/db_wrapper"
+Code = "https://github.com/gintsmurans/db_wrapper"
+"Issue Tracker" = "https://github.com/gintsmurans/db_wrapper/issues"
+Download = "https://pypi.org/project/db_wrapper/"
+
+[tool.setuptools.package-data]
+db_wrapper_pgsql = ["py.typed"]

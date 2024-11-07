@@ -47,7 +47,8 @@ ARG GIT_EMAIL
 
 # Install additional dependecies
 RUN apt-get update -yq \
-    && apt-get install -yq --no-install-recommends openssh-client less git rsync gettext-base
+    && apt-get install -yq --no-install-recommends openssh-client tree less git \
+        rsync gettext-base
 
 # Setup git
 RUN git config --global user.email "$GIT_NAME" \
@@ -55,8 +56,8 @@ RUN git config --global user.email "$GIT_NAME" \
     && git config --global pull.rebase true
 
 # Install python app's dev dependecies
-COPY ./requirements.txt /root/meta/data/requirements_dev.txt
-RUN python3 -m pip install --no-cache-dir -r /root/meta/data/requirements_dev.txt
+# * For now this is in run script as src is not mounted at build time
+# RUN python3 -m pip install -e ./src/db_wrapper/[dev]
 
 # Clean up caches
 RUN apt-get clean \

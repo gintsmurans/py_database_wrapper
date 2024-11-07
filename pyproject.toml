@@ -1,9 +1,15 @@
 [build-system]
-requires = ["setuptools>=49.2.0", "wheel>=0.37"]
+requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.coverage.run]
+source = [
+    "src/db_wrapper"
+]
 
 [tool.mypy]
 files = [
+    "src/db_wrapper/db_wrapper",
     "src/db_wrapper/db_wrapper_pgsql",
     "src/db_wrapper/db_wrapper_mysql",
     "src/db_wrapper/db_wrapper_mssql",
@@ -12,3 +18,7 @@ files = [
 warn_unused_ignores = true
 show_error_codes = true
 strict = true
+
+[tool.codespell]
+ignore-words-list = "alot,ans,ba,fo,te,erro,varning"
+skip = "build,_build,.tox,.mypy_cache,.venv,pq.c,_psycopg.c,*.html"

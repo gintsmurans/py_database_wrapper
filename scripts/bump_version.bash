@@ -6,7 +6,12 @@
 
 # Define the files where the version should be replaced
 FILES_TO_UPDATE=(
-  "src/db_wrapper/config.py"
+  "pyproject.toml"
+  "src/db_wrapper/pyproject.toml"
+  "src/db_wrapper_pgsql/pyproject.toml"
+  "src/db_wrapper_mysql/pyproject.toml"
+  "src/db_wrapper_mssql/pyproject.toml"
+  "src/db_wrapper/db_wrapper/config.py"
 )
 
 # Fail if any command fails

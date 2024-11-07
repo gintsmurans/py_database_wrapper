@@ -6,7 +6,6 @@ source /root/meta/scripts/console.bash
 #####################
 ### Configuration ###
 #####################
-
 if [ -f /run/secrets/user_ssh_key ]; then
     echo_info "Fix ssh key permissions"
     mkdir /root/.ssh && \
@@ -14,10 +13,20 @@ if [ -f /run/secrets/user_ssh_key ]; then
     chmod 600 /root/.ssh/id_rsa
 fi
 
+# Go to app directory
+cd /srv/app
+
+# Setup precommit link
+echo_info "Setup precommit link"
+ln -sf /srv/app/scripts/git_pre_commit.bash /srv/app/.git/hooks/pre-commit
+
+# Install project requirements
+python3 -m pip install -e ./src/db_wrapper/[dev]
+
+
 ########################
 ### Run main process ###
 ########################
-
 # Define a function to handle the SIGTERM signal
 function handle_sigterm {
   echo "Received SIGTERM signal. Stopping long running process..."
