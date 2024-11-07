@@ -50,7 +50,7 @@ class DBWrapper:
             db (Any): The database connection object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        if self.db is None:
+        if hasattr(self, "db") == False or self.db is None:
             self.db = db
 
         if logger is None:
