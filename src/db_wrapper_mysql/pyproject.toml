@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db_wrapper_mysql"
-version = "0.1.5"
+version = "0.1.6"
 description = "db_wrapper for MySQL database"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -35,7 +35,7 @@ classifiers = [
 ]
 keywords = ["database", "wrapper", "python"]
 dependencies = [
-    "db_wrapper == 0.1.5",
+    "db_wrapper == 0.1.6",
     "mysqlclient >= 2.2.2"
 ]
 
