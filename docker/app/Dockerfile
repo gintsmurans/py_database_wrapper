@@ -57,7 +57,7 @@ RUN git config --global user.email "$GIT_NAME" \
 
 # Install python app's dev dependecies
 # * For now this is in run script as src is not mounted at build time
-# RUN python3 -m pip install -e ./src/db_wrapper/[dev]
+# RUN python3 -m pip install -e ./src/db_wrap/[dev]
 
 # Clean up caches
 RUN apt-get clean \

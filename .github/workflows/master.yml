@@ -24,23 +24,23 @@ jobs:
       - name: deps
         run: python -m pip install -U build
 
-      - name: build db_wrapper base
-        run: python -m build src/db_wrapper
+      - name: build db_wrap base
+        run: python -m build src/db_wrap
 
-      - name: build db_wrapper_pgsql
-        run: python -m build src/db_wrapper_pgsql
+      - name: build db_wrap_pgsql
+        run: python -m build src/db_wrap_pgsql
 
-      - name: build db_wrapper_mysql
-        run: python -m build src/db_wrapper_mysql
+      - name: build db_wrap_mysql
+        run: python -m build src/db_wrap_mysql
 
-      - name: build db_wrapper_mssql
-        run: python -m build src/db_wrapper_mssql
+      - name: build db_wrap_mssql
+        run: python -m build src/db_wrap_mssql
 
-      - name: build db_wrapper_sqlite
-        run: python -m build src/db_wrapper_sqlite
+      - name: build db_wrap_sqlite
+        run: python -m build src/db_wrap_sqlite
 
       - name: Move all distributions to dist/
-        run: mkdir -p dist && mv src/db_wrapper/dist/* dist/ && mv src/db_wrapper_pgsql/dist/* dist/ && mv src/db_wrapper_mysql/dist/* dist/ && mv src/db_wrapper_mssql/dist/* dist/ && mv src/db_wrapper_sqlite/dist/* dist/
+        run: mkdir -p dist && mv src/db_wrap/dist/* dist/ && mv src/db_wrap_pgsql/dist/* dist/ && mv src/db_wrap_mysql/dist/* dist/ && mv src/db_wrap_mssql/dist/* dist/ && mv src/db_wrap_sqlite/dist/* dist/
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

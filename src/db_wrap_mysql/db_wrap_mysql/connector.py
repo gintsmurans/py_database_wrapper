@@ -3,7 +3,7 @@ from typing import TypedDict
 from MySQLdb.connections import Connection as MySqlConnection
 from MySQLdb.cursors import DictCursor as MySqlDictCursor
 
-from db_wrapper import DatabaseBackend
+from db_wrap import DatabaseBackend
 
 
 class MyConfig(TypedDict):

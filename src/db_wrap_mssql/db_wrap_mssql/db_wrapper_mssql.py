@@ -3,7 +3,7 @@ from pymssql import (
     Cursor as MssqlCursor,
 )
 
-from db_wrapper import DBWrapper, DBDataModel
+from db_wrap import DBWrapper, DBDataModel
 
 from .connector import MSSQL
 
