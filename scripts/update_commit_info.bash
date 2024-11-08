@@ -5,7 +5,7 @@
 #############################################
 
 FILES_TO_UPDATE=(
-    "src/db_wrapper/db_wrapper/config.py"
+    "src/db_wrap/db_wrap/config.py"
 )
 
 # Find base path

@@ -1,5 +1,5 @@
 {
-    "name": "db_wrapper",
+    "name": "db_wrap",
     "dockerComposeFile": [
         "../docker-compose.yml"
     ],
@@ -24,11 +24,11 @@
                 "python.analysis.typeCheckingMode": "strict",
                 "python.analysis.autoImportCompletions": true,
                 "python.analysis.extraPaths": [
-                    "src/db_wrapper/",
-                    "src/db_wrapper_pgsql/",
-                    "src/db_wrapper_mysql/",
-                    "src/db_wrapper_mssql/",
-                    "src/db_wrapper_sqlite/"
+                    "src/db_wrap/",
+                    "src/db_wrap_pgsql/",
+                    "src/db_wrap_mysql/",
+                    "src/db_wrap_mssql/",
+                    "src/db_wrap_sqlite/"
                 ],
                 "[python]": {
                     "editor.formatOnSave": true,

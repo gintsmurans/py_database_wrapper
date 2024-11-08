@@ -17,8 +17,8 @@ from psycopg.rows import (
 )
 from psycopg_pool import AsyncConnectionPool
 
-from db_wrapper import DatabaseBackend
-from db_wrapper.utils.timer import Timer
+from db_wrap import DatabaseBackend
+from db_wrap.utils.timer import Timer
 
 
 PgConnectionType = PgConnection[PgDictRow]

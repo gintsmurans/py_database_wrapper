@@ -6,7 +6,7 @@ from pymssql import (
     Cursor as MssqlCursor,
 )
 
-from db_wrapper import DatabaseBackend
+from db_wrap import DatabaseBackend
 
 
 class MsConfig(TypedDict):

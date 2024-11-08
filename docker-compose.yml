@@ -1,8 +1,8 @@
 services:
   # Develop
   develop:
-    image: py_db_wrapper
-    container_name: py_db_wrapper_develop
+    image: py_db_wrap
+    container_name: py_db_wrap_develop
     build:
       context: .
       dockerfile: ./docker/app/Dockerfile

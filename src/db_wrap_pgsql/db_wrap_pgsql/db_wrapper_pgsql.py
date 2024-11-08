@@ -4,7 +4,7 @@ from typing import Any, AsyncGenerator, overload
 from psycopg import Cursor, AsyncCursor, sql
 from psycopg.rows import class_row
 
-from db_wrapper import T, OrderByItem, DBWrapper, DBDataModel
+from db_wrap import T, OrderByItem, DBWrapper, DBDataModel
 
 from .connector import (
     # Sync

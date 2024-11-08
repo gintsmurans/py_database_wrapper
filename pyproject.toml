@@ -4,16 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
 source = [
-    "src/db_wrapper"
+    "src/db_wrap"
 ]
 
 [tool.mypy]
 files = [
-    "src/db_wrapper/db_wrapper",
-    "src/db_wrapper/db_wrapper_pgsql",
-    "src/db_wrapper/db_wrapper_mysql",
-    "src/db_wrapper/db_wrapper_mssql",
-    "src/db_wrapper/db_wrapper_sqlite",
+    "src/db_wrap/db_wrap",
+    "src/db_wrap/db_wrap_pgsql",
+    "src/db_wrap/db_wrap_mysql",
+    "src/db_wrap/db_wrap_mssql",
+    "src/db_wrap/db_wrap_sqlite",
 ]
 warn_unused_ignores = true
 show_error_codes = true

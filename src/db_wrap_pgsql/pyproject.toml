@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "db_wrapper_pgsql"
-version = "0.1.22"
-description = "db_wrapper for PostgreSQL database"
+name = "db_wrap_pgsql"
+version = "0.1.23"
+description = "db_wrap for PostgreSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -35,18 +35,18 @@ classifiers = [
 ]
 keywords = ["database", "wrapper", "python", "postgresql", "pgsql"]
 dependencies = [
-    "db_wrapper == 0.1.22",
+    "db_wrap == 0.1.23",
     "psycopg[binary] >= 3.2.0",
     "psycopg[pool] >= 3.2.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/gintsmurans/py_db_wrapper"
-Documentation = "https://github.com/gintsmurans/py_db_wrapper"
-Changes = "https://github.com/gintsmurans/py_db_wrapper"
-Code = "https://github.com/gintsmurans/py_db_wrapper"
-"Issue Tracker" = "https://github.com/gintsmurans/py_db_wrapper/issues"
-Download = "https://pypi.org/project/db_wrapper/"
+Homepage = "https://github.com/gintsmurans/py_db_wrap"
+Documentation = "https://github.com/gintsmurans/py_db_wrap"
+Changes = "https://github.com/gintsmurans/py_db_wrap"
+Code = "https://github.com/gintsmurans/py_db_wrap"
+"Issue Tracker" = "https://github.com/gintsmurans/py_db_wrap/issues"
+Download = "https://pypi.org/project/db_wrap/"
 
 [tool.setuptools.package-data]
-db_wrapper_pgsql = ["py.typed"]
+db_wrap_pgsql = ["py.typed"]

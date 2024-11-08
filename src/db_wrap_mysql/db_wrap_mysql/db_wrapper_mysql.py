@@ -3,7 +3,7 @@ from typing import Any
 
 from MySQLdb.cursors import DictCursor as MySqlDictCursor
 
-from db_wrapper import DBWrapper
+from db_wrap import DBWrapper
 
 from .connector import MySQL
 
