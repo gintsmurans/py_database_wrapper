@@ -21,7 +21,7 @@ echo_info "Setup precommit link"
 ln -sf /srv/app/scripts/git_pre_commit.bash /srv/app/.git/hooks/pre-commit
 
 # Install project requirements
-python3 -m pip install -e ./src/db_wrap/[dev]
+python3 -m pip install -e ./src/database_wrapper/[dev]
 
 
 ########################

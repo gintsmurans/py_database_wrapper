@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "db_wrap"
-version = "0.1.23"
-description = "A Different Approach to Database Wrappers in Python"
+name = "db_wrap_sqlite"
+version = "0.1.20"
+description = "db_wrap for PostgreSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -33,8 +33,10 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "pgsql", "mysql", "mssql", "sqlite"]
-dependencies = []
+keywords = ["database", "wrapper", "python", "sqlite"]
+dependencies = [
+    "db_wrap == 0.1.24",
+]
 
 [project.urls]
 Homepage = "https://github.com/gintsmurans/py_db_wrap"
@@ -44,30 +46,5 @@ Code = "https://github.com/gintsmurans/py_db_wrap"
 "Issue Tracker" = "https://github.com/gintsmurans/py_db_wrap/issues"
 Download = "https://pypi.org/project/db_wrap/"
 
-[project.optional-dependencies]
-pgsql = ["db_wrap_pgsql == 0.1.23"]
-mysql = ["db_wrap_mysql == 0.1.23"]
-mssql = ["db_wrap_mssql == 0.1.23"]
-sqlite = ["db_wrap_sqlite == 0.1.23"]
-all = ["db_wrap[pgsql,mysql,mssql,sqlite]"]
-dev = [
-    # Development
-    "ast-comments >= 1.1.2",
-    "codespell >= 2.2",
-    "build >= 1.2.1",
-    # Formatting & Types
-    "black >= 24.1.0",
-    "types-setuptools >= 61.0.0",
-    "types-pymssql >= 2.1.0",
-    # Database drivers
-    "psycopg[binary] >= 3.2.0",
-    "psycopg[pool] >= 3.2.0",
-    "mysqlclient >= 2.2.2",
-    "pymssql >= 2.2.10"
-]
-
-# [tool.setuptools.packages.find]
-# where = ["src"]
-
 [tool.setuptools.package-data]
-db_wrap = ["py.typed"]
+db_wrap_sqlite = ["py.typed"]

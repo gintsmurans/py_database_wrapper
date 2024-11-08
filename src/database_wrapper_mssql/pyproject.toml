@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db_wrap_mssql"
-version = "0.1.23"
+version = "0.1.24"
 description = "db_wrap for MSSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -35,7 +35,7 @@ classifiers = [
 ]
 keywords = ["database", "wrapper", "python", "mssql", "sqlserver"]
 dependencies = [
-    "db_wrap == 0.1.23",
+    "db_wrap == 0.1.24",
     "pymssql >= 2.2.10",
 ]
 

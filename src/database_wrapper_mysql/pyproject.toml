@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "db_wrap_sqlite"
-version = "0.1.20"
-description = "db_wrap for PostgreSQL database"
+name = "db_wrap_mysql"
+version = "0.1.24"
+description = "db_wrap for MySQL database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -33,9 +33,10 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "sqlite"]
+keywords = ["database", "wrapper", "python", "mysql", "mariadb"]
 dependencies = [
-    "db_wrap == 0.1.23",
+    "db_wrap == 0.1.24",
+    "mysqlclient >= 2.2.2"
 ]
 
 [project.urls]
@@ -47,4 +48,4 @@ Code = "https://github.com/gintsmurans/py_db_wrap"
 Download = "https://pypi.org/project/db_wrap/"
 
 [tool.setuptools.package-data]
-db_wrap_sqlite = ["py.typed"]
+db_wrap_mysql = ["py.typed"]
