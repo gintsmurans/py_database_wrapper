@@ -3,13 +3,11 @@ from pymssql import (
     Cursor as MssqlCursor,
 )
 
-from db_wrapper import DBWrapper
-from db_wrapper.db_data_model import DBDataModel
+from db_wrapper import DBWrapper, DBDataModel
 
 from .connector import MSSQL
 
 
-# TODO: Possibly don't need to override any methods here as base class is based on postgres
 class DBWrapperMSSQL(DBWrapper):
     """Database wrapper for mssql database"""
 

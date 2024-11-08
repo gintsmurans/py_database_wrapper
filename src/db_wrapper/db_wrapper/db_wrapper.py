@@ -135,6 +135,25 @@ class DBWrapper:
         """
         self.logger.debug(f"Query: {query} with params: {params}")
 
+    def turnDataIntoModel(
+        self,
+        emptyDataClass: T,
+        dbData: list[dict[str, Any]],
+    ) -> list[T]:
+        """
+        Turns the given data into a data model.
+
+        By default we are pretty sure that there is no factory in the cursor,
+        So we need to create a new instance of the data model and fill it with data
+        TODO: Look for some better way to do this. Also enumerate is slow.
+        """
+        result = [emptyDataClass.__class__() for _item in dbData]
+        for i, item in enumerate(dbData):
+            result[i].fillDataFromDict(item)
+            result[i].raw_data = item
+
+        return result
+
     #####################
     ### Query methods ###
     #####################
@@ -212,7 +231,12 @@ class DBWrapper:
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
-        return ReturnModel(success=True, result=dbData)
+        # Turn data into models
+        newModel = emptyDataClass.__class__()
+        newModel.fillDataFromDict(dbData)
+        newModel.raw_data = dbData
+
+        return ReturnModel(success=True, result=newModel)
 
     async def getByKey(
         self,
@@ -254,7 +278,12 @@ class DBWrapper:
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
-        return ReturnModel(success=True, result=dbData)
+        # Turn data into models
+        newModel = emptyDataClass.__class__()
+        newModel.fillDataFromDict(dbData)
+        newModel.raw_data = dbData
+
+        return ReturnModel(success=True, result=newModel)
 
     async def getAll(
         self,
@@ -320,6 +349,9 @@ class DBWrapper:
         dbData = newCursor.fetchall()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
+
+        # Turn data into models
+        dbData = self.turnDataIntoModel(emptyDataClass, dbData)
 
         return ReturnModel(success=True, result=dbData)
 
@@ -437,6 +469,9 @@ class DBWrapper:
         dbData = newCursor.fetchall()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
+
+        # Turn data into models
+        dbData = self.turnDataIntoModel(emptyDataClass, dbData)
 
         return ReturnModel(success=True, result=dbData)
 

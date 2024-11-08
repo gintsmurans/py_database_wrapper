@@ -44,10 +44,6 @@ class DBDataModel(object):
     ### Default fields ###
     ######################
 
-    # TODO: Add schema name
-    # TODO: Add alias for table name
-    # TODO: Make it so that id key always return just the key name and alias or table name is added where needed?
-
     @property
     def schemaName(self) -> str | None:
         return None

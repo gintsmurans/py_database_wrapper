@@ -7,7 +7,7 @@ A different approach to a db wrapper in python
 ```bash
 pip install db_wrapper[pgsql] # for postgres
 pip install db_wrapper[mysql] # for mysql
-pip install db_wrapper[mssql] # TODO: for mssql
+pip install db_wrapper[mssql] # for mssql
 pip install db_wrapper[sqlite] # TODO: for sqlite
 ```
 
