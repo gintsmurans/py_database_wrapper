@@ -1,6 +1,8 @@
 # py_db_wrapper
 
-A different approach to a db wrapper in python
+A Different Approach to Database Wrappers in Python
+
+This project aims to create an alternative to the commonly used ORMs in Python, focusing on raw queries, models that represent returned results, and a straightforward base to make simple queries genuinely simple.
 
 ## Installation
 

@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "db_wrapper_mssql"
-version = "0.1.21"
-description = "db_wrapper for MSSQL database"
+name = "db_wrapper_sqlite"
+version = "0.1.20"
+description = "db_wrapper for PostgreSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -33,10 +33,9 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "mssql", "sqlserver"]
+keywords = ["database", "wrapper", "python", "sqlite"]
 dependencies = [
-    "db_wrapper == 0.1.21",
-    "pymssql >= 2.2.10",
+    "db_wrapper == 0.1.20",
 ]
 
 [project.urls]
@@ -48,4 +47,4 @@ Code = "https://github.com/gintsmurans/py_db_wrapper"
 Download = "https://pypi.org/project/db_wrapper/"
 
 [tool.setuptools.package-data]
-db_wrapper_mssql = ["py.typed"]
+db_wrapper_sqlite = ["py.typed"]
