@@ -1,15 +1,18 @@
 import logging
 
-from typing import Generator, cast, Any, overload
+from typing import AsyncGenerator, cast, Any, overload
 
 from .db_backend import DatabaseBackend
 from .db_data_model import DBDataModel
 from .db_wrapper_interface import DBWrapperInterface, OrderByItem, NoParam, T
 
 
-class DBWrapper(DBWrapperInterface):
+class DBWrapperAsync(DBWrapperInterface):
     """
-    Database wrapper class.
+    Async Database wrapper class.
+
+    Note: In async environment we cannot call close method from __del__ method.
+        It means you will need to call close method manually from async context.
     """
 
     ###########################
@@ -64,12 +67,6 @@ class DBWrapper(DBWrapperInterface):
         Deallocates the instance of the DBWrapper class.
         """
         self.logger.debug("Dealloc")
-        self.close()
-
-    def close(self) -> None:
-        """
-        Close resources. Usually you should not close connections here, just remove references.
-        """
 
         # Force remove instances so that there are no circular references
         if hasattr(self, "db") and self.db:
@@ -77,6 +74,12 @@ class DBWrapper(DBWrapperInterface):
 
         if hasattr(self, "dbConn") and self.dbConn:
             del self.dbConn
+
+    async def close(self) -> None:
+        """
+        Async method for closing async resources.
+        """
+        raise NotImplementedError("Method not implemented")
 
     ######################
     ### Helper methods ###
@@ -99,12 +102,12 @@ class DBWrapper(DBWrapperInterface):
         return name
 
     @overload
-    def createCursor(self) -> Any: ...
+    async def createCursor(self) -> Any: ...
 
     @overload
-    def createCursor(self, emptyDataClass: DBDataModel) -> Any: ...
+    async def createCursor(self, emptyDataClass: DBDataModel) -> Any: ...
 
-    def createCursor(self, emptyDataClass: DBDataModel | None = None) -> Any:
+    async def createCursor(self, emptyDataClass: DBDataModel | None = None) -> Any:
         """
         Creates a new cursor object.
 
@@ -112,7 +115,7 @@ class DBWrapper(DBWrapperInterface):
             emptyDataClass (T | None, optional): The data model to use for the cursor. Defaults to None.
 
         Returns:
-            The created cursor object.
+            AsyncCursor[DictRow] | AsyncCursor[T]: The created cursor object.
         """
         assert self.db is not None, "Database connection is not set"
         return self.db.cursor
@@ -183,7 +186,7 @@ class DBWrapper(DBWrapperInterface):
         return f"LIMIT {limit} OFFSET {offset}"
 
     # Action methods
-    def getOne(
+    async def getOne(
         self,
         emptyDataClass: T,
         customQuery: Any = None,
@@ -215,17 +218,17 @@ class DBWrapper(DBWrapperInterface):
         querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
+            await newCursor.execute(querySql, (idValue,))
 
             # Fetch one row
-            row = newCursor.fetchone()
+            row = await newCursor.fetchone()
             if row is None:
                 return
 
@@ -233,9 +236,9 @@ class DBWrapper(DBWrapperInterface):
             return self.turnDataIntoModel(emptyDataClass, row)
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
-    def getByKey(
+    async def getByKey(
         self,
         emptyDataClass: T,
         idKey: str,
@@ -265,17 +268,17 @@ class DBWrapper(DBWrapperInterface):
         querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
+            await newCursor.execute(querySql, (idValue,))
 
             # Fetch one row
-            row = newCursor.fetchone()
+            row = await newCursor.fetchone()
             if row is None:
                 return
 
@@ -284,9 +287,9 @@ class DBWrapper(DBWrapperInterface):
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
-    def getAll(
+    async def getAll(
         self,
         emptyDataClass: T,
         idKey: str | None = None,
@@ -295,7 +298,7 @@ class DBWrapper(DBWrapperInterface):
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> Generator[T, None, None]:
+    ) -> AsyncGenerator[T, None]:
         """
         Retrieves all records from the database.
 
@@ -309,7 +312,7 @@ class DBWrapper(DBWrapperInterface):
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            Generator[T, None, None]: The result of the query.
+            AsyncGenerator[T, None]: The result of the query.
         """
         # Query
         _query = (
@@ -341,7 +344,7 @@ class DBWrapper(DBWrapperInterface):
         querySql = f"{_query} {_order} {_limit}"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
@@ -349,18 +352,18 @@ class DBWrapper(DBWrapperInterface):
         # Load data
         try:
             # Execute the query
-            newCursor.execute(querySql, _params)
+            await newCursor.execute(querySql, _params)
 
             # Instead of fetchall(), we'll use a generator to yield results one by one
             while True:
-                row = newCursor.fetchone()
+                row = await newCursor.fetchone()
                 if row is None:
                     break
                 yield self.turnDataIntoModel(emptyDataClass, row)
 
         finally:
             # Ensure the cursor is closed after the generator is exhausted or an error occurs
-            newCursor.close()
+            await newCursor.close()
 
     def formatFilter(self, key: str, filter: Any) -> tuple[Any, ...]:
         if type(filter) is dict:
@@ -431,7 +434,7 @@ class DBWrapper(DBWrapperInterface):
 
         return (_query, _params)
 
-    def getFiltered(
+    async def getFiltered(
         self,
         emptyDataClass: T,
         filter: dict[str, Any],
@@ -439,7 +442,7 @@ class DBWrapper(DBWrapperInterface):
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> Generator[T, None, None]:
+    ) -> AsyncGenerator[T, None]:
         # Filter
         _query = (
             customQuery
@@ -466,7 +469,7 @@ class DBWrapper(DBWrapperInterface):
         querySql = f"{_query} {_filter} {_order} {_limit}"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
@@ -474,20 +477,20 @@ class DBWrapper(DBWrapperInterface):
         # Load data
         try:
             # Execute the query
-            newCursor.execute(querySql, _params)
+            await newCursor.execute(querySql, _params)
 
             # Instead of fetchall(), we'll use a generator to yield results one by one
             while True:
-                row = newCursor.fetchone()
+                row = await newCursor.fetchone()
                 if row is None:
                     break
                 yield self.turnDataIntoModel(emptyDataClass, row)
 
         finally:
             # Ensure the cursor is closed after the generator is exhausted or an error occurs
-            newCursor.close()
+            await newCursor.close()
 
-    def _store(
+    async def _store(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -524,16 +527,16 @@ class DBWrapper(DBWrapperInterface):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, insertQuery, tuple(values))
 
         # Insert
         try:
-            newCursor.execute(insertQuery, tuple(values))
+            await newCursor.execute(insertQuery, tuple(values))
             affectedRows = newCursor.rowcount
-            result = newCursor.fetchone()
+            result = await newCursor.fetchone()
 
             return (
                 result.id if result and hasattr(result, "id") else 0,
@@ -542,16 +545,19 @@ class DBWrapper(DBWrapperInterface):
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
     @overload
-    def store(self, records: T) -> tuple[int, int]:  # type: ignore
+    async def store(self, records: T) -> tuple[int, int]:  # type: ignore
         ...
 
     @overload
-    def store(self, records: list[T]) -> list[tuple[int, int]]: ...
+    async def store(self, records: list[T]) -> list[tuple[int, int]]: ...
 
-    def store(self, records: T | list[T]) -> tuple[int, int] | list[tuple[int, int]]:
+    async def store(
+        self,
+        records: T | list[T],
+    ) -> tuple[int, int] | list[tuple[int, int]]:
         """
         Stores a record or a list of records in the database.
 
@@ -576,7 +582,7 @@ class DBWrapper(DBWrapperInterface):
             if not storeIdKey or not storeData:
                 continue
 
-            res = self._store(
+            res = await self._store(
                 row,
                 row.schemaName,
                 row.tableName,
@@ -593,7 +599,7 @@ class DBWrapper(DBWrapperInterface):
 
         return status
 
-    def _update(
+    async def _update(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -628,30 +634,30 @@ class DBWrapper(DBWrapperInterface):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, updateQuery, tuple(values))
 
         # Update
         try:
-            newCursor.execute(updateQuery, tuple(values))
+            await newCursor.execute(updateQuery, tuple(values))
             affectedRows = newCursor.rowcount
 
             return affectedRows
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
     @overload
-    def update(self, records: T) -> int:  # type: ignore
+    async def update(self, records: T) -> int:  # type: ignore
         ...
 
     @overload
-    def update(self, records: list[T]) -> list[int]: ...
+    async def update(self, records: list[T]) -> list[int]: ...
 
-    def update(self, records: T | list[T]) -> int | list[int]:
+    async def update(self, records: T | list[T]) -> int | list[int]:
         """
         Updates a record or a list of records in the database.
 
@@ -677,7 +683,7 @@ class DBWrapper(DBWrapperInterface):
                 continue
 
             status.append(
-                self._update(
+                await self._update(
                     row,
                     row.schemaName,
                     row.tableName,
@@ -694,7 +700,7 @@ class DBWrapper(DBWrapperInterface):
 
         return status
 
-    def updateData(
+    async def updateData(
         self,
         record: DBDataModel,
         updateData: dict[str, Any],
@@ -703,7 +709,7 @@ class DBWrapper(DBWrapperInterface):
     ) -> int:
         updateIdKey = updateIdKey or record.idKey
         updateIdValue = updateIdValue or record.id
-        status = self._update(
+        status = await self._update(
             record,
             record.schemaName,
             record.tableName,
@@ -716,7 +722,7 @@ class DBWrapper(DBWrapperInterface):
 
         return status
 
-    def _delete(
+    async def _delete(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -742,30 +748,30 @@ class DBWrapper(DBWrapperInterface):
         delete_query = f"DELETE FROM {tableIdentifier} WHERE {deleteKey} = %s"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, delete_query, (idValue,))
 
         # Delete
         try:
-            newCursor.execute(delete_query, (idValue,))
+            await newCursor.execute(delete_query, (idValue,))
             affected_rows = newCursor.rowcount
 
             return affected_rows
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
     @overload
-    def delete(self, records: T) -> int:  # type: ignore
+    async def delete(self, records: T) -> int:  # type: ignore
         ...
 
     @overload
-    def delete(self, records: list[T]) -> list[int]: ...
+    async def delete(self, records: list[T]) -> list[int]: ...
 
-    def delete(self, records: T | list[T]) -> int | list[int]:
+    async def delete(self, records: T | list[T]) -> int | list[int]:
         """
         Deletes a record or a list of records from the database.
 
@@ -790,7 +796,7 @@ class DBWrapper(DBWrapperInterface):
                 continue
 
             status.append(
-                self._delete(
+                await self._delete(
                     row,
                     row.schemaName,
                     row.tableName,

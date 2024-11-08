@@ -21,7 +21,7 @@ General usage is the same for all databases. The only difference is the import s
 
 * For now all databases are sync, except for PostgreSQL which can use both sync and async.
     * PgSQL connector for sync
-    * AsyncPgSQLWithPooling for async
+    * PgSQLWithPoolingAsync for async
 * We are assuming that there is no point of using tuple cursors, so behind the scenes all databases are using dict cursors.
 * Wrapper methods that return multiple results are async generators.
 * Wrapper methods that return a single result are still async methods, but returns without generator.
@@ -55,6 +55,14 @@ pip install -e ./src/database_wrapper_sqlite --config-settings editable_mode=str
 
 We are adding `--config-settings editable_mode=strict` for vscode to be able to use the packages in the development environment. See [#3473](https://github.com/microsoft/pylance-release/issues/3473)
 
+## Implementation
+
+| Database | Sync | Async |
+| :------- | :--: | :---: |
+| pgsql    |  Y   |   Y   |
+| mysql    |  Y   |   N   |
+| mssql    |  Y   |   N   |
+| sqlite   |  N   |   N   |
 
 ## TODO
 

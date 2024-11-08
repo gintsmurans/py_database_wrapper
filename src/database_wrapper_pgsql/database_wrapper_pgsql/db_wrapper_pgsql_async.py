@@ -1,27 +1,30 @@
 import logging
-from typing import Any, Generator, overload
+from typing import Any, AsyncGenerator, overload
 
-from psycopg import Cursor, sql
+from psycopg import AsyncCursor, sql
 from psycopg.rows import class_row
 
-from database_wrapper import T, OrderByItem, DBWrapper, DBDataModel
+from database_wrapper import T, OrderByItem, DBWrapperAsync, DBDataModel
 
 from .connector import (
-    # Sync
-    PgConnectionType,
-    PgCursorType,
-    PgSQL,
+    # Async
+    PgAsyncConnectionType,
+    PgAsyncCursorType,
+    PgSQLWithPoolingAsync,
 )
 
 
-class DBWrapperPgSQL(DBWrapper):
+class DBWrapperPgSQLAsync(DBWrapperAsync):
     """
-    Sync database wrapper for postgres
+    Async database wrapper for postgres
+
+    This is meant to be used in async environments.
+    Also remember to call close() when done as we cannot do that in __del__.
     """
 
     # Override db instance
-    db: PgSQL
-    dbConn: PgConnectionType | None = None
+    db: PgSQLWithPoolingAsync
+    dbConn: PgAsyncConnectionType | None = None
 
     #######################
     ### Class lifecycle ###
@@ -30,8 +33,8 @@ class DBWrapperPgSQL(DBWrapper):
     # Meta methods
     def __init__(
         self,
-        db: PgSQL,
-        dbConn: PgConnectionType | None = None,
+        db: PgSQLWithPoolingAsync,
+        dbConn: PgAsyncConnectionType | None = None,
         logger: logging.Logger | None = None,
     ):
         """
@@ -42,6 +45,12 @@ class DBWrapperPgSQL(DBWrapper):
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)
+
+    async def close(self) -> None:
+        if hasattr(self, "dbConn") and self.dbConn and hasattr(self, "db") and self.db:
+            await self.db.returnConnection(self.dbConn)
+
+        await super().close()
 
     ######################
     ### Helper methods ###
@@ -63,18 +72,18 @@ class DBWrapperPgSQL(DBWrapper):
         return sql.Identifier(name)
 
     @overload
-    def createCursor(self) -> PgCursorType: ...
+    async def createCursor(self) -> PgAsyncCursorType: ...
 
     @overload
-    def createCursor(
+    async def createCursor(
         self,
         emptyDataClass: T,
-    ) -> Cursor[T]: ...
+    ) -> AsyncCursor[T]: ...
 
-    def createCursor(
+    async def createCursor(
         self,
         emptyDataClass: T | None = None,
-    ) -> Cursor[T] | PgCursorType:
+    ) -> AsyncCursor[T] | PgAsyncCursorType:
         """
         Creates a new cursor object.
 
@@ -89,11 +98,12 @@ class DBWrapperPgSQL(DBWrapper):
 
         # First we need connection
         if self.dbConn is None:
-            self.dbConn = self.db.connection
+            status = await self.db.newConnection()
+            if not status:
+                raise Exception("Failed to create new connection")
 
-        # Lets make sure we have a connection
-        if self.dbConn is None:
-            raise Exception("Failed to get connection")
+            (pgConn, _pgCur) = status
+            self.dbConn = pgConn
 
         if emptyDataClass is None:
             return self.dbConn.cursor()
@@ -102,7 +112,7 @@ class DBWrapperPgSQL(DBWrapper):
 
     def logQuery(
         self,
-        cursor: Cursor[Any],
+        cursor: AsyncCursor[Any],
         query: sql.SQL | sql.Composed,
         params: tuple[Any, ...],
     ) -> None:
@@ -144,7 +154,7 @@ class DBWrapperPgSQL(DBWrapper):
         return sql.SQL("LIMIT {} OFFSET {}").format(limit, offset)
 
     # Action methods
-    def getOne(
+    async def getOne(
         self,
         emptyDataClass: T,
         customQuery: sql.SQL | sql.Composed | str | None = None,
@@ -179,24 +189,23 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
         try:
-
-            newCursor.execute(querySql, (idValue,))
-            dbData = newCursor.fetchone()
+            await newCursor.execute(querySql, (idValue,))
+            dbData = await newCursor.fetchone()
 
             return dbData
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
-    def getByKey(
+    async def getByKey(
         self,
         emptyDataClass: T,
         idKey: str,
@@ -229,23 +238,23 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
-            dbData = newCursor.fetchone()
+            await newCursor.execute(querySql, (idValue,))
+            dbData = await newCursor.fetchone()
 
             return dbData
 
         finally:
             # Ensure the cursor is closed after the generator is exhausted or an error occurs
-            newCursor.close()
+            await newCursor.close()
 
-    def getAll(
+    async def getAll(
         self,
         emptyDataClass: T,
         idKey: str | None = None,
@@ -254,7 +263,7 @@ class DBWrapperPgSQL(DBWrapper):
         offset: int = 0,
         limit: int = 100,
         customQuery: sql.SQL | sql.Composed | str | None = None,
-    ) -> Generator[T, None, None]:
+    ) -> AsyncGenerator[T, None]:
         """
         Retrieves all records from the database.
 
@@ -268,7 +277,7 @@ class DBWrapperPgSQL(DBWrapper):
             customQuery (sql.SQL | sql.Composed | str | None, optional): The custom query to use. Defaults to None.
 
         Returns:
-            Generator[T, None, None]: The result of the query.
+            AsyncGenerator[T, None]: The result of the query.
         """
         # Query
         _query = (
@@ -304,25 +313,28 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
         try:
-            newCursor.execute(querySql, _params)
+            # Execute the query
+            await newCursor.execute(querySql, _params)
+
+            # Instead of fetchall(), we'll use a generator to yield results one by one
             while True:
-                row = newCursor.fetchone()
+                row = await newCursor.fetchone()
                 if row is None:
                     break
                 yield row
 
         finally:
-            # Close the cursor
-            newCursor.close()
+            # Ensure the cursor is closed after the generator is exhausted or an error occurs
+            await newCursor.close()
 
-    def getFiltered(
+    async def getFiltered(
         self,
         emptyDataClass: T,
         filter: dict[str, Any],
@@ -330,7 +342,7 @@ class DBWrapperPgSQL(DBWrapper):
         offset: int = 0,
         limit: int = 100,
         customQuery: sql.SQL | sql.Composed | str | None = None,
-    ) -> Generator[T, None, None]:
+    ) -> AsyncGenerator[T, None]:
         # Filter
         _query = (
             customQuery
@@ -359,25 +371,28 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
         try:
-            newCursor.execute(querySql, _params)
+            # Execute the query
+            await newCursor.execute(querySql, _params)
+
+            # Instead of fetchall(), we'll use a generator to yield results one by one
             while True:
-                row = newCursor.fetchone()
+                row = await newCursor.fetchone()
                 if row is None:
                     break
                 yield row
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
-    def _store(
+    async def _store(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -401,16 +416,16 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, insertQuery, tuple(values))
 
         # Insert
         try:
-            newCursor.execute(insertQuery, tuple(values))
+            await newCursor.execute(insertQuery, tuple(values))
             affectedRows = newCursor.rowcount
-            result = newCursor.fetchone()
+            result = await newCursor.fetchone()
 
             return (
                 result.id if result and hasattr(result, "id") else 0,
@@ -419,9 +434,9 @@ class DBWrapperPgSQL(DBWrapper):
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
-    def _update(
+    async def _update(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -449,23 +464,23 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, updateQuery, tuple(values))
 
         # Update
         try:
-            newCursor.execute(updateQuery, tuple(values))
+            await newCursor.execute(updateQuery, tuple(values))
             affectedRows = newCursor.rowcount
 
             return affectedRows
 
         finally:
             # Close the cursor
-            newCursor.close()
+            await newCursor.close()
 
-    def _delete(
+    async def _delete(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -482,13 +497,18 @@ class DBWrapperPgSQL(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, delete_query, (idValue,))
 
         # Delete
-        newCursor.execute(delete_query, (idValue,))
-        affected_rows = newCursor.rowcount
+        try:
+            await newCursor.execute(delete_query, (idValue,))
+            affected_rows = newCursor.rowcount
 
-        return affected_rows
+            return affected_rows
+
+        finally:
+            # Close the cursor
+            await newCursor.close()

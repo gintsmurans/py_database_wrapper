@@ -115,7 +115,7 @@ class PgSQL(DatabaseBackend):
         self.connection.rollback()
 
 
-class AsyncPgSQLWithPooling(DatabaseBackend):
+class PgSQLWithPoolingAsync(DatabaseBackend):
     """
     PostgreSQL database implementation with async and connection pooling
 
@@ -223,7 +223,7 @@ class AsyncPgSQLWithPooling(DatabaseBackend):
                 # Lets do some socket magic
                 self.fixSocketTimeouts(connection.fileno())
 
-                async with timer.aenter("AsyncPgSQLWithPooling.__aenter__.ping"):
+                async with timer.aenter("PgSQLWithPoolingAsync.__aenter__.ping"):
                     async with connection.transaction():
                         await cursor.execute("SELECT 1")
                         await cursor.fetchone()

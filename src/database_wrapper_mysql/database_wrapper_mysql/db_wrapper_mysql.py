@@ -62,5 +62,5 @@ class DBWrapperMysql(DBWrapper):
     def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
         return f"LIMIT {offset},{limit}"
 
-    async def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:
+    def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:
         return self.db.connection.cursor(MySqlDictCursor)
