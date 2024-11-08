@@ -21,7 +21,10 @@ class DBWrapperPgSQL(DBWrapper):
 
     # Override db instance
     db: PgSQL
+    """ PostgreSQL database connector """
+
     dbConn: PgConnectionType | None = None
+    """ PostgreSQL connection object """
 
     #######################
     ### Class lifecycle ###
@@ -38,7 +41,8 @@ class DBWrapperPgSQL(DBWrapper):
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The MySQL object.
+            db (MySQL): The PostgreSQL connector.
+            dbConn (MySqlConnection, optional): The PostgreSQL connection object. Defaults to None.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)

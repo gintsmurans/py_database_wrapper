@@ -22,6 +22,10 @@ class DBWrapperInterface(ABC):
     Database wrapper class interface.
 
     This class defines the interface for the database wrapper classes.
+
+    :property db: Database backend object.
+    :property dbConn: Database connection object.
+    :property logger: Logger object
     """
 
     ###########################
@@ -29,38 +33,14 @@ class DBWrapperInterface(ABC):
     ###########################
 
     # Db backend
-    @property
-    @abstractmethod
-    def db(self) -> DatabaseBackend:
-        """
-        Database backend object.
+    db: DatabaseBackend
+    """Database backend object."""
 
-        Returns:
-            Any: The database backend object.
-        """
-        ...
+    dbConn: Any
+    """Database connection object."""
 
-    @property
-    @abstractmethod
-    def dbConn(self) -> Any:
-        """
-        Database connection object.
-
-        Its not always set. Currently is used as a placeholder for async connections.
-        For sync connections db - DatabaseBackend.connection is used.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def logger(self) -> Any:
-        """
-        Logger object.
-
-        Returns:
-            logging.Logger: The logger object.
-        """
-        ...
+    logger: logging.Logger | None
+    """Logger object"""
 
     #######################
     ### Class lifecycle ###

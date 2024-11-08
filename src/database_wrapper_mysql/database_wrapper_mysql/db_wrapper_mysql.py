@@ -14,6 +14,10 @@ class DBWrapperMysql(DBWrapper):
 
     # Override db instance
     db: MySQL
+    """ MySQL database connector """
+
+    dbConn: MySqlConnection | None = None
+    """ MySQL connection object """
 
     #######################
     ### Class lifecycle ###
@@ -30,7 +34,8 @@ class DBWrapperMysql(DBWrapper):
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The MySQL object.
+            db (MySQL): The MySQL connector.
+            dbConn (MySqlConnection, optional): The MySQL connection object. Defaults to None.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)
@@ -49,6 +54,7 @@ class DBWrapperMysql(DBWrapper):
         Logs the given query and parameters.
 
         Args:
+            cursor (MySqlDictCursor): The cursor used to execute the query.
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
