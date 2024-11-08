@@ -21,6 +21,9 @@ from db_wrapper import DatabaseBackend
 from db_wrapper.utils.timer import Timer
 
 
+PgConnectionType = PgConnection[PgDictRow]
+PgCursorType = PgCursor[PgDictRow]
+
 PgAsyncConnectionType = PgAsyncConnection[PgDictRow]
 PgAsyncCursorType = PgAsyncCursor[PgDictRow]
 
@@ -210,8 +213,8 @@ class PostgreSQL(DatabaseBackend):
 
     config: PgConfig
 
-    connection: PgConnection[PgDictRow] | None
-    cursor: PgCursor[PgDictRow] | None
+    connection: PgConnectionType | None
+    cursor: PgCursorType | None
 
     def connect(self):
         # Free resources
@@ -220,7 +223,7 @@ class PostgreSQL(DatabaseBackend):
 
         self.logger.debug("Connecting to DB")
         self.connection = cast(
-            PgConnection[PgDictRow],
+            PgConnectionType,
             PgConnect(
                 host=self.config["hostname"],
                 port=self.config["port"],

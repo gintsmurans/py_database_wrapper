@@ -1,22 +1,44 @@
-from typing import Any, cast
+from typing import Any, overload
 
-from psycopg import AsyncCursor, sql
+from psycopg import Cursor, AsyncCursor, sql
 from psycopg.rows import class_row
 
 from db_wrapper import T, OrderByItem, DBWrapper, DBDataModel
 from db_wrapper.utils import ReturnModel
 
 from .connector import (
+    # Sync
+    PgConnectionType,
+    PgCursorType,
+    PostgreSQL,
+    # Async
     PgAsyncConnectionType,
     PgAsyncCursorType,
+    AsyncPostgreSQLWithPooling,
 )
 
 
 class DBWrapperPostgres(DBWrapper):
-    """Database wrapper for postgres"""
+    """
+    Database wrapper for postgres
+
+    This is meant to be used in async environments. Also remember to call close() when done.
+
+    """
 
     # Override db instance
-    db: PgAsyncConnectionType | None
+    db: PostgreSQL | AsyncPostgreSQLWithPooling
+    dbConn: PgConnectionType | PgAsyncConnectionType | None = None
+
+    #######################
+    ### Class lifecycle ###
+    #######################
+
+    async def close(self) -> None:
+        if hasattr(self, "dbConn") and self.dbConn and hasattr(self, "db") and self.db:
+            if isinstance(self.db, AsyncPostgreSQLWithPooling):
+                await self.db.returnConnection(self.dbConn)  # type: ignore
+            self.dbConn = None
 
     ######################
     ### Helper methods ###
@@ -37,9 +59,19 @@ class DBWrapperPostgres(DBWrapper):
 
         return sql.Identifier(name)
 
-    def createCursor(
-        self, emptyDataClass: DBDataModel | None = None
-    ) -> PgAsyncCursorType | AsyncCursor[DBDataModel]:
+    @overload
+    async def createCursor(self) -> PgCursorType | PgAsyncCursorType: ...
+
+    @overload
+    async def createCursor(
+        self,
+        emptyDataClass: T,
+    ) -> Cursor[T] | AsyncCursor[T]: ...
+
+    async def createCursor(
+        self,
+        emptyDataClass: T | None = None,
+    ) -> Cursor[T] | PgCursorType | AsyncCursor[T] | PgAsyncCursorType:
         """
         Creates a new cursor object.
 
@@ -51,14 +83,31 @@ class DBWrapperPostgres(DBWrapper):
         """
         assert self.db is not None, "Database connection is not set"
 
-        if emptyDataClass is None:
-            return self.db.cursor()
+        # First we need connection
+        if self.dbConn is None:
+            if isinstance(self.db, PostgreSQL):
+                self.dbConn = self.db.connection
 
-        return self.db.cursor(row_factory=class_row(emptyDataClass.__class__))
+            if isinstance(self.db, AsyncPostgreSQLWithPooling):
+                status = await self.db.newConnection()
+                if not status:
+                    raise Exception("Failed to create new connection")
+
+                (pgConn, _pgCur) = status
+                self.dbConn = pgConn
+
+        # Lets make sure we have a connection
+        if self.dbConn is None:
+            raise Exception("Failed to get connection")
+
+        if emptyDataClass is None:
+            return self.dbConn.cursor()
+
+        return self.dbConn.cursor(row_factory=class_row(emptyDataClass.__class__))
 
     def logQuery(
         self,
-        cursor: AsyncCursor[Any],
+        cursor: AsyncCursor[Any] | Cursor[Any],
         query: sql.SQL | sql.Composed,
         params: tuple[Any, ...],
     ) -> None:
@@ -69,7 +118,7 @@ class DBWrapperPostgres(DBWrapper):
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
-        queryString = query.as_string(self.db)
+        queryString = query.as_string(self.dbConn)
         self.logger.debug(f"Query: {queryString}")
 
     #####################
@@ -112,8 +161,6 @@ class DBWrapperPostgres(DBWrapper):
         Returns:
             ReturnModel[T | None]: The result of the query.
         """
-        assert self.db is not None, "Database connection is not set"
-
         # Query
         _query = (
             customQuery
@@ -137,14 +184,18 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[T], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        await newCursor.execute(querySql, (idValue,))
-        dbData = await newCursor.fetchone()
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(querySql, (idValue,))
+            dbData = await newCursor.fetchone()
+        else:
+            newCursor.execute(querySql, (idValue,))
+            dbData = newCursor.fetchone()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -168,8 +219,6 @@ class DBWrapperPostgres(DBWrapper):
         Returns:
             ReturnModel[T | None]: The result of the query.
         """
-        assert self.db is not None, "Database connection is not set"
-
         # Query
         _query = (
             customQuery
@@ -183,14 +232,18 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[T], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        await newCursor.execute(querySql, (idValue,))
-        dbData = await newCursor.fetchone()
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(querySql, (idValue,))
+            dbData = await newCursor.fetchone()
+        else:
+            newCursor.execute(querySql, (idValue,))
+            dbData = newCursor.fetchone()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -220,8 +273,6 @@ class DBWrapperPostgres(DBWrapper):
         Returns:
             ReturnModel[list[T] | None]: The result of the query.
         """
-        assert self.db is not None, "Database connection is not set"
-
         # Query
         _query = (
             customQuery
@@ -256,14 +307,18 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[T], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        await newCursor.execute(querySql, _params)
-        dbData = await newCursor.fetchall()
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(querySql, _params)
+            dbData = await newCursor.fetchall()
+        else:
+            newCursor.execute(querySql, _params)
+            dbData = newCursor.fetchall()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -278,8 +333,6 @@ class DBWrapperPostgres(DBWrapper):
         limit: int = 100,
         customQuery: sql.SQL | sql.Composed | str | None = None,
     ) -> ReturnModel[list[T] | None]:
-        assert self.db is not None, "Database connection is not set"
-
         # Filter
         _query = (
             customQuery
@@ -308,14 +361,18 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[T], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        await newCursor.execute(querySql, _params)
-        dbData = await newCursor.fetchall()
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(querySql, _params)
+            dbData = await newCursor.fetchall()
+        else:
+            newCursor.execute(querySql, _params)
+            dbData = newCursor.fetchall()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -345,15 +402,20 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[DBDataModel], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, insertQuery, tuple(values))
 
         # Insert
-        await newCursor.execute(insertQuery, tuple(values))
-        affectedRows = newCursor.rowcount
-        result = await newCursor.fetchone()
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(insertQuery, tuple(values))
+            affectedRows = newCursor.rowcount
+            result = await newCursor.fetchone()
+        else:
+            newCursor.execute(insertQuery, tuple(values))
+            affectedRows = newCursor.rowcount
+            result = newCursor.fetchone()
 
         return ReturnModel(
             success=True,
@@ -371,8 +433,6 @@ class DBWrapperPostgres(DBWrapper):
         updateData: dict[str, Any],
         updateId: tuple[str, Any],
     ) -> ReturnModel[int]:
-        assert self.db is not None, "Database connection is not set"
-
         (idKey, idValue) = updateId
         keys = updateData.keys()
         values = list(updateData.values())
@@ -393,13 +453,16 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[DBDataModel], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, updateQuery, tuple(values))
 
         # Update
-        await newCursor.execute(updateQuery, tuple(values))
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(updateQuery, tuple(values))
+        else:
+            newCursor.execute(updateQuery, tuple(values))
         affectedRows = newCursor.rowcount
 
         return ReturnModel(success=True, result=affectedRows)
@@ -411,8 +474,6 @@ class DBWrapperPostgres(DBWrapper):
         tableName: str,
         deleteId: tuple[str, Any],
     ) -> ReturnModel[int]:
-        assert self.db is not None, "Database connection is not set"
-
         (idKey, idValue) = deleteId
 
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
@@ -423,13 +484,16 @@ class DBWrapperPostgres(DBWrapper):
         )
 
         # Create a new cursor
-        newCursor = cast(AsyncCursor[DBDataModel], self.createCursor(emptyDataClass))
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, delete_query, (idValue,))
 
         # Delete
-        await newCursor.execute(delete_query, (idValue,))
+        if isinstance(newCursor, AsyncCursor):
+            await newCursor.execute(delete_query, (idValue,))
+        else:
+            newCursor.execute(delete_query, (idValue,))
         affected_rows = newCursor.rowcount
 
         return ReturnModel(success=True, result=affected_rows)

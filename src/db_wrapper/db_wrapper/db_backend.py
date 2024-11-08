@@ -14,11 +14,12 @@ class DatabaseBackend:
     contextConnection: ContextVar[Any | None]
     contextAsyncConnection: ContextVar[Any | None]
 
+    config: Any
+
     connectionTimeout: int
     slowDownTimeout: int = 5
 
     name: str
-    config: Any
     logger: logging.Logger
     timer: ContextVar[Timer | None]
 

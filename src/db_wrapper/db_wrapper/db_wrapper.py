@@ -2,6 +2,7 @@ import logging
 
 from typing import TypeVar, cast, Any, overload
 
+from .db_backend import DatabaseBackend
 from .db_data_model import DBDataModel
 from .utils.return_model import ReturnModel
 
@@ -26,9 +27,17 @@ class DBWrapper:
     ### Instance properties ###
     ###########################
 
-    # db instance
+    # Db backend
     db: Any
-    """Database backends"""
+    """Database backend object"""
+
+    dbConn: Any
+    """
+    Database connection object.
+
+    Its not always set. Currently is used as a placeholder for async connections.
+    For sync connections db - DatabaseBackend.connection is used.
+    """
 
     # logger
     logger: logging.Logger
@@ -40,24 +49,43 @@ class DBWrapper:
     # Meta methods
     def __init__(
         self,
-        db: Any,
+        db: DatabaseBackend,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (Any): The database connection object.
+            db (DatabaseBackend): The DatabaseBackend object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        if hasattr(self, "db") == False or self.db is None:
-            self.db = db
+        self.db = db
+        self.dbConn = None
 
         if logger is None:
             loggerName = f"{__name__}.{self.__class__.__name__}"
             self.logger = logging.getLogger(loggerName)
         else:
             self.logger = logger
+
+    def __del__(self):
+        """
+        Deallocates the instance of the DBWrapper class.
+        """
+        self.logger.debug("Dealloc")
+
+        # Force remove instances so that there are no circular references
+        if hasattr(self, "db") and self.db:
+            self.db = None
+
+        if hasattr(self, "dbConn") and self.dbConn:
+            self.dbConn = None
+
+    async def close(self) -> None:
+        """
+        Async method for closing async resources.
+        """
+        raise NotImplementedError("Method not implemented")
 
     ######################
     ### Helper methods ###
@@ -79,12 +107,12 @@ class DBWrapper:
         return name
 
     @overload
-    def createCursor(self) -> Any: ...
+    async def createCursor(self) -> Any: ...
 
     @overload
-    def createCursor(self, emptyDataClass: DBDataModel) -> Any: ...
+    async def createCursor(self, emptyDataClass: DBDataModel) -> Any: ...
 
-    def createCursor(self, emptyDataClass: DBDataModel | None = None) -> Any:
+    async def createCursor(self, emptyDataClass: DBDataModel | None = None) -> Any:
         """
         Creates a new cursor object.
 
@@ -95,7 +123,7 @@ class DBWrapper:
             AsyncCursor[DictRow] | AsyncCursor[T]: The created cursor object.
         """
         assert self.db is not None, "Database connection is not set"
-        return self.db.cursor()
+        return self.db.cursor
 
     def logQuery(self, cursor: Any, query: Any, params: tuple[Any, ...]) -> None:
         """
@@ -152,8 +180,6 @@ class DBWrapper:
         Returns:
             ReturnModel[T | None]: The result of the query.
         """
-        assert self.db is not None, "Database connection is not set"
-
         # Query
         _query = (
             customQuery
@@ -175,7 +201,7 @@ class DBWrapper:
         querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
@@ -206,8 +232,6 @@ class DBWrapper:
         Returns:
             ReturnModel[T | None]: The result of the query.
         """
-        assert self.db is not None, "Database connection is not set"
-
         # Query
         _query = (
             customQuery
@@ -219,7 +243,7 @@ class DBWrapper:
         querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, (idValue,))
@@ -256,8 +280,6 @@ class DBWrapper:
         Returns:
             ReturnModel[list[T] | None]: The result of the query.
         """
-        assert self.db is not None, "Database connection is not set"
-
         # Query
         _query = (
             customQuery
@@ -288,7 +310,7 @@ class DBWrapper:
         querySql = f"{_query} {_order} {_limit}"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
@@ -379,8 +401,6 @@ class DBWrapper:
         limit: int = 100,
         customQuery: Any = None,
     ) -> ReturnModel[list[T] | None]:
-        assert self.db is not None, "Database connection is not set"
-
         # Filter
         _query = (
             customQuery
@@ -407,7 +427,7 @@ class DBWrapper:
         querySql = f"{_query} {_filter} {_order} {_limit}"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, querySql, _params)
@@ -444,7 +464,7 @@ class DBWrapper:
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, insertQuery, tuple(values))
@@ -518,8 +538,6 @@ class DBWrapper:
 
         Schema name and table name are parameters to allow for the updating of records in different tables.
         """
-        assert self.db is not None, "Database connection is not set"
-
         (idKey, idValue) = updateId
         keys = updateData.keys()
         values = list(updateData.values())
@@ -534,7 +552,7 @@ class DBWrapper:
         )
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, updateQuery, tuple(values))
@@ -624,8 +642,6 @@ class DBWrapper:
 
         Schema name and table name are parameters to allow for the deletion of records from different tables.
         """
-        assert self.db is not None, "Database connection is not set"
-
         (idKey, idValue) = deleteId
 
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
@@ -633,7 +649,7 @@ class DBWrapper:
         delete_query = f"DELETE FROM {tableIdentifier} WHERE {deleteKey} = %s"
 
         # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
+        newCursor = await self.createCursor(emptyDataClass)
 
         # Log
         self.logQuery(newCursor, delete_query, (idValue,))

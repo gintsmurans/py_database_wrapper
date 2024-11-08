@@ -1,16 +1,17 @@
 from typing import Any
 
-from MySQLdb import Connection as MySqlConnection
 from MySQLdb.cursors import DictCursor as MySqlDictCursor
 
 from db_wrapper import DBWrapper
+
+from .connector import MySQL
 
 
 class DBWrapperMysql(DBWrapper):
     """Base model for all RV4 models"""
 
     # Override db instance
-    db: MySqlConnection
+    db: MySQL
 
     ######################
     ### Helper methods ###
@@ -39,5 +40,5 @@ class DBWrapperMysql(DBWrapper):
     def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
         return f"LIMIT {offset},{limit}"
 
-    def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:
-        return self.db.cursor(MySqlDictCursor)  # type: ignore
+    async def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:
+        return self.db.connection.cursor(MySqlDictCursor)

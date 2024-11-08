@@ -1,10 +1,11 @@
 from pymssql import (
-    Connection as MssqlConnection,
     Cursor as MssqlCursor,
 )
 
 from db_wrapper import DBWrapper
 from db_wrapper.db_data_model import DBDataModel
+
+from .connector import MSSQL
 
 
 # TODO: Possibly don't need to override any methods here as base class is based on postgres
@@ -12,7 +13,7 @@ class DBWrapperMSSQL(DBWrapper):
     """Database wrapper for mssql database"""
 
     # Override db instance
-    db: MssqlConnection
+    db: MSSQL
 
     def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
         return f"""
@@ -20,7 +21,7 @@ class DBWrapperMSSQL(DBWrapper):
             FETCH NEXT {limit} ROWS ONLY
         """
 
-    def createCursor(
+    async def createCursor(
         self,
         emptyDataClass: DBDataModel | None = None,
     ) -> MssqlCursor:
@@ -33,4 +34,4 @@ class DBWrapperMSSQL(DBWrapper):
         Returns:
             PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
         """
-        return self.db.cursor(as_dict=True)
+        return self.db.connection.cursor(as_dict=True)

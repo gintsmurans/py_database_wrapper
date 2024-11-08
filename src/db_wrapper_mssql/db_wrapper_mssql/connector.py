@@ -11,7 +11,7 @@ from db_wrapper import DatabaseBackend
 
 class MsConfig(TypedDict):
     hostname: str
-    port: int
+    port: str | None
     username: str
     password: str
     database: str
@@ -27,11 +27,16 @@ class MSSQL(DatabaseBackend):
 
     def connect(self):
         self.logger.debug("Connecting to DB")
+
+        if not self.config["port"]:
+            self.config["port"] = "1433"
+
         self.connection = MssqlConnect(
-            self.config["hostname"],
-            self.config["username"],
-            self.config["password"],
-            self.config["database"],
+            server=self.config["hostname"],
+            user=self.config["username"],
+            password=self.config["password"],
+            database=self.config["database"],
+            port=self.config["port"],
             tds_version="7.0",
             timeout=self.connectionTimeout,
             login_timeout=self.connectionTimeout,
