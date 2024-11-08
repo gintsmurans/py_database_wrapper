@@ -90,8 +90,12 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
         self,
     ) -> tuple[PgAsyncConnectionType, PgAsyncCursorType] | None:
         timer = self.timer.get()
-        assert timer, "Timer is not initialized"
         assert self.asyncPool, "Async pool is not initialized"
+
+        # Create dummy timer
+        if timer is None:
+            timer = Timer("db")
+            self.timer.set(timer)
 
         # Log
         self.logger.debug("Getting connection from the pool")
@@ -135,8 +139,11 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
     async def returnConnection(self, connection: PgAsyncConnectionType) -> None:
         """Return connection to the pool"""
         timer = self.timer.get()
-        assert timer, "Timer is not initialized"
         assert self.asyncPool, "Async pool is not initialized"
+
+        # Create dummy timer
+        if timer is None:
+            timer = Timer("db")
 
         # Log
         self.logger.debug("Putting connection back to the pool")
