@@ -59,8 +59,9 @@ We are adding `--config-settings editable_mode=strict` for vscode to be able to 
 ## TODO
 
 * Add sync wrappers that themselves are sync
+    * Figure out uniform naming for sync/async classes
 * Add sqlite support
-    * Would be nice to have also async support for sqlite
+    * Would be nice to also have async support for sqlite
 * Add more tests
 * Add more usage examples
 * Create a better documentation

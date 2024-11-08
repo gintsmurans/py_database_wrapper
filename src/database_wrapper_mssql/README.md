@@ -2,7 +2,7 @@
 
 _Part of the `database_wrapper` package._
 
-This python package is a database wrapper for [MSSQL](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) databases.
+This python package is a database wrapper for [MSSQL](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) database.
 
 ## Installation
 
