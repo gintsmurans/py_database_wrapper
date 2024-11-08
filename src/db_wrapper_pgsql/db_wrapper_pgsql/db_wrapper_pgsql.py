@@ -1,11 +1,10 @@
 import logging
-from typing import Any, overload
+from typing import Any, AsyncGenerator, overload
 
 from psycopg import Cursor, AsyncCursor, sql
 from psycopg.rows import class_row
 
 from db_wrapper import T, OrderByItem, DBWrapper, DBDataModel
-from db_wrapper.utils import ReturnModel
 
 from .connector import (
     # Sync
@@ -92,7 +91,8 @@ class DBWrapperPostgres(DBWrapper):
         Creates a new cursor object.
 
         Args:
-            emptyDataClass (DBDataModel | None, optional): The data model to use for the cursor. Defaults to None.
+            emptyDataClass (DBDataModel | None, optional): The data model to use for the cursor.
+                Defaults to None.
 
         Returns:
             PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
@@ -131,6 +131,7 @@ class DBWrapperPostgres(DBWrapper):
         Logs the given query and parameters.
 
         Args:
+            cursor (Any): The database cursor.
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
@@ -150,6 +151,7 @@ class DBWrapperPostgres(DBWrapper):
         Creates a SQL query to filter data from the given table.
 
         Args:
+            schemaName (str): The name of the schema to filter data from.
             tableName (str): The name of the table to filter data from.
 
         Returns:
@@ -167,15 +169,17 @@ class DBWrapperPostgres(DBWrapper):
         self,
         emptyDataClass: T,
         customQuery: sql.SQL | sql.Composed | str | None = None,
-    ) -> ReturnModel[T | None]:
+    ) -> T | None:
         """
         Retrieves a single record from the database.
 
         Args:
             emptyDataClass (T): The data model to use for the query.
+            customQuery (sql.SQL | sql.Composed | str | None, optional): The custom query to use.
+                Defaults to None.
 
         Returns:
-            ReturnModel[T | None]: The result of the query.
+            T | None: The result of the query.
         """
         # Query
         _query = (
@@ -186,13 +190,9 @@ class DBWrapperPostgres(DBWrapper):
         idKey = emptyDataClass.idKey
         idValue = emptyDataClass.id
         if not idKey:
-            return ReturnModel(
-                success=False, message="Id key is not provided", code=10000
-            )
+            raise ValueError("Id key is not set")
         if not idValue:
-            return ReturnModel(
-                success=False, message="Id value is not provided", code=10000
-            )
+            raise ValueError("Id value is not set")
 
         # Create a SQL object for the query and format it
         querySql = sql.SQL("{query} WHERE {idkey} = %s").format(
@@ -206,16 +206,22 @@ class DBWrapperPostgres(DBWrapper):
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        if isinstance(newCursor, AsyncCursor):
-            await newCursor.execute(querySql, (idValue,))
-            dbData = await newCursor.fetchone()
-        else:
-            newCursor.execute(querySql, (idValue,))
-            dbData = newCursor.fetchone()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            if isinstance(newCursor, AsyncCursor):
+                await newCursor.execute(querySql, (idValue,))
+                dbData = await newCursor.fetchone()
+            else:
+                newCursor.execute(querySql, (idValue,))
+                dbData = newCursor.fetchone()
 
-        return ReturnModel(success=True, result=dbData)
+            return dbData
+
+        finally:
+            # Close the cursor
+            if isinstance(newCursor, AsyncCursor):
+                await newCursor.close()
+            else:
+                newCursor.close()
 
     async def getByKey(
         self,
@@ -223,7 +229,7 @@ class DBWrapperPostgres(DBWrapper):
         idKey: str,
         idValue: Any,
         customQuery: sql.SQL | sql.Composed | str | None = None,
-    ) -> ReturnModel[T | None]:
+    ) -> T | None:
         """
         Retrieves a single record from the database using the given key.
 
@@ -231,9 +237,11 @@ class DBWrapperPostgres(DBWrapper):
             emptyDataClass (T): The data model to use for the query.
             idKey (str): The name of the key to use for the query.
             idValue (Any): The value of the key to use for the query.
+            customQuery (sql.SQL | sql.Composed | str | None, optional): The custom query to use.
+                Defaults to None.
 
         Returns:
-            ReturnModel[T | None]: The result of the query.
+            T | None: The result of the query.
         """
         # Query
         _query = (
@@ -254,16 +262,22 @@ class DBWrapperPostgres(DBWrapper):
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        if isinstance(newCursor, AsyncCursor):
-            await newCursor.execute(querySql, (idValue,))
-            dbData = await newCursor.fetchone()
-        else:
-            newCursor.execute(querySql, (idValue,))
-            dbData = newCursor.fetchone()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            if isinstance(newCursor, AsyncCursor):
+                await newCursor.execute(querySql, (idValue,))
+                dbData = await newCursor.fetchone()
+            else:
+                newCursor.execute(querySql, (idValue,))
+                dbData = newCursor.fetchone()
 
-        return ReturnModel(success=True, result=dbData)
+            return dbData
+
+        finally:
+            # Ensure the cursor is closed after the generator is exhausted or an error occurs
+            if isinstance(newCursor, AsyncCursor):
+                await newCursor.close()
+            else:
+                newCursor.close()
 
     async def getAll(
         self,
@@ -274,7 +288,7 @@ class DBWrapperPostgres(DBWrapper):
         offset: int = 0,
         limit: int = 100,
         customQuery: sql.SQL | sql.Composed | str | None = None,
-    ) -> ReturnModel[list[T] | None]:
+    ) -> AsyncGenerator[T, None]:
         """
         Retrieves all records from the database.
 
@@ -285,9 +299,10 @@ class DBWrapperPostgres(DBWrapper):
             orderBy (OrderByItem | None, optional): The order by item to use for sorting. Defaults to None.
             offset (int, optional): The number of results to skip. Defaults to 0.
             limit (int, optional): The maximum number of results to return. Defaults to 100.
+            customQuery (sql.SQL | sql.Composed | str | None, optional): The custom query to use. Defaults to None.
 
         Returns:
-            ReturnModel[list[T] | None]: The result of the query.
+            AsyncGenerator[T, None]: The result of the query.
         """
         # Query
         _query = (
@@ -329,16 +344,30 @@ class DBWrapperPostgres(DBWrapper):
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        if isinstance(newCursor, AsyncCursor):
-            await newCursor.execute(querySql, _params)
-            dbData = await newCursor.fetchall()
-        else:
-            newCursor.execute(querySql, _params)
-            dbData = newCursor.fetchall()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            if isinstance(newCursor, AsyncCursor):
+                # Execute the query
+                await newCursor.execute(querySql, _params)
 
-        return ReturnModel(success=True, result=dbData)
+                # Instead of fetchall(), we'll use a generator to yield results one by one
+                while True:
+                    row = await newCursor.fetchone()
+                    if row is None:
+                        break
+                    yield row
+            else:
+                newCursor.execute(querySql, _params)
+                while True:
+                    row = newCursor.fetchone()
+                    if row is None:
+                        break
+                    yield row
+        finally:
+            # Ensure the cursor is closed after the generator is exhausted or an error occurs
+            if isinstance(newCursor, AsyncCursor):
+                await newCursor.close()
+            else:
+                newCursor.close()
 
     async def getFiltered(
         self,
@@ -348,7 +377,7 @@ class DBWrapperPostgres(DBWrapper):
         offset: int = 0,
         limit: int = 100,
         customQuery: sql.SQL | sql.Composed | str | None = None,
-    ) -> ReturnModel[list[T] | None]:
+    ) -> AsyncGenerator[T, None]:
         # Filter
         _query = (
             customQuery
@@ -383,16 +412,30 @@ class DBWrapperPostgres(DBWrapper):
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        if isinstance(newCursor, AsyncCursor):
-            await newCursor.execute(querySql, _params)
-            dbData = await newCursor.fetchall()
-        else:
-            newCursor.execute(querySql, _params)
-            dbData = newCursor.fetchall()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            if isinstance(newCursor, AsyncCursor):
+                # Execute the query
+                await newCursor.execute(querySql, _params)
 
-        return ReturnModel(success=True, result=dbData)
+                # Instead of fetchall(), we'll use a generator to yield results one by one
+                while True:
+                    row = await newCursor.fetchone()
+                    if row is None:
+                        break
+                    yield row
+            else:
+                newCursor.execute(querySql, _params)
+                while True:
+                    row = newCursor.fetchone()
+                    if row is None:
+                        break
+                    yield row
+        finally:
+            # Ensure the cursor is closed after the generator is exhausted or an error occurs
+            if isinstance(newCursor, AsyncCursor):
+                await newCursor.close()
+            else:
+                newCursor.close()
 
     async def _store(
         self,
@@ -401,7 +444,7 @@ class DBWrapperPostgres(DBWrapper):
         tableName: str,
         storeData: dict[str, Any],
         idKey: str,
-    ) -> ReturnModel[tuple[int, int]]:
+    ) -> tuple[int, int]:
         keys = storeData.keys()
         values = list(storeData.values())
 
@@ -433,12 +476,9 @@ class DBWrapperPostgres(DBWrapper):
             affectedRows = newCursor.rowcount
             result = newCursor.fetchone()
 
-        return ReturnModel(
-            success=True,
-            result=(
-                result.id if result and hasattr(result, "id") else 0,
-                affectedRows,
-            ),
+        return (
+            result.id if result and hasattr(result, "id") else 0,
+            affectedRows,
         )
 
     async def _update(
@@ -448,7 +488,7 @@ class DBWrapperPostgres(DBWrapper):
         tableName: str,
         updateData: dict[str, Any],
         updateId: tuple[str, Any],
-    ) -> ReturnModel[int]:
+    ) -> int:
         (idKey, idValue) = updateId
         keys = updateData.keys()
         values = list(updateData.values())
@@ -481,7 +521,7 @@ class DBWrapperPostgres(DBWrapper):
             newCursor.execute(updateQuery, tuple(values))
         affectedRows = newCursor.rowcount
 
-        return ReturnModel(success=True, result=affectedRows)
+        return affectedRows
 
     async def _delete(
         self,
@@ -489,7 +529,7 @@ class DBWrapperPostgres(DBWrapper):
         schemaName: str | None,
         tableName: str,
         deleteId: tuple[str, Any],
-    ) -> ReturnModel[int]:
+    ) -> int:
         (idKey, idValue) = deleteId
 
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
@@ -512,4 +552,4 @@ class DBWrapperPostgres(DBWrapper):
             newCursor.execute(delete_query, (idValue,))
         affected_rows = newCursor.rowcount
 
-        return ReturnModel(success=True, result=affected_rows)
+        return affected_rows

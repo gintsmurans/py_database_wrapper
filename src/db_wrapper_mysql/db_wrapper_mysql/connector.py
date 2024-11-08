@@ -22,7 +22,7 @@ class MySQL(DatabaseBackend):
     connection: MySqlConnection
     cursor: MySqlDictCursor
 
-    def connect(self):
+    def open(self):
         # Free resources
         if hasattr(self, "connection") and self.connection:
             self.close()

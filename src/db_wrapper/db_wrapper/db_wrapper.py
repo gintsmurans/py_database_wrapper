@@ -1,11 +1,9 @@
 import logging
 
-from typing import TypeVar, cast, Any, overload
+from typing import AsyncGenerator, TypeVar, cast, Any, overload
 
 from .db_backend import DatabaseBackend
 from .db_data_model import DBDataModel
-from .utils.return_model import ReturnModel
-
 
 OrderByItem = list[tuple[str, str | None]]
 
@@ -96,6 +94,7 @@ class DBWrapper:
         Creates a SQL identifier object from the given name.
 
         Args:
+            schema (str | None): The schema to create the identifier from.
             name (str): The name to create the identifier from.
 
         Returns:
@@ -130,6 +129,7 @@ class DBWrapper:
         Logs the given query and parameters.
 
         Args:
+            cursor (Any): The database cursor.
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
@@ -138,20 +138,24 @@ class DBWrapper:
     def turnDataIntoModel(
         self,
         emptyDataClass: T,
-        dbData: list[dict[str, Any]],
-    ) -> list[T]:
+        dbData: dict[str, Any],
+    ) -> T:
         """
         Turns the given data into a data model.
-
         By default we are pretty sure that there is no factory in the cursor,
         So we need to create a new instance of the data model and fill it with data
-        TODO: Look for some better way to do this. Also enumerate is slow.
-        """
-        result = [emptyDataClass.__class__() for _item in dbData]
-        for i, item in enumerate(dbData):
-            result[i].fillDataFromDict(item)
-            result[i].raw_data = item
 
+        Args:
+            emptyDataClass (T): The data model to use.
+            dbData (dict[str, Any]): The data to turn into a model.
+
+        Returns:
+            T: The data model filled with data.
+        """
+
+        result = emptyDataClass.__class__()
+        result.fillDataFromDict(dbData)
+        result.raw_data = dbData
         return result
 
     #####################
@@ -163,6 +167,7 @@ class DBWrapper:
         Creates a SQL query to filter data from the given table.
 
         Args:
+            schemaName (str | None): The name of the schema to filter data from.
             tableName (str): The name of the table to filter data from.
 
         Returns:
@@ -189,15 +194,16 @@ class DBWrapper:
         self,
         emptyDataClass: T,
         customQuery: Any = None,
-    ) -> ReturnModel[T | None]:
+    ) -> T | None:
         """
         Retrieves a single record from the database.
 
         Args:
             emptyDataClass (T): The data model to use for the query.
+            customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            ReturnModel[T | None]: The result of the query.
+            T | None: The result of the query.
         """
         # Query
         _query = (
@@ -208,13 +214,9 @@ class DBWrapper:
         idKey = emptyDataClass.idKey
         idValue = emptyDataClass.id
         if not idKey:
-            return ReturnModel(
-                success=False, message="Id key is not provided", code=10000
-            )
+            raise ValueError("Id key is not set")
         if not idValue:
-            return ReturnModel(
-                success=False, message="Id value is not provided", code=10000
-            )
+            raise ValueError("Id value is not set")
 
         # Create a SQL object for the query and format it
         querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
@@ -226,17 +228,19 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        newCursor.execute(querySql, (idValue,))
-        dbData = newCursor.fetchone()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            newCursor.execute(querySql, (idValue,))
 
-        # Turn data into models
-        newModel = emptyDataClass.__class__()
-        newModel.fillDataFromDict(dbData)
-        newModel.raw_data = dbData
+            # Fetch one row
+            row = await newCursor.fetchone()
+            if row is None:
+                return
 
-        return ReturnModel(success=True, result=newModel)
+            # Turn data into model
+            return self.turnDataIntoModel(emptyDataClass, row)
+        finally:
+            # Close the cursor
+            await newCursor.close()
 
     async def getByKey(
         self,
@@ -244,7 +248,7 @@ class DBWrapper:
         idKey: str,
         idValue: Any,
         customQuery: Any = None,
-    ) -> ReturnModel[T | None]:
+    ) -> T | None:
         """
         Retrieves a single record from the database using the given key.
 
@@ -252,9 +256,10 @@ class DBWrapper:
             emptyDataClass (T): The data model to use for the query.
             idKey (str): The name of the key to use for the query.
             idValue (Any): The value of the key to use for the query.
+            customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            ReturnModel[T | None]: The result of the query.
+            T | None: The result of the query.
         """
         # Query
         _query = (
@@ -273,17 +278,20 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        newCursor.execute(querySql, (idValue,))
-        dbData = newCursor.fetchone()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            newCursor.execute(querySql, (idValue,))
 
-        # Turn data into models
-        newModel = emptyDataClass.__class__()
-        newModel.fillDataFromDict(dbData)
-        newModel.raw_data = dbData
+            # Fetch one row
+            row = await newCursor.fetchone()
+            if row is None:
+                return
 
-        return ReturnModel(success=True, result=newModel)
+            # Turn data into model
+            return self.turnDataIntoModel(emptyDataClass, row)
+
+        finally:
+            # Close the cursor
+            await newCursor.close()
 
     async def getAll(
         self,
@@ -294,7 +302,7 @@ class DBWrapper:
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> ReturnModel[list[T] | None]:
+    ) -> AsyncGenerator[T, None]:
         """
         Retrieves all records from the database.
 
@@ -305,9 +313,10 @@ class DBWrapper:
             orderBy (OrderByItem | None, optional): The order by item to use for sorting. Defaults to None.
             offset (int, optional): The number of results to skip. Defaults to 0.
             limit (int, optional): The maximum number of results to return. Defaults to 100.
+            customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            ReturnModel[list[T] | None]: The result of the query.
+            AsyncGenerator[T, None]: The result of the query.
         """
         # Query
         _query = (
@@ -345,15 +354,20 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        newCursor.execute(querySql, _params)
-        dbData = newCursor.fetchall()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            # Execute the query
+            await newCursor.execute(querySql, _params)
 
-        # Turn data into models
-        dbData = self.turnDataIntoModel(emptyDataClass, dbData)
+            # Instead of fetchall(), we'll use a generator to yield results one by one
+            while True:
+                row = await newCursor.fetchone()
+                if row is None:
+                    break
+                yield self.turnDataIntoModel(emptyDataClass, row)
 
-        return ReturnModel(success=True, result=dbData)
+        finally:
+            # Ensure the cursor is closed after the generator is exhausted or an error occurs
+            await newCursor.close()
 
     def formatFilter(self, key: str, filter: Any) -> tuple[Any, ...]:
         if type(filter) is dict:
@@ -432,7 +446,7 @@ class DBWrapper:
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> ReturnModel[list[T] | None]:
+    ) -> AsyncGenerator[T, None]:
         # Filter
         _query = (
             customQuery
@@ -465,15 +479,20 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        newCursor.execute(querySql, _params)
-        dbData = newCursor.fetchall()
-        if not dbData:
-            return ReturnModel(success=False, message="Data not found", code=10001)
+        try:
+            # Execute the query
+            await newCursor.execute(querySql, _params)
 
-        # Turn data into models
-        dbData = self.turnDataIntoModel(emptyDataClass, dbData)
+            # Instead of fetchall(), we'll use a generator to yield results one by one
+            while True:
+                row = await newCursor.fetchone()
+                if row is None:
+                    break
+                yield self.turnDataIntoModel(emptyDataClass, row)
 
-        return ReturnModel(success=True, result=dbData)
+        finally:
+            # Ensure the cursor is closed after the generator is exhausted or an error occurs
+            await newCursor.close()
 
     async def _store(
         self,
@@ -482,7 +501,20 @@ class DBWrapper:
         tableName: str,
         storeData: dict[str, Any],
         idKey: str,
-    ) -> ReturnModel[tuple[int, int]]:
+    ) -> tuple[int, int]:
+        """
+        Stores a record in the database.
+
+        Args:
+            emptyDataClass (DBDataModel): The data model to use for the query.
+            schemaName (str | None): The name of the schema to store the record in.
+            tableName (str): The name of the table to store the record in.
+            storeData (dict[str, Any]): The data to store.
+            idKey (str): The name of the key to use for the query.
+
+        Returns:
+            tuple[int, int]: The id of the record and the number of affected rows.
+        """
         keys = storeData.keys()
         values = list(storeData.values())
 
@@ -505,29 +537,42 @@ class DBWrapper:
         self.logQuery(newCursor, insertQuery, tuple(values))
 
         # Insert
-        newCursor.execute(insertQuery, tuple(values))
-        affectedRows = newCursor.rowcount
-        result = newCursor.fetchone()
+        try:
+            newCursor.execute(insertQuery, tuple(values))
+            affectedRows = newCursor.rowcount
+            result = newCursor.fetchone()
 
-        return ReturnModel(
-            success=True,
-            result=(
+            return (
                 result.id if result and hasattr(result, "id") else 0,
                 affectedRows,
-            ),
-        )
+            )
+
+        finally:
+            # Close the cursor
+            await newCursor.close()
 
     @overload
-    async def store(self, records: T) -> ReturnModel[tuple[int, int]]:  # type: ignore
+    async def store(self, records: T) -> tuple[int, int]:  # type: ignore
         ...
 
     @overload
-    async def store(self, records: list[T]) -> list[ReturnModel[tuple[int, int]]]: ...
+    async def store(self, records: list[T]) -> list[tuple[int, int]]: ...
 
     async def store(
         self, records: T | list[T]
-    ) -> ReturnModel[tuple[int, int]] | list[ReturnModel[tuple[int, int]]]:
-        status: list[ReturnModel[tuple[int, int]]] = []
+    ) -> tuple[int, int] | list[tuple[int, int]]:
+        """
+        Stores a record or a list of records in the database.
+
+        Args:
+            records (T | list[T]): The record or records to store.
+
+        Returns:
+            tuple[int, int] | list[tuple[int, int]]: The id of the record and
+                the number of affected rows for a single record or a list of
+                ids and the number of affected rows for a list of records.
+        """
+        status: list[tuple[int, int]] = []
 
         oneRecord = False
         if not isinstance(records, list):
@@ -547,13 +592,10 @@ class DBWrapper:
                 storeData,
                 storeIdKey,
             )
-            if res.result:
-                row.id = res.result[0]  # update the id of the row
+            if res:
+                row.id = res[0]  # update the id of the row
 
             status.append(res)
-
-        if len(status) == 0:
-            return ReturnModel(success=False, message="No data to store", code=10002)
 
         if oneRecord:
             return status[0]
@@ -567,11 +609,19 @@ class DBWrapper:
         tableName: str,
         updateData: dict[str, Any],
         updateId: tuple[str, Any],
-    ) -> ReturnModel[int]:
+    ) -> int:
         """
         Updates a record in the database.
 
-        Schema name and table name are parameters to allow for the updating of records in different tables.
+        Args:
+            emptyDataClass (DBDataModel): The data model to use for the query.
+            schemaName (str | None): The name of the schema to update the record in.
+            tableName (str): The name of the table to update the record in.
+            updateData (dict[str, Any]): The data to update.
+            updateId (tuple[str, Any]): The id of the record to update.
+
+        Returns:
+            int: The number of affected rows.
         """
         (idKey, idValue) = updateId
         keys = updateData.keys()
@@ -593,22 +643,35 @@ class DBWrapper:
         self.logQuery(newCursor, updateQuery, tuple(values))
 
         # Update
-        newCursor.execute(updateQuery, tuple(values))
-        affectedRows = newCursor.rowcount
+        try:
+            newCursor.execute(updateQuery, tuple(values))
+            affectedRows = newCursor.rowcount
 
-        return ReturnModel(success=True, result=affectedRows)
+            return affectedRows
+
+        finally:
+            # Close the cursor
+            await newCursor.close()
 
     @overload
-    async def update(self, records: T) -> ReturnModel[int]:  # type: ignore
+    async def update(self, records: T) -> int:  # type: ignore
         ...
 
     @overload
-    async def update(self, records: list[T]) -> list[ReturnModel[int]]: ...
+    async def update(self, records: list[T]) -> list[int]: ...
 
-    async def update(
-        self, records: T | list[T]
-    ) -> ReturnModel[int] | list[ReturnModel[int]]:
-        status: list[ReturnModel[int]] = []
+    async def update(self, records: T | list[T]) -> int | list[int]:
+        """
+        Updates a record or a list of records in the database.
+
+        Args:
+            records (T | list[T]): The record or records to update.
+
+        Returns:
+            int | list[int]: The number of affected rows for a single record or a list of
+                affected rows for a list of records.
+        """
+        status: list[int] = []
 
         oneRecord = False
         if not isinstance(records, list):
@@ -635,9 +698,6 @@ class DBWrapper:
                 )
             )
 
-        if len(status) == 0:
-            return ReturnModel(success=False, message="No data to update", code=10002)
-
         if oneRecord:
             return status[0]
 
@@ -649,7 +709,7 @@ class DBWrapper:
         updateData: dict[str, Any],
         updateIdKey: str | None = None,
         updateIdValue: Any = None,
-    ) -> ReturnModel[int]:
+    ) -> int:
         updateIdKey = updateIdKey or record.idKey
         updateIdValue = updateIdValue or record.id
         status = await self._update(
@@ -671,11 +731,18 @@ class DBWrapper:
         schemaName: str | None,
         tableName: str,
         deleteId: tuple[str, Any],
-    ) -> ReturnModel[int]:
+    ) -> int:
         """
         Deletes a record from the database.
 
-        Schema name and table name are parameters to allow for the deletion of records from different tables.
+        Args:
+            emptyDataClass (DBDataModel): The data model to use for the query.
+            schemaName (str | None): The name of the schema to delete the record from.
+            tableName (str): The name of the table to delete the record from.
+            deleteId (tuple[str, Any]): The id of the record to delete.
+
+        Returns:
+            int: The number of affected rows.
         """
         (idKey, idValue) = deleteId
 
@@ -690,22 +757,35 @@ class DBWrapper:
         self.logQuery(newCursor, delete_query, (idValue,))
 
         # Delete
-        newCursor.execute(delete_query, (idValue,))
-        affected_rows = newCursor.rowcount
+        try:
+            newCursor.execute(delete_query, (idValue,))
+            affected_rows = newCursor.rowcount
 
-        return ReturnModel(success=True, result=affected_rows)
+            return affected_rows
+
+        finally:
+            # Close the cursor
+            await newCursor.close()
 
     @overload
-    async def delete(self, records: T) -> ReturnModel[int]:  # type: ignore
+    async def delete(self, records: T) -> int:  # type: ignore
         ...
 
     @overload
-    async def delete(self, records: list[T]) -> list[ReturnModel[int]]: ...
+    async def delete(self, records: list[T]) -> list[int]: ...
 
-    async def delete(
-        self, records: T | list[T]
-    ) -> ReturnModel[int] | list[ReturnModel[int]]:
-        status: list[ReturnModel[int]] = []
+    async def delete(self, records: T | list[T]) -> int | list[int]:
+        """
+        Deletes a record or a list of records from the database.
+
+        Args:
+            records (T | list[T]): The record or records to delete.
+
+        Returns:
+            int | list[int]: The number of affected rows for a single record or a list of
+                affected rows for a list of records.
+        """
+        status: list[int] = []
 
         oneRecord = False
         if not isinstance(records, list):
@@ -729,9 +809,6 @@ class DBWrapper:
                     ),
                 )
             )
-
-        if len(status) == 0:
-            return ReturnModel(success=False, message="No data to delete", code=10003)
 
         if oneRecord:
             return status[0]

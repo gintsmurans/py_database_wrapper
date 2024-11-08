@@ -32,8 +32,12 @@ class DatabaseBackend:
         instanceName: str = "database_backend",
     ) -> None:
         """
-        Init stuff. Main concept here is that in init we do not connect to database,
-        so that class instances can be safely made regardless of connection statuss
+        Main concept here is that in init we do not connect to database,
+        so that class instances can be safely made regardless of connection statuss.
+
+        Remember to call open() before using this class.
+        Close will be called automatically when class is destroyed.
+        But sometimes in async environment you should call close() proactively.
         """
 
         self.config = dbConfig
@@ -75,7 +79,7 @@ class DatabaseBackend:
         raise Exception("Not implemented")
 
     # Connection
-    def connect(self) -> None:
+    def open(self) -> None:
         """Connect to database"""
         raise Exception("Not implemented")
 

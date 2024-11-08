@@ -54,8 +54,13 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
         connectionTimeout: int = 5,
         instanceName: str = "async_postgresql",
     ) -> None:
-        """Init stuff. Main concept here is that in init we do not connect to database,
-        so that class instances can be safely made regardless of connection statuss"""
+        """
+        Main concept here is that in init we do not connect to database,
+        so that class instances can be safely made regardless of connection statuss.
+
+        Remember to call open() after creating instance to actually open the pool to the database
+        and also close() to close the pool.
+        """
 
         super().__init__(dbConfig, connectionTimeout, instanceName)
 
@@ -223,7 +228,7 @@ class PostgreSQL(DatabaseBackend):
     connection: PgConnectionType | None
     cursor: PgCursorType | None
 
-    def connect(self):
+    def open(self):
         # Free resources
         if hasattr(self, "connection") and self.connection:
             self.close()

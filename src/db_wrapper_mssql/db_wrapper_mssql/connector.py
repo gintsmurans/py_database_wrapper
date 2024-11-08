@@ -25,7 +25,7 @@ class MSSQL(DatabaseBackend):
     connection: MssqlConnection
     cursor: MssqlCursor
 
-    def connect(self):
+    def open(self):
         self.logger.debug("Connecting to DB")
 
         # Set default port
