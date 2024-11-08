@@ -1,9 +1,10 @@
 import logging
 from typing import Any
 
+from MySQLdb.connections import Connection as MySqlConnection
 from MySQLdb.cursors import DictCursor as MySqlDictCursor
 
-from db_wrap import DBWrapper
+from database_wrapper import DBWrapper
 
 from .connector import MySQL
 
@@ -22,6 +23,7 @@ class DBWrapperMysql(DBWrapper):
     def __init__(
         self,
         db: MySQL,
+        dbConn: MySqlConnection | None = None,
         logger: logging.Logger | None = None,
     ):
         """
@@ -31,7 +33,7 @@ class DBWrapperMysql(DBWrapper):
             db (MySQL): The MySQL object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(db, logger)
+        super().__init__(db, dbConn, logger)
 
     ######################
     ### Helper methods ###

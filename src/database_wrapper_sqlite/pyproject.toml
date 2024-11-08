@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "db_wrap_mssql"
-version = "0.1.23"
-description = "db_wrap for MSSQL database"
+name = "database_wrapper_sqlite"
+version = "0.1.20"
+description = "database_wrapper for PostgreSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -33,19 +33,18 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "mssql", "sqlserver"]
+keywords = ["database", "wrapper", "python", "sqlite"]
 dependencies = [
-    "db_wrap == 0.1.23",
-    "pymssql >= 2.2.10",
+    "database_wrapper == 0.1.25",
 ]
 
 [project.urls]
-Homepage = "https://github.com/gintsmurans/py_db_wrap"
-Documentation = "https://github.com/gintsmurans/py_db_wrap"
-Changes = "https://github.com/gintsmurans/py_db_wrap"
-Code = "https://github.com/gintsmurans/py_db_wrap"
-"Issue Tracker" = "https://github.com/gintsmurans/py_db_wrap/issues"
-Download = "https://pypi.org/project/db_wrap/"
+Homepage = "https://github.com/gintsmurans/py_database_wrapper"
+Documentation = "https://github.com/gintsmurans/py_database_wrapper"
+Changes = "https://github.com/gintsmurans/py_database_wrapper"
+Code = "https://github.com/gintsmurans/py_database_wrapper"
+"Issue Tracker" = "https://github.com/gintsmurans/py_database_wrapper/issues"
+Download = "https://pypi.org/project/database_wrapper/"
 
 [tool.setuptools.package-data]
-db_wrap_mssql = ["py.typed"]
+database_wrapper_sqlite = ["py.typed"]

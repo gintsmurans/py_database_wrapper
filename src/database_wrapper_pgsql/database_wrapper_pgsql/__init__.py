@@ -1,7 +1,7 @@
 """
-db_wrap_pgsql package - PostgreSQL database wrapper
+database_wrapper_pgsql package - PostgreSQL database wrapper
 
-Part of the db_wrap package
+Part of the database_wrapper package
 """
 
 # Copyright 2024 Gints Murans
@@ -12,7 +12,7 @@ from .db_wrapper_pgsql import DBWrapperPostgres
 from .connector import PgConfig, AsyncPostgreSQLWithPooling, PostgreSQL
 
 # Set the logger to a quiet default, can be enabled if needed
-logger = logging.getLogger("db_wrap_pgsql")
+logger = logging.getLogger("database_wrapper_pgsql")
 if logger.level == logging.NOTSET:
     logger.setLevel(logging.WARNING)
 

@@ -1,9 +1,10 @@
 import logging
 from pymssql import (
+    Connection as MssqlConnection,
     Cursor as MssqlCursor,
 )
 
-from db_wrap import DBWrapper, DBDataModel
+from database_wrapper import DBWrapper, DBDataModel
 
 from .connector import MSSQL
 
@@ -22,6 +23,7 @@ class DBWrapperMSSQL(DBWrapper):
     def __init__(
         self,
         db: MSSQL,
+        dbConn: MssqlConnection | None = None,
         logger: logging.Logger | None = None,
     ):
         """
@@ -31,7 +33,7 @@ class DBWrapperMSSQL(DBWrapper):
             db (MSSQL): The MSSQL object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(db, logger)
+        super().__init__(db, dbConn, logger)
 
     ######################
     ### Helper methods ###

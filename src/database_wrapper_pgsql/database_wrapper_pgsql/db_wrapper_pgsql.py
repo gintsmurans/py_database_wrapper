@@ -4,7 +4,7 @@ from typing import Any, AsyncGenerator, overload
 from psycopg import Cursor, AsyncCursor, sql
 from psycopg.rows import class_row
 
-from db_wrap import T, OrderByItem, DBWrapper, DBDataModel
+from database_wrapper import T, OrderByItem, DBWrapper, DBDataModel
 
 from .connector import (
     # Sync
@@ -38,6 +38,7 @@ class DBWrapperPostgres(DBWrapper):
     def __init__(
         self,
         db: PostgreSQL | AsyncPostgreSQLWithPooling,
+        dbConn: PgConnectionType | PgAsyncConnectionType | None = None,
         logger: logging.Logger | None = None,
     ):
         """
@@ -47,7 +48,7 @@ class DBWrapperPostgres(DBWrapper):
             db (MySQL): The MySQL object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(db, logger)
+        super().__init__(db, dbConn, logger)
 
     async def close(self) -> None:
         if hasattr(self, "dbConn") and self.dbConn and hasattr(self, "db") and self.db:
