@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db_wrapper"
-version = "0.1.19"
+version = "0.1.20"
 description = "A different approach to a db wrapper in python"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -45,15 +45,16 @@ Code = "https://github.com/gintsmurans/py_db_wrapper"
 Download = "https://pypi.org/project/db_wrapper/"
 
 [project.optional-dependencies]
-pgsql = ["db_wrapper_pgsql == 0.1.19"]
-mysql = ["db_wrapper_mysql == 0.1.19"]
-mssql = ["db_wrapper_mssql == 0.1.19"]
-sqlite = ["db_wrapper_sqlite == 0.1.19"]
+pgsql = ["db_wrapper_pgsql == 0.1.20"]
+mysql = ["db_wrapper_mysql == 0.1.20"]
+mssql = ["db_wrapper_mssql == 0.1.20"]
+sqlite = ["db_wrapper_sqlite == 0.1.20"]
 all = ["db_wrapper[pgsql,mysql,mssql,sqlite]"]
 dev = [
     # Development
     "ast-comments >= 1.1.2",
     "codespell >= 2.2",
+    "build >= 1.2.1",
     # Formatting & Types
     "black >= 24.1.0",
     "types-setuptools >= 61.0.0",
