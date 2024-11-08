@@ -207,8 +207,8 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        await newCursor.execute(querySql, (idValue,))
-        dbData = await newCursor.fetchone()
+        newCursor.execute(querySql, (idValue,))
+        dbData = newCursor.fetchone()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -249,8 +249,8 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, (idValue,))
 
         # Load data
-        await newCursor.execute(querySql, (idValue,))
-        dbData = await newCursor.fetchone()
+        newCursor.execute(querySql, (idValue,))
+        dbData = newCursor.fetchone()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -316,8 +316,8 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        await newCursor.execute(querySql, _params)
-        dbData = await newCursor.fetchall()
+        newCursor.execute(querySql, _params)
+        dbData = newCursor.fetchall()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -433,8 +433,8 @@ class DBWrapper:
         self.logQuery(newCursor, querySql, _params)
 
         # Load data
-        await newCursor.execute(querySql, _params)
-        dbData = await newCursor.fetchall()
+        newCursor.execute(querySql, _params)
+        dbData = newCursor.fetchall()
         if not dbData:
             return ReturnModel(success=False, message="Data not found", code=10001)
 
@@ -470,9 +470,9 @@ class DBWrapper:
         self.logQuery(newCursor, insertQuery, tuple(values))
 
         # Insert
-        await newCursor.execute(insertQuery, tuple(values))
+        newCursor.execute(insertQuery, tuple(values))
         affectedRows = newCursor.rowcount
-        result = await newCursor.fetchone()
+        result = newCursor.fetchone()
 
         return ReturnModel(
             success=True,
@@ -558,7 +558,7 @@ class DBWrapper:
         self.logQuery(newCursor, updateQuery, tuple(values))
 
         # Update
-        await newCursor.execute(updateQuery, tuple(values))
+        newCursor.execute(updateQuery, tuple(values))
         affectedRows = newCursor.rowcount
 
         return ReturnModel(success=True, result=affectedRows)
@@ -655,7 +655,7 @@ class DBWrapper:
         self.logQuery(newCursor, delete_query, (idValue,))
 
         # Delete
-        await newCursor.execute(delete_query, (idValue,))
+        newCursor.execute(delete_query, (idValue,))
         affected_rows = newCursor.rowcount
 
         return ReturnModel(success=True, result=affected_rows)
