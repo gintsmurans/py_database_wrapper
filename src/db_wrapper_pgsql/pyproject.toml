@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db_wrapper_pgsql"
-version = "0.1.21"
+version = "0.1.22"
 description = "db_wrapper for PostgreSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -15,7 +15,7 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU General Public License v3.0 (GPL-3.0)",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX",
@@ -35,7 +35,7 @@ classifiers = [
 ]
 keywords = ["database", "wrapper", "python", "postgresql", "pgsql"]
 dependencies = [
-    "db_wrapper == 0.1.21",
+    "db_wrapper == 0.1.22",
     "psycopg[binary] >= 3.2.0",
     "psycopg[pool] >= 3.2.0",
 ]
