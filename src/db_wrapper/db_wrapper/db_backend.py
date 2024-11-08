@@ -83,6 +83,10 @@ class DatabaseBackend:
         """Connect to database"""
         raise Exception("Not implemented")
 
+    async def openAsync(self) -> None:
+        """Connect to database"""
+        raise Exception("Not implemented")
+
     def close(self) -> None:
         """Close connections"""
         if self.cursor:
@@ -113,6 +117,31 @@ class DatabaseBackend:
         s.setsockopt(
             socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connectionTimeout * 1000
         )
+
+    async def newConnection(
+        self,
+    ) -> tuple[Any, Any] | None:
+        """
+        Create new connection
+
+        Used for async context manager and async connection creation
+
+        Returns:
+            tuple[Any, Any] | None: Connection and cursor
+        """
+        raise Exception("Not implemented")
+
+    async def returnConnection(self, connection: Any) -> None:
+        """
+        Return connection to pool
+
+        Used for async context manager and async connections return.
+        For example to return connection to a pool.
+
+        Args:
+            connection (Any): Connection to return to pool
+        """
+        raise Exception("Not implemented")
 
     # Data
     def lastInsertId(self) -> int:

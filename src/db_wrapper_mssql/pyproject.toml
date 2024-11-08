@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db_wrapper_mssql"
-version = "0.1.18"
+version = "0.1.19"
 description = "db_wrapper for MSSQL database"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -35,16 +35,16 @@ classifiers = [
 ]
 keywords = ["database", "wrapper", "python"]
 dependencies = [
-    "db_wrapper == 0.1.18",
+    "db_wrapper == 0.1.19",
     "pymssql >= 2.2.10",
 ]
 
 [project.urls]
-Homepage = "https://github.com/gintsmurans/db_wrapper"
-Documentation = "https://github.com/gintsmurans/db_wrapper/src/db_wrapper_mssql"
-Changes = "https://github.com/gintsmurans/db_wrapper"
-Code = "https://github.com/gintsmurans/db_wrapper"
-"Issue Tracker" = "https://github.com/gintsmurans/db_wrapper/issues"
+Homepage = "https://github.com/gintsmurans/py_db_wrapper"
+Documentation = "https://github.com/gintsmurans/py_db_wrapper"
+Changes = "https://github.com/gintsmurans/py_db_wrapper"
+Code = "https://github.com/gintsmurans/py_db_wrapper"
+"Issue Tracker" = "https://github.com/gintsmurans/py_db_wrapper/issues"
 Download = "https://pypi.org/project/db_wrapper/"
 
 [tool.setuptools.package-data]

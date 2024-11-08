@@ -88,7 +88,7 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
             },
         )
 
-    async def open(self) -> None:
+    async def openAsync(self) -> None:
         await self.asyncPool.open(wait=True, timeout=self.connectionTimeout)
 
     async def newConnection(

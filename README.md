@@ -1,4 +1,4 @@
-# db_wrapper
+# py_db_wrapper
 
 A different approach to a db wrapper in python
 
