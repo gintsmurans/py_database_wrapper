@@ -1,3 +1,4 @@
+import logging
 from pymssql import (
     Cursor as MssqlCursor,
 )
@@ -15,11 +16,28 @@ class DBWrapperMSSQL(DBWrapper):
     # Override db instance
     db: MSSQL
 
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
-        return f"""
-            OFFSET {offset} ROWS
-            FETCH NEXT {limit} ROWS ONLY
+    #######################
+    ### Class lifecycle ###
+    #######################
+
+    # Meta methods
+    def __init__(
+        self,
+        db: MSSQL,
+        logger: logging.Logger | None = None,
+    ):
         """
+        Initializes a new instance of the DBWrapper class.
+
+        Args:
+            db (MSSQL): The MSSQL object.
+            logger (logging.Logger, optional): The logger object. Defaults to None.
+        """
+        super().__init__(db, logger)
+
+    ######################
+    ### Helper methods ###
+    ######################
 
     async def createCursor(
         self,
@@ -35,3 +53,13 @@ class DBWrapperMSSQL(DBWrapper):
             PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
         """
         return self.db.connection.cursor(as_dict=True)
+
+    #####################
+    ### Query methods ###
+    #####################
+
+    def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
+        return f"""
+            OFFSET {offset} ROWS
+            FETCH NEXT {limit} ROWS ONLY
+        """

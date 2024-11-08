@@ -1,3 +1,4 @@
+import logging
 from typing import Any, overload
 
 from psycopg import Cursor, AsyncCursor, sql
@@ -33,6 +34,21 @@ class DBWrapperPostgres(DBWrapper):
     #######################
     ### Class lifecycle ###
     #######################
+
+    # Meta methods
+    def __init__(
+        self,
+        db: PostgreSQL | AsyncPostgreSQLWithPooling,
+        logger: logging.Logger | None = None,
+    ):
+        """
+        Initializes a new instance of the DBWrapper class.
+
+        Args:
+            db (MySQL): The MySQL object.
+            logger (logging.Logger, optional): The logger object. Defaults to None.
+        """
+        super().__init__(db, logger)
 
     async def close(self) -> None:
         if hasattr(self, "dbConn") and self.dbConn and hasattr(self, "db") and self.db:

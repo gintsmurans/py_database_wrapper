@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from MySQLdb.cursors import DictCursor as MySqlDictCursor
@@ -12,6 +13,25 @@ class DBWrapperMysql(DBWrapper):
 
     # Override db instance
     db: MySQL
+
+    #######################
+    ### Class lifecycle ###
+    #######################
+
+    # Meta methods
+    def __init__(
+        self,
+        db: MySQL,
+        logger: logging.Logger | None = None,
+    ):
+        """
+        Initializes a new instance of the DBWrapper class.
+
+        Args:
+            db (MySQL): The MySQL object.
+            logger (logging.Logger, optional): The logger object. Defaults to None.
+        """
+        super().__init__(db, logger)
 
     ######################
     ### Helper methods ###
