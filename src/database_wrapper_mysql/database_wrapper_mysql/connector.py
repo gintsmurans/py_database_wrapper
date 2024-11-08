@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from MySQLdb.connections import Connection as MySqlConnection
 from MySQLdb.cursors import DictCursor as MySqlDictCursor
@@ -8,14 +8,27 @@ from database_wrapper import DatabaseBackend
 
 class MyConfig(TypedDict):
     hostname: str
-    port: int
+    port: NotRequired[int]
     username: str
     password: str
     database: str
+    charset: NotRequired[str]
+    collation: NotRequired[str]
+    kwargs: NotRequired[dict[str, Any]]
 
 
 class MySQL(DatabaseBackend):
-    """MySQL database implementation"""
+    """
+    MySQL database backend
+
+    :param config: Configuration for MySQL
+    :type config: MyConfig
+
+    Defaults:
+        port = 0 - See comment below
+        charset = utf8
+        collation = utf8_general_ci
+    """
 
     config: MyConfig
 
@@ -26,6 +39,19 @@ class MySQL(DatabaseBackend):
         # Free resources
         if hasattr(self, "connection") and self.connection:
             self.close()
+
+        # Set defaults
+        if "port" not in self.config or not self.config["port"]:
+            self.config["port"] = 0
+
+        if "charset" not in self.config or not self.config["charset"]:
+            self.config["charset"] = "utf8"
+
+        if "collation" not in self.config or not self.config["collation"]:
+            self.config["collation"] = "utf8_general_ci"
+
+        if "kwargs" not in self.config or not self.config["kwargs"]:
+            self.config["kwargs"] = {}
 
         self.logger.debug("Connecting to DB")
         self.connection = MySqlConnection(
@@ -45,7 +71,10 @@ class MySQL(DatabaseBackend):
             port=self.config.get("port", 0),
             connect_timeout=self.connectionTimeout,
             use_unicode=True,
-            charset="utf8",
+            charset=self.config["charset"],
+            collation=self.config["collation"],
+            cursorclass=MySqlDictCursor,
+            **self.config["kwargs"],
         )
         self.cursor = self.connection.cursor(MySqlDictCursor)
 

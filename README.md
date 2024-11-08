@@ -15,7 +15,24 @@ pip install database_wrapper[sqlite] # TODO: for sqlite
 
 ## Usage
 
-_needs to be updated_
+General usage is the same for all databases. The only difference is the import statement and the class name.
+
+#### Random notes:
+
+* For now all databases are sync, except for PostgreSQL which can use both sync and async.
+    * PgSQL connector for sync
+    * AsyncPgSQLWithPooling for async
+* We are assuming that there is no point of using tuple cursors, so behind the scenes all databases are using dict cursors.
+* Wrapper methods that return multiple results are async generators.
+* Wrapper methods that return a single result are still async methods, but returns without generator.
+
+
+#### Specific database wrappers:
+
+* [database_wrapper_pgsql](src/database_wrapper_pgsql)
+* [database_wrapper_mysql](src/database_wrapper_mysql)
+* [database_wrapper_mssql](src/database_wrapper_mssql)
+* [database_wrapper_sqlite](src/database_wrapper_sqlite)
 
 
 ## Development
@@ -37,3 +54,15 @@ pip install -e ./src/database_wrapper_sqlite --config-settings editable_mode=str
 ```
 
 We are adding `--config-settings editable_mode=strict` for vscode to be able to use the packages in the development environment. See [#3473](https://github.com/microsoft/pylance-release/issues/3473)
+
+
+## TODO
+
+* Add sync wrappers that themselves are sync
+* Add sqlite support
+    * Would be nice to have also async support for sqlite
+* Add more tests
+* Add more usage examples
+* Create a better documentation
+* Add async support for MySQL and MSSQL - need to look into libraries that support this
+* Do we need more database support? If so, which ones?
