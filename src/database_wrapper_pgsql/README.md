@@ -13,9 +13,9 @@ pip install database_wrapper[pgsql]
 ## Usage
 
 ```python
-from database_wrapper_pgsql import AsyncPgSQLWithPooling, DBWrapperPgSQL
+from database_wrapper_pgsql import PgSQLWithPoolingAsync, DBWrapperPgSQLAsync
 
-db = MySQL({
+db = PgSQLWithPoolingAsync({
     "hostname": "localhost",
     "port": 3306,
     "username": "root",
@@ -23,7 +23,7 @@ db = MySQL({
     "database": "my_database"
 })
 db.open()
-dbWrapper = DBWrapperMySQL(db=db)
+dbWrapper = DBWrapperPgSQLAsync(db=db)
 
 # Simple query
 aModel = MyModel()
@@ -40,7 +40,7 @@ else:
 # Raw query
 res = await dbWrapper.getAll(
     aModel,
-    """
+    customQuery="""
         SELECT t1.*, t2.name AS other_name
         FROM my_table AS t1
         LEFT JOIN other_table AS t2 ON t1.other_id = t2.id

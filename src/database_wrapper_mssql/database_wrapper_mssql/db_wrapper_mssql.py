@@ -39,7 +39,7 @@ class DBWrapperMSSQL(DBWrapper):
     ### Helper methods ###
     ######################
 
-    async def createCursor(
+    def createCursor(
         self,
         emptyDataClass: DBDataModel | None = None,
     ) -> MssqlCursor:

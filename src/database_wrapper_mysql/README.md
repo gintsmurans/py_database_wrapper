@@ -40,7 +40,7 @@ else:
 # Raw query
 res = await dbWrapper.getAll(
     aModel,
-    """
+    customQuery="""
         SELECT t1.*, t2.name AS other_name
         FROM my_table AS t1
         LEFT JOIN other_table AS t2 ON t1.other_id = t2.id
