@@ -1,6 +1,6 @@
 import asyncio
 from contextvars import ContextVar
-from typing import Any, TypedDict, cast
+from typing import Any, NotRequired, TypedDict, cast
 
 from psycopg import (
     # Async
@@ -30,16 +30,103 @@ PgAsyncCursorType = PgAsyncCursor[PgDictRow]
 
 class PgConfig(TypedDict):
     hostname: str
-    port: int
+    port: NotRequired[int]
     username: str
     password: str
     database: str
-    ssl: str
+    ssl: NotRequired[str]
+    kwargs: NotRequired[dict[str, Any]]
+
+    # Connection Pooling
     maxconnections: int
+    pool_kwargs: NotRequired[dict[str, Any]]
 
 
-class AsyncPostgreSQLWithPooling(DatabaseBackend):
-    """PostgreSQL database implementation"""
+class PgSQL(DatabaseBackend):
+    """
+    PostgreSQL database implementation
+
+    :param config: Configuration for PostgreSQL
+    :type config: PgConfig
+
+    Defaults:
+        port = 5432
+        ssl = prefer
+
+    """
+
+    config: PgConfig
+
+    connection: PgConnectionType | None
+    cursor: PgCursorType | None
+
+    def open(self):
+        # Free resources
+        if hasattr(self, "connection") and self.connection:
+            self.close()
+
+        # Set defaults
+        if "port" not in self.config or not self.config["port"]:
+            self.config["port"] = 5432
+
+        if "ssl" not in self.config or not self.config["ssl"]:
+            self.config["ssl"] = "prefer"
+
+        if "kwargs" not in self.config or not self.config["kwargs"]:
+            self.config["kwargs"] = {}
+
+        self.logger.debug("Connecting to DB")
+        self.connection = cast(
+            PgConnectionType,
+            PgConnect(
+                host=self.config["hostname"],
+                port=self.config["port"],
+                sslmode=self.config["ssl"],
+                user=self.config["username"],
+                password=self.config["password"],
+                dbname=self.config["database"],
+                connect_timeout=self.connectionTimeout,
+                row_factory=PgDictRowFactory,  # type: ignore
+                **self.config["kwargs"],
+            ),
+        )
+        self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
+
+        # Lets do some socket magic
+        self.fixSocketTimeouts(self.connection.fileno())
+
+    def affectedRows(self) -> int:
+        assert self.cursor, "Cursor is not initialized"
+
+        return self.cursor.rowcount
+
+    def commit(self) -> None:
+        """Commit DB queries"""
+        assert self.connection, "Connection is not initialized"
+
+        self.logger.debug(f"Commit DB queries")
+        self.connection.commit()
+
+    def rollback(self) -> None:
+        """Rollback DB queries"""
+        assert self.connection, "Connection is not initialized"
+
+        self.logger.debug(f"Rollback DB queries")
+        self.connection.rollback()
+
+
+class AsyncPgSQLWithPooling(DatabaseBackend):
+    """
+    PostgreSQL database implementation with async and connection pooling
+
+    :param config: Configuration for PostgreSQL
+    :type config: PgConfig
+
+    Defaults:
+        port = 5432
+        ssl = prefer
+        maxconnections = 5
+    """
 
     config: PgConfig
 
@@ -64,19 +151,36 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
 
         super().__init__(dbConfig, connectionTimeout, instanceName)
 
-        if not "port" in self.config:
+        # Set defaults
+        if not "port" in self.config or not self.config["port"]:
             self.config["port"] = 5432
+
+        if not "ssl" in self.config or not self.config["ssl"]:
+            self.config["ssl"] = "prefer"
+
+        if not "kwargs" in self.config or not self.config["kwargs"]:
+            self.config["kwargs"] = {}
+
+        if not "auto_commit" in self.config["kwargs"]:
+            self.config["kwargs"]["auto_commit"] = True
+
+        # Connection pooling defaults
+        if not "maxconnections" in self.config or not self.config["maxconnections"]:
+            self.config["maxconnections"] = 5
+
+        if not "pool_kwargs" in self.config or not self.config["pool_kwargs"]:
+            self.config["pool_kwargs"] = {}
 
         connStr = (
             f"postgresql://{self.config['username']}:{self.config['password']}@{self.config['hostname']}:{self.config['port']}"
             f"/{self.config['database']}?connect_timeout={self.connectionTimeout}&application_name={self.name}"
-            f"&sslmode={self.config.get('ssl', 'prefer')}"
+            f"&sslmode={self.config['ssl']}"
         )
         self.asyncPool = AsyncConnectionPool(
             connStr,
             open=False,
             min_size=2,
-            max_size=self.config.get("maxconnections", 5),
+            max_size=self.config["maxconnections"],
             max_lifetime=20 * 60,
             max_idle=400,
             timeout=self.connectionTimeout,
@@ -86,6 +190,7 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
             kwargs={
                 "autocommit": True,
             },
+            **self.config["pool_kwargs"],
         )
 
     async def openAsync(self) -> None:
@@ -118,9 +223,7 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
                 # Lets do some socket magic
                 self.fixSocketTimeouts(connection.fileno())
 
-                async with timer.aenter(
-                    "sql_conn.PostgreSQLWithPooling.__aenter__.ping"
-                ):
+                async with timer.aenter("AsyncPgSQLWithPooling.__aenter__.ping"):
                     async with connection.transaction():
                         await cursor.execute("SELECT 1")
                         await cursor.fetchone()
@@ -218,55 +321,3 @@ class AsyncPostgreSQLWithPooling(DatabaseBackend):
                 ...  # Ignore, as it is expected
             except Exception as e:
                 self.logger.debug(f"Error while closing async pool: {e}", exc_info=True)
-
-
-class PostgreSQL(DatabaseBackend):
-    """PostgreSQL database implementation"""
-
-    config: PgConfig
-
-    connection: PgConnectionType | None
-    cursor: PgCursorType | None
-
-    def open(self):
-        # Free resources
-        if hasattr(self, "connection") and self.connection:
-            self.close()
-
-        self.logger.debug("Connecting to DB")
-        self.connection = cast(
-            PgConnectionType,
-            PgConnect(
-                host=self.config["hostname"],
-                port=self.config["port"],
-                sslmode=self.config.get("ssl", "prefer"),
-                user=self.config["username"],
-                password=self.config["password"],
-                dbname=self.config["database"],
-                connect_timeout=self.connectionTimeout,
-                row_factory=PgDictRowFactory,  # type: ignore
-            ),
-        )
-        self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
-
-        # Lets do some socket magic
-        self.fixSocketTimeouts(self.connection.fileno())
-
-    def affectedRows(self) -> int:
-        assert self.cursor, "Cursor is not initialized"
-
-        return self.cursor.rowcount
-
-    def commit(self) -> None:
-        """Commit DB queries"""
-        assert self.connection, "Connection is not initialized"
-
-        self.logger.debug(f"Commit DB queries")
-        self.connection.commit()
-
-    def rollback(self) -> None:
-        """Rollback DB queries"""
-        assert self.connection, "Connection is not initialized"
-
-        self.logger.debug(f"Rollback DB queries")
-        self.connection.rollback()

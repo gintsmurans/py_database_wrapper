@@ -35,7 +35,7 @@ classifiers = [
 ]
 keywords = ["database", "wrapper", "python", "sqlite"]
 dependencies = [
-    "database_wrapper == 0.1.27",
+    "database_wrapper == 0.1.28",
 ]
 
 [project.urls]

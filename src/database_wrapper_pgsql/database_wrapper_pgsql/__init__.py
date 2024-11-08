@@ -8,8 +8,8 @@ Part of the database_wrapper package
 
 import logging
 
-from .db_wrapper_pgsql import DBWrapperPostgres
-from .connector import PgConfig, AsyncPostgreSQLWithPooling, PostgreSQL
+from .db_wrapper_pgsql import DBWrapperPgSQL
+from .connector import PgConfig, AsyncPgSQLWithPooling, PgSQL
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_pgsql")
@@ -18,8 +18,8 @@ if logger.level == logging.NOTSET:
 
 
 __all__ = [
-    "DBWrapperPostgres",
+    "DBWrapperPgSQL",
     "PgConfig",
-    "AsyncPostgreSQLWithPooling",
-    "PostgreSQL",
+    "AsyncPgSQLWithPooling",
+    "PgSQL",
 ]

@@ -10,15 +10,15 @@ from .connector import (
     # Sync
     PgConnectionType,
     PgCursorType,
-    PostgreSQL,
+    PgSQL,
     # Async
     PgAsyncConnectionType,
     PgAsyncCursorType,
-    AsyncPostgreSQLWithPooling,
+    AsyncPgSQLWithPooling,
 )
 
 
-class DBWrapperPostgres(DBWrapper):
+class DBWrapperPgSQL(DBWrapper):
     """
     Database wrapper for postgres
 
@@ -27,7 +27,7 @@ class DBWrapperPostgres(DBWrapper):
     """
 
     # Override db instance
-    db: PostgreSQL | AsyncPostgreSQLWithPooling
+    db: PgSQL | AsyncPgSQLWithPooling
     dbConn: PgConnectionType | PgAsyncConnectionType | None = None
 
     #######################
@@ -37,7 +37,7 @@ class DBWrapperPostgres(DBWrapper):
     # Meta methods
     def __init__(
         self,
-        db: PostgreSQL | AsyncPostgreSQLWithPooling,
+        db: PgSQL | AsyncPgSQLWithPooling,
         dbConn: PgConnectionType | PgAsyncConnectionType | None = None,
         logger: logging.Logger | None = None,
     ):
@@ -52,7 +52,7 @@ class DBWrapperPostgres(DBWrapper):
 
     async def close(self) -> None:
         if hasattr(self, "dbConn") and self.dbConn and hasattr(self, "db") and self.db:
-            if isinstance(self.db, AsyncPostgreSQLWithPooling):
+            if isinstance(self.db, AsyncPgSQLWithPooling):
                 await self.db.returnConnection(self.dbConn)  # type: ignore
             self.dbConn = None
 
@@ -102,10 +102,10 @@ class DBWrapperPostgres(DBWrapper):
 
         # First we need connection
         if self.dbConn is None:
-            if isinstance(self.db, PostgreSQL):
+            if isinstance(self.db, PgSQL):
                 self.dbConn = self.db.connection
 
-            if isinstance(self.db, AsyncPostgreSQLWithPooling):
+            if isinstance(self.db, AsyncPgSQLWithPooling):
                 status = await self.db.newConnection()
                 if not status:
                     raise Exception("Failed to create new connection")

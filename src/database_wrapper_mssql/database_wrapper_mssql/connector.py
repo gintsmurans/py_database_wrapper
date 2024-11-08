@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from pymssql import (
     connect as MssqlConnect,
@@ -11,14 +11,25 @@ from database_wrapper import DatabaseBackend
 
 class MsConfig(TypedDict):
     hostname: str
-    port: str | None
+    port: NotRequired[str]
     username: str
     password: str
     database: str
+    tds_version: NotRequired[str]
+    kwargs: NotRequired[dict[str, Any]]
 
 
 class MSSQL(DatabaseBackend):
-    """MSSQL database backend"""
+    """
+    MSSQL database backend
+
+    :param config: Configuration for MSSQL
+    :type config: MsConfig
+
+    Defaults:
+        port = 1433
+        tds_version = 7.0
+    """
 
     config: MsConfig
 
@@ -28,9 +39,15 @@ class MSSQL(DatabaseBackend):
     def open(self):
         self.logger.debug("Connecting to DB")
 
-        # Set default port
+        # Set defaults
         if "port" not in self.config or not self.config["port"]:
             self.config["port"] = "1433"
+
+        if "tds_version" not in self.config or not self.config["tds_version"]:
+            self.config["tds_version"] = "7.0"
+
+        if "kwargs" not in self.config or not self.config["kwargs"]:
+            self.config["kwargs"] = {}
 
         self.connection = MssqlConnect(
             server=self.config["hostname"],
@@ -39,8 +56,10 @@ class MSSQL(DatabaseBackend):
             database=self.config["database"],
             port=self.config["port"],
             tds_version="7.0",
+            as_dict=True,
             timeout=self.connectionTimeout,
             login_timeout=self.connectionTimeout,
+            **self.config["kwargs"],
         )
         self.cursor = self.connection.cursor(as_dict=True)
 
