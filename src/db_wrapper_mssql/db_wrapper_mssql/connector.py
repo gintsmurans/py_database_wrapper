@@ -28,7 +28,8 @@ class MSSQL(DatabaseBackend):
     def connect(self):
         self.logger.debug("Connecting to DB")
 
-        if not self.config["port"]:
+        # Set default port
+        if "port" not in self.config or not self.config["port"]:
             self.config["port"] = "1433"
 
         self.connection = MssqlConnect(
