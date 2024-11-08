@@ -24,7 +24,10 @@ class DBWrapperPgSQLAsync(DBWrapperAsync):
 
     # Override db instance
     db: PgSQLWithPoolingAsync
+    """ Async PostgreSQL database connector """
+
     dbConn: PgAsyncConnectionType | None = None
+    """ Async PostgreSQL connection object """
 
     #######################
     ### Class lifecycle ###
@@ -41,7 +44,8 @@ class DBWrapperPgSQLAsync(DBWrapperAsync):
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The MySQL object.
+            db (MySQL): The PostgreSQL database connector.
+            dbConn (MySqlConnection, optional): The PostgreSQL connection object. Defaults to None.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)

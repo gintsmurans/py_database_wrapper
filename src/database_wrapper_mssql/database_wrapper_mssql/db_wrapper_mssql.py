@@ -14,6 +14,10 @@ class DBWrapperMSSQL(DBWrapper):
 
     # Override db instance
     db: MSSQL
+    """ MSSQL database connector """
+
+    dbConn: MssqlConnection | None = None
+    """ MsSQL connection object """
 
     #######################
     ### Class lifecycle ###
@@ -30,7 +34,8 @@ class DBWrapperMSSQL(DBWrapper):
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MSSQL): The MSSQL object.
+            db (MSSQL): The MSSQL connector.
+            dbConn (MssqlConnection, optional): The MSSQL connection object. Defaults to None.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)
