@@ -2,28 +2,28 @@
 
 _Part of the `database_wrapper` package._
 
-This python package is a database wrapper for [PostgreSQL](https://www.postgresql.org/) (also called pgsql) database.
+This python package is a database wrapper for [sqlite](https://www.sqlite.org/) database.
+
+## !!! IMPORTANT !!!
+
+This package is not yet implemented. The README is a placeholder for future implementation.
 
 ## Installation
 
 ```bash
-pip install database_wrapper[pgsql]
+pip install database_wrapper[sqlite]
 ```
 
 ## Usage
 
 ```python
-from database_wrapper_pgsql import AsyncPgSQLWithPooling, DBWrapperPgSQL
+from database_wrapper_sqlite import Sqlite, DBWrapperSqlite
 
-db = MySQL({
-    "hostname": "localhost",
-    "port": 3306,
-    "username": "root",
-    "password": "your_password",
-    "database": "my_database"
+db = Sqlite({
+    "database": "my_database.db",
 })
 db.open()
-dbWrapper = DBWrapperMySQL(db=db)
+dbWrapper = DBWrapperSqlite(db=db)
 
 # Simple query
 aModel = MyModel()

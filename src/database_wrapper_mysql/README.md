@@ -2,7 +2,7 @@
 
 _Part of the `database_wrapper` package._
 
-This python package is a database wrapper for [MySQL](https://www.mysql.com/) and [MariaDB](https://mariadb.org/) databases.
+This python package is a database wrapper for [MySQL](https://www.mysql.com/) and [MariaDB](https://mariadb.org/) database.
 
 ## Installation
 
