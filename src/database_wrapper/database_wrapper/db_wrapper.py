@@ -48,6 +48,7 @@ class DBWrapper:
     def __init__(
         self,
         db: DatabaseBackend,
+        dbConn: Any = None,
         logger: logging.Logger | None = None,
     ):
         """
@@ -58,7 +59,7 @@ class DBWrapper:
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         self.db = db
-        self.dbConn = None
+        self.dbConn = dbConn
 
         if logger is None:
             loggerName = f"{__name__}.{self.__class__.__name__}"

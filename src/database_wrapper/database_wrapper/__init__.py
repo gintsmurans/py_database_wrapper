@@ -1,5 +1,5 @@
 """
-db_wrap package - Base for database wrappers
+database_wrapper package - Base for database wrappers
 """
 
 # Copyright 2024 Gints Murans
@@ -12,7 +12,7 @@ from .db_data_model import DBDataModel, DBDefaultsDataModel
 from .db_wrapper import DBWrapper, T, OrderByItem
 
 # Set the logger to a quiet default, can be enabled if needed
-logger = logging.getLogger("db_wrap")
+logger = logging.getLogger("database_wrapper")
 if logger.level == logging.NOTSET:
     logger.setLevel(logging.WARNING)
 
