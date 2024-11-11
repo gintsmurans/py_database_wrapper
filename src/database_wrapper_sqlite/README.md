@@ -1,4 +1,4 @@
-# database_wrapper
+# database_wrapper_sqlite
 
 _Part of the `database_wrapper` package._
 

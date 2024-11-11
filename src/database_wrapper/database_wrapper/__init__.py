@@ -9,7 +9,7 @@ import logging
 from . import utils
 from .db_backend import DatabaseBackend
 from .db_data_model import DBDataModel, DBDefaultsDataModel
-from .db_wrapper_interface import DBWrapperInterface, OrderByItem, NoParam, T
+from .common import OrderByItem, DataModelType, NoParam
 from .db_wrapper import DBWrapper
 from .db_wrapper_async import DBWrapperAsync
 
@@ -27,12 +27,11 @@ __all__ = [
     "DBDataModel",
     "DBDefaultsDataModel",
     # Wrappers
-    "DBWrapperInterface",
     "DBWrapper",
     "DBWrapperAsync",
     # Helpers
+    "DataModelType",
     "OrderByItem",
     "NoParam",
-    "T",
     "utils",
 ]

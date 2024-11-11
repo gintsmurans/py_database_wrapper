@@ -1,102 +1,30 @@
-import logging
+from typing import Generator, Any, overload
 
-from typing import Generator, cast, Any, overload
-
-from .db_backend import DatabaseBackend
 from .db_data_model import DBDataModel
-from .db_wrapper_interface import DBWrapperInterface, OrderByItem, NoParam, T
+from .db_wrapper_mixin import DBWrapperMixin
+from .common import OrderByItem, DataModelType
 
 
-class DBWrapper(DBWrapperInterface):
+class DBWrapper(DBWrapperMixin):
     """
     Database wrapper class.
     """
-
-    ###########################
-    ### Instance properties ###
-    ###########################
-
-    # Db backend
-    db: Any
-    """Database backend object"""
-
-    dbConn: Any
-    """
-    Database connection object.
-
-    Its not always set. Currently is used as a placeholder for async connections.
-    For sync connections db - DatabaseBackend.connection is used.
-    """
-
-    # logger
-    logger: Any
-    """Logger object"""
 
     #######################
     ### Class lifecycle ###
     #######################
 
-    # Meta methods
-    def __init__(
-        self,
-        db: DatabaseBackend,
-        dbConn: Any = None,
-        logger: logging.Logger | None = None,
-    ):
-        """
-        Initializes a new instance of the DBWrapper class.
-
-        Args:
-            db (DatabaseBackend): The DatabaseBackend object.
-            logger (logging.Logger, optional): The logger object. Defaults to None.
-        """
-        self.db = db
-        self.dbConn = dbConn
-
-        if logger is None:
-            loggerName = f"{__name__}.{self.__class__.__name__}"
-            self.logger = logging.getLogger(loggerName)
-        else:
-            self.logger = logger
-
-    def __del__(self):
-        """
-        Deallocates the instance of the DBWrapper class.
-        """
-        self.logger.debug("Dealloc")
-        self.close()
-
     def close(self) -> None:
         """
-        Close resources. Usually you should not close connections here, just remove references.
+        Close resources. Usually you should not close connections here,
+        just remove references.
         """
 
-        # Force remove instances so that there are no circular references
-        if hasattr(self, "db") and self.db:
-            del self.db
-
-        if hasattr(self, "dbConn") and self.dbConn:
-            del self.dbConn
+        raise NotImplementedError("Method not implemented")
 
     ######################
     ### Helper methods ###
     ######################
-
-    def makeIdentifier(self, schema: str | None, name: str) -> Any:
-        """
-        Creates a SQL identifier object from the given name.
-
-        Args:
-            schema (str | None): The schema to create the identifier from.
-            name (str): The name to create the identifier from.
-
-        Returns:
-            str: The created SQL identifier object.
-        """
-        if schema:
-            return f"{schema}.{name}"
-
-        return name
 
     @overload
     def createCursor(self) -> Any: ...
@@ -109,7 +37,7 @@ class DBWrapper(DBWrapperInterface):
         Creates a new cursor object.
 
         Args:
-            emptyDataClass (T | None, optional): The data model to use for the cursor. Defaults to None.
+            emptyDataClass (DataModelType | None, optional): The data model to use for the cursor. Defaults to None.
 
         Returns:
             The created cursor object.
@@ -117,88 +45,27 @@ class DBWrapper(DBWrapperInterface):
         assert self.db is not None, "Database connection is not set"
         return self.db.cursor
 
-    def logQuery(self, cursor: Any, query: Any, params: tuple[Any, ...]) -> None:
-        """
-        Logs the given query and parameters.
-
-        Args:
-            cursor (Any): The database cursor.
-            query (Any): The query to log.
-            params (tuple[Any, ...]): The parameters to log.
-        """
-        self.logger.debug(f"Query: {query} with params: {params}")
-
-    def turnDataIntoModel(
-        self,
-        emptyDataClass: T,
-        dbData: dict[str, Any],
-    ) -> T:
-        """
-        Turns the given data into a data model.
-        By default we are pretty sure that there is no factory in the cursor,
-        So we need to create a new instance of the data model and fill it with data
-
-        Args:
-            emptyDataClass (T): The data model to use.
-            dbData (dict[str, Any]): The data to turn into a model.
-
-        Returns:
-            T: The data model filled with data.
-        """
-
-        result = emptyDataClass.__class__()
-        result.fillDataFromDict(dbData)
-        result.raw_data = dbData
-        return result
-
     #####################
     ### Query methods ###
     #####################
 
-    def filterQuery(self, schemaName: str | None, tableName: str) -> Any:
-        """
-        Creates a SQL query to filter data from the given table.
-
-        Args:
-            schemaName (str | None): The name of the schema to filter data from.
-            tableName (str): The name of the table to filter data from.
-
-        Returns:
-            Any: The created SQL query object.
-        """
-        fullTableName = self.makeIdentifier(schemaName, tableName)
-        return f"SELECT * FROM {fullTableName}"
-
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> Any:
-        """
-        Creates a SQL query to limit the number of results returned.
-
-        Args:
-            offset (int, optional): The number of results to skip. Defaults to 0.
-            limit (int, optional): The maximum number of results to return. Defaults to 100.
-
-        Returns:
-            Any: The created SQL query object.
-        """
-        return f"LIMIT {limit} OFFSET {offset}"
-
     # Action methods
     def getOne(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         customQuery: Any = None,
-    ) -> T | None:
+    ) -> DataModelType | None:
         """
-        Retrieves a single record from the database.
+        Retrieves a single record from the database by class defined id.
 
         Args:
-            emptyDataClass (T): The data model to use for the query.
+            emptyDataClass (DataModelType): The data model to use for the query.
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            T | None: The result of the query.
+            DataModelType | None: The result of the query.
         """
-        # Query
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
@@ -211,18 +78,21 @@ class DBWrapper(DBWrapperInterface):
         if not idValue:
             raise ValueError("Id value is not set")
 
+        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        _params = (idValue,)
+
         # Create a SQL object for the query and format it
-        querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        querySql = self._formatFilterQuery(_query, _filter, None, None)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
 
         # Log
-        self.logQuery(newCursor, querySql, (idValue,))
+        self.logQuery(newCursor, querySql, _params)
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
+            newCursor.execute(querySql, _params)
 
             # Fetch one row
             row = newCursor.fetchone()
@@ -237,42 +107,44 @@ class DBWrapper(DBWrapperInterface):
 
     def getByKey(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         idKey: str,
         idValue: Any,
         customQuery: Any = None,
-    ) -> T | None:
+    ) -> DataModelType | None:
         """
         Retrieves a single record from the database using the given key.
 
         Args:
-            emptyDataClass (T): The data model to use for the query.
+            emptyDataClass (DataModelType): The data model to use for the query.
             idKey (str): The name of the key to use for the query.
             idValue (Any): The value of the key to use for the query.
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            T | None: The result of the query.
+            DataModelType | None: The result of the query.
         """
-        # Query
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
+        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        _params = (idValue,)
 
         # Create a SQL object for the query and format it
-        querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        querySql = self._formatFilterQuery(_query, _filter, None, None)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
 
         # Log
-        self.logQuery(newCursor, querySql, (idValue,))
+        self.logQuery(newCursor, querySql, _params)
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
+            newCursor.execute(querySql, _params)
 
             # Fetch one row
             row = newCursor.fetchone()
@@ -288,19 +160,19 @@ class DBWrapper(DBWrapperInterface):
 
     def getAll(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         idKey: str | None = None,
         idValue: Any | None = None,
         orderBy: OrderByItem | None = None,
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> Generator[T, None, None]:
+    ) -> Generator[DataModelType, None, None]:
         """
         Retrieves all records from the database.
 
         Args:
-            emptyDataClass (T): The data model to use for the query.
+            emptyDataClass (DataModelType): The data model to use for the query.
             idKey (str | None, optional): The name of the key to use for filtering. Defaults to None.
             idValue (Any | None, optional): The value of the key to use for filtering. Defaults to None.
             orderBy (OrderByItem | None, optional): The order by item to use for sorting. Defaults to None.
@@ -309,36 +181,28 @@ class DBWrapper(DBWrapperInterface):
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            Generator[T, None, None]: The result of the query.
+            Generator[DataModelType, None, None]: The result of the query.
         """
-        # Query
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
         _params: tuple[Any, ...] = ()
-
-        # Filter
+        _filter = ""
         if idKey and idValue:
-            _query = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+            _filter = (
+                f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+            )
             _params = (idValue,)
 
-        # Limits
-        _order = ""
-        _limit = ""
-
-        if orderBy:
-            orderList = [
-                f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-                for item in orderBy
-            ]
-            _order = "ORDER BY %s" % ", ".join(orderList)
-        if offset or limit:
-            _limit = f"{self.limitQuery(offset, limit)}"
+        # Order and limit
+        _order = self.orderQuery(orderBy)
+        _limit = self.limitQuery(offset, limit)
 
         # Create a SQL object for the query and format it
-        querySql = f"{_query} {_order} {_limit}"
+        querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -356,114 +220,36 @@ class DBWrapper(DBWrapperInterface):
                 row = newCursor.fetchone()
                 if row is None:
                     break
+
                 yield self.turnDataIntoModel(emptyDataClass, row)
 
         finally:
             # Ensure the cursor is closed after the generator is exhausted or an error occurs
             newCursor.close()
 
-    def formatFilter(self, key: str, filter: Any) -> tuple[Any, ...]:
-        if type(filter) is dict:
-            if "$contains" in filter:
-                return (
-                    f"{key} LIKE %s",
-                    f"%{filter['$contains']}%",
-                )
-            elif "$starts_with" in filter:
-                return (f"{key} LIKE %s", f"{filter['$starts_with']}%")
-            elif "$ends_with" in filter:
-                return (f"{key} LIKE %s", f"%{filter['$ends_with']}")
-            elif "$min" in filter and "$max" not in filter:
-                return (f"{key} >= %s", filter["$min"])  # type: ignore
-            elif "$max" in filter and "$min" not in filter:
-                return (f"{key} <= %s", filter["$max"])  # type: ignore
-            elif "$min" in filter and "$max" in filter:
-                return (f"{key} BETWEEN %s AND %s", filter["$min"], filter["$max"])  # type: ignore
-            elif "$in" in filter:
-                inFilter1: list[Any] = cast(list[Any], filter["$in"])
-                return (f"{key} IN (%s)" % ",".join(["%s"] * len(inFilter1)),) + tuple(
-                    inFilter1
-                )
-            elif "$not_in" in filter:
-                inFilter2: list[Any] = cast(list[Any], filter["$in"])
-                return (
-                    f"{key} NOT IN (%s)" % ",".join(["%s"] * len(inFilter2)),
-                ) + tuple(inFilter2)
-            elif "$not" in filter:
-                return (f"{key} != %s", filter["$not"])  # type: ignore
-
-            elif "$gt" in filter:
-                return (f"{key} > %s", filter["$gt"])  # type: ignore
-            elif "$gte" in filter:
-                return (f"{key} >= %s", filter["$gte"])  # type: ignore
-            elif "$lt" in filter:
-                return (f"{key} < %s", filter["$lt"])  # type: ignore
-            elif "$lte" in filter:
-                return (f"{key} <= %s", filter["$lte"])  # type: ignore
-            elif "$is_null" in filter:
-                return (f"{key} IS NULL",)  # type: ignore
-            elif "$is_not_null" in filter:
-                return (f"{key} IS NOT NULL",)  # type: ignore
-
-            raise NotImplementedError("Filter type not supported")
-        elif type(filter) is str or type(filter) is int or type(filter) is float:
-            return (f"{key} = %s", filter)
-        elif type(filter) is bool:
-            return (
-                f"{key} = TRUE" if filter else f"{key} = FALSE",
-                NoParam,
-            )
-        else:
-            raise NotImplementedError(
-                f"Filter type not supported: {key} = {type(filter)}"
-            )
-
-    def createFilter(
-        self, filter: dict[str, Any] | None
-    ) -> tuple[str, tuple[Any, ...]]:
-        if filter is None or len(filter) == 0:
-            return ("", tuple())
-
-        raw = [self.formatFilter(key, filter[key]) for key in filter]
-        _query = " AND ".join([tup[0] for tup in raw])
-        _query = f"WHERE {_query}"
-        _params = tuple([val for tup in raw for val in tup[1:] if val is not NoParam])
-
-        return (_query, _params)
-
     def getFiltered(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         filter: dict[str, Any],
         orderBy: OrderByItem | None = None,
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> Generator[T, None, None]:
-        # Filter
+    ) -> Generator[DataModelType, None, None]:
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
         (_filter, _params) = self.createFilter(filter)
-        _filter = _filter
 
-        # Limits
-        _order = ""
-        _limit = ""
+        # Order and limit
+        _order = self.orderQuery(orderBy)
+        _limit = self.limitQuery(offset, limit)
 
-        if orderBy:
-            orderList = [
-                f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-                for item in orderBy
-            ]
-            _order = "ORDER BY %s" % ", ".join(orderList)
-        if offset or limit:
-            _limit = f"{self.limitQuery(offset, limit)}"
-
-        # Create a SQL object for the query and format it
-        querySql = f"{_query} {_filter} {_order} {_limit}"
+        # Create SQL query
+        querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -481,6 +267,7 @@ class DBWrapper(DBWrapperInterface):
                 row = newCursor.fetchone()
                 if row is None:
                     break
+
                 yield self.turnDataIntoModel(emptyDataClass, row)
 
         finally:
@@ -508,20 +295,10 @@ class DBWrapper(DBWrapperInterface):
         Returns:
             tuple[int, int]: The id of the record and the number of affected rows.
         """
-        keys = storeData.keys()
         values = list(storeData.values())
-
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
         returnKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-
-        columns = ", ".join(keys)
-        valuesPlaceholder = ", ".join(["%s"] * len(values))
-        insertQuery = (
-            f"INSERT INTO {tableIdentifier} "
-            f"({columns}) "
-            f"VALUES ({valuesPlaceholder}) "
-            f"RETURNING {returnKey}"
-        )
+        insertQuery = self._formatInsertQuery(tableIdentifier, storeData, returnKey)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -545,18 +322,21 @@ class DBWrapper(DBWrapperInterface):
             newCursor.close()
 
     @overload
-    def store(self, records: T) -> tuple[int, int]:  # type: ignore
+    def store(self, records: DataModelType) -> tuple[int, int]:  # type: ignore
         ...
 
     @overload
-    def store(self, records: list[T]) -> list[tuple[int, int]]: ...
+    def store(self, records: list[DataModelType]) -> list[tuple[int, int]]: ...
 
-    def store(self, records: T | list[T]) -> tuple[int, int] | list[tuple[int, int]]:
+    def store(
+        self,
+        records: DataModelType | list[DataModelType],
+    ) -> tuple[int, int] | list[tuple[int, int]]:
         """
         Stores a record or a list of records in the database.
 
         Args:
-            records (T | list[T]): The record or records to store.
+            records (DataModelType | list[DataModelType]): The record or records to store.
 
         Returns:
             tuple[int, int] | list[tuple[int, int]]: The id of the record and
@@ -615,17 +395,12 @@ class DBWrapper(DBWrapperInterface):
             int: The number of affected rows.
         """
         (idKey, idValue) = updateId
-        keys = updateData.keys()
         values = list(updateData.values())
         values.append(idValue)
 
-        set_clause = ", ".join(f"{key} = %s" for key in keys)
-
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
         updateKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        updateQuery = (
-            f"UPDATE {tableIdentifier} SET {set_clause} WHERE {updateKey} = %s"
-        )
+        updateQuery = self._formatUpdateQuery(tableIdentifier, updateKey, updateData)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -645,18 +420,18 @@ class DBWrapper(DBWrapperInterface):
             newCursor.close()
 
     @overload
-    def update(self, records: T) -> int:  # type: ignore
+    def update(self, records: DataModelType) -> int:  # type: ignore
         ...
 
     @overload
-    def update(self, records: list[T]) -> list[int]: ...
+    def update(self, records: list[DataModelType]) -> list[int]: ...
 
-    def update(self, records: T | list[T]) -> int | list[int]:
+    def update(self, records: DataModelType | list[DataModelType]) -> int | list[int]:
         """
         Updates a record or a list of records in the database.
 
         Args:
-            records (T | list[T]): The record or records to update.
+            records (DataModelType | list[DataModelType]): The record or records to update.
 
         Returns:
             int | list[int]: The number of affected rows for a single record or a list of
@@ -739,7 +514,7 @@ class DBWrapper(DBWrapperInterface):
 
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
         deleteKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        delete_query = f"DELETE FROM {tableIdentifier} WHERE {deleteKey} = %s"
+        delete_query = self._formatDeleteQuery(tableIdentifier, deleteKey)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -759,18 +534,18 @@ class DBWrapper(DBWrapperInterface):
             newCursor.close()
 
     @overload
-    def delete(self, records: T) -> int:  # type: ignore
+    def delete(self, records: DataModelType) -> int:  # type: ignore
         ...
 
     @overload
-    def delete(self, records: list[T]) -> list[int]: ...
+    def delete(self, records: list[DataModelType]) -> list[int]: ...
 
-    def delete(self, records: T | list[T]) -> int | list[int]:
+    def delete(self, records: DataModelType | list[DataModelType]) -> int | list[int]:
         """
         Deletes a record or a list of records from the database.
 
         Args:
-            records (T | list[T]): The record or records to delete.
+            records (DataModelType | list[DataModelType]): The record or records to delete.
 
         Returns:
             int | list[int]: The number of affected rows for a single record or a list of

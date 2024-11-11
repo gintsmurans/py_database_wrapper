@@ -24,6 +24,7 @@ class DBWrapperMSSQL(DBWrapper):
     #######################
 
     # Meta methods
+    # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
         db: MSSQL,
@@ -63,7 +64,9 @@ class DBWrapperMSSQL(DBWrapper):
     ### Query methods ###
     #####################
 
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
+    def limitQuery(self, offset: int = 0, limit: int = 100) -> str | None:
+        if limit == 0:
+            return None
         return f"""
             OFFSET {offset} ROWS
             FETCH NEXT {limit} ROWS ONLY
