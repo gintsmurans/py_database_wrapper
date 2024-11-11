@@ -166,7 +166,7 @@ class DBWrapperInterface(ABC):
         ...
 
     @abstractmethod
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> Any:
+    def limitQuery(self, offset: int = 0, limit: int = 100) -> Any | None:
         """
         Creates a SQL query to limit the number of results returned.
 

@@ -60,13 +60,15 @@ class DBWrapperMysql(DBWrapper):
             params (tuple[Any, ...]): The parameters to log.
         """
         queryString = cursor.mogrify(query, params)
-        self.logger.debug(f"Query: {queryString}")
+        logging.getLogger().debug(f"Query: {queryString}")
 
     #####################
     ### Query methods ###
     #####################
 
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
+    def limitQuery(self, offset: int = 0, limit: int = 100) -> str | None:
+        if limit == 0:
+            return None
         return f"LIMIT {offset},{limit}"
 
     def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:

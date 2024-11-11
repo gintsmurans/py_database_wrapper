@@ -64,7 +64,9 @@ class DBWrapperMSSQL(DBWrapper):
     ### Query methods ###
     #####################
 
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> str:
+    def limitQuery(self, offset: int = 0, limit: int = 100) -> str | None:
+        if limit == 0:
+            return None
         return f"""
             OFFSET {offset} ROWS
             FETCH NEXT {limit} ROWS ONLY

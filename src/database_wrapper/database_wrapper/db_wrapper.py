@@ -56,7 +56,7 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         customQuery: Any = None,
     ) -> T | None:
         """
-        Retrieves a single record from the database.
+        Retrieves a single record from the database by class defined id.
 
         Args:
             emptyDataClass (T): The data model to use for the query.
@@ -65,7 +65,7 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         Returns:
             T | None: The result of the query.
         """
-        # Query
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
@@ -78,18 +78,21 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         if not idValue:
             raise ValueError("Id value is not set")
 
+        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        _params = (idValue,)
+
         # Create a SQL object for the query and format it
-        querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        querySql = self._formatFilterQuery(_query, _filter, None, None)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
 
         # Log
-        self.logQuery(newCursor, querySql, (idValue,))
+        self.logQuery(newCursor, querySql, _params)
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
+            newCursor.execute(querySql, _params)
 
             # Fetch one row
             row = newCursor.fetchone()
@@ -121,25 +124,27 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         Returns:
             T | None: The result of the query.
         """
-        # Query
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
+        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        _params = (idValue,)
 
         # Create a SQL object for the query and format it
-        querySql = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+        querySql = self._formatFilterQuery(_query, _filter, None, None)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
 
         # Log
-        self.logQuery(newCursor, querySql, (idValue,))
+        self.logQuery(newCursor, querySql, _params)
 
         # Load data
         try:
-            newCursor.execute(querySql, (idValue,))
+            newCursor.execute(querySql, _params)
 
             # Fetch one row
             row = newCursor.fetchone()
@@ -178,34 +183,26 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         Returns:
             Generator[T, None, None]: The result of the query.
         """
-        # Query
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
         _params: tuple[Any, ...] = ()
-
-        # Filter
+        _filter = ""
         if idKey and idValue:
-            _query = f"{_query} WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+            _filter = (
+                f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
+            )
             _params = (idValue,)
 
-        # Limits
-        _order = ""
-        _limit = ""
-
-        if orderBy:
-            orderList = [
-                f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-                for item in orderBy
-            ]
-            _order = "ORDER BY %s" % ", ".join(orderList)
-        if offset or limit:
-            _limit = f"{self.limitQuery(offset, limit)}"
+        # Order and limit
+        _order = self.orderQuery(orderBy)
+        _limit = self.limitQuery(offset, limit)
 
         # Create a SQL object for the query and format it
-        querySql = f"{_query} {_order} {_limit}"
+        querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -223,6 +220,7 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
                 row = newCursor.fetchone()
                 if row is None:
                     break
+
                 yield self.turnDataIntoModel(emptyDataClass, row)
 
         finally:
@@ -238,30 +236,20 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         limit: int = 100,
         customQuery: Any = None,
     ) -> Generator[T, None, None]:
-        # Filter
+        # Query and filter
         _query = (
             customQuery
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
         (_filter, _params) = self.createFilter(filter)
-        _filter = _filter
 
-        # Limits
-        _order = ""
-        _limit = ""
+        # Order and limit
+        _order = self.orderQuery(orderBy)
+        _limit = self.limitQuery(offset, limit)
 
-        if orderBy:
-            orderList = [
-                f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-                for item in orderBy
-            ]
-            _order = "ORDER BY %s" % ", ".join(orderList)
-        if offset or limit:
-            _limit = f"{self.limitQuery(offset, limit)}"
-
-        # Create a SQL object for the query and format it
-        querySql = f"{_query} {_filter} {_order} {_limit}"
+        # Create SQL query
+        querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -279,6 +267,7 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
                 row = newCursor.fetchone()
                 if row is None:
                     break
+
                 yield self.turnDataIntoModel(emptyDataClass, row)
 
         finally:
@@ -306,20 +295,10 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
         Returns:
             tuple[int, int]: The id of the record and the number of affected rows.
         """
-        keys = storeData.keys()
         values = list(storeData.values())
-
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
         returnKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-
-        columns = ", ".join(keys)
-        valuesPlaceholder = ", ".join(["%s"] * len(values))
-        insertQuery = (
-            f"INSERT INTO {tableIdentifier} "
-            f"({columns}) "
-            f"VALUES ({valuesPlaceholder}) "
-            f"RETURNING {returnKey}"
-        )
+        insertQuery = self._formatInsertQuery(tableIdentifier, storeData, returnKey)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -349,7 +328,10 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
     @overload
     def store(self, records: list[T]) -> list[tuple[int, int]]: ...
 
-    def store(self, records: T | list[T]) -> tuple[int, int] | list[tuple[int, int]]:
+    def store(
+        self,
+        records: T | list[T],
+    ) -> tuple[int, int] | list[tuple[int, int]]:
         """
         Stores a record or a list of records in the database.
 
@@ -413,17 +395,12 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
             int: The number of affected rows.
         """
         (idKey, idValue) = updateId
-        keys = updateData.keys()
         values = list(updateData.values())
         values.append(idValue)
 
-        set_clause = ", ".join(f"{key} = %s" for key in keys)
-
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
         updateKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        updateQuery = (
-            f"UPDATE {tableIdentifier} SET {set_clause} WHERE {updateKey} = %s"
-        )
+        updateQuery = self._formatUpdateQuery(tableIdentifier, updateKey, updateData)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
@@ -537,7 +514,7 @@ class DBWrapper(DBWrapperMixin, DBWrapperInterface):
 
         tableIdentifier = self.makeIdentifier(schemaName, tableName)
         deleteKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        delete_query = f"DELETE FROM {tableIdentifier} WHERE {deleteKey} = %s"
+        delete_query = self._formatDeleteQuery(tableIdentifier, deleteKey)
 
         # Create a new cursor
         newCursor = self.createCursor(emptyDataClass)
