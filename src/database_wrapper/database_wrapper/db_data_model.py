@@ -13,7 +13,7 @@ from psycopg import sql
 
 
 @dataclass
-class DBDataModel(object):
+class DBDataModel:
     """
     Base class for all database models.
 
@@ -38,6 +38,14 @@ class DBDataModel(object):
     - strToBool(value: Any): Converts a string to a boolean value.
     - strToInt(value: Any): Converts a string to an integer value.
     - validate(): Validates the instance.
+
+    To enable storing and updating fields that by default are not stored or updated, use the following methods:
+    - setStore(field_name: str, enable: bool = True): Enable/Disable storing a field.
+    - setUpdate(field_name: str, enable: bool = True): Enable/Disable updating a field.
+
+    To exclude a field from the dictionary representation of the instance, set metadata key "exclude" to True.
+    To change exclude status of a field, use the following method:
+    - setExclude(field_name: str, enable: bool = True): Exclude a field from dict representation.
     """
 
     ######################
@@ -62,7 +70,7 @@ class DBDataModel(object):
 
     @property
     def idValue(self) -> Any:
-        return getattr(self, self.idKey, None)
+        return getattr(self, self.idKey)
 
     # Id should be readonly by default and should be always present if record exists
     id: int = field(
@@ -80,6 +88,7 @@ class DBDataModel(object):
         default_factory=dict,
         metadata={
             "db_field": ("raw_data", "jsonb"),
+            "exclude": True,
             "store": False,
             "update": False,
         },
@@ -114,8 +123,19 @@ class DBDataModel(object):
         return self.toJsonString()
 
     # Dict
+    def dictFilter(self, pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        newDict: dict[str, Any] = {}
+        for field in pairs:
+            classField = self.__dataclass_fields__.get(field[0], None)
+            if classField is not None:
+                metadata = classField.metadata
+                if not "exclude" in metadata or not metadata["exclude"]:
+                    newDict[field[0]] = field[1]
+
+        return newDict
+
     def toDict(self) -> dict[str, Any]:
-        return asdict(self)
+        return asdict(self, dict_factory=self.dictFilter)
 
     def toFormattedDict(self) -> dict[str, Any]:
         return self.toDict()
@@ -212,6 +232,33 @@ class DBDataModel(object):
 
     def validate(self) -> bool:
         raise NotImplementedError("`validate` is not implemented")
+
+    def setStore(self, field_name: str, enable: bool = True) -> None:
+        """
+        Enable/Disable storing a field (insert into database)
+        """
+        if field_name in self.__dataclass_fields__:
+            currentMetadata = self.__dataclass_fields__[field_name].metadata
+            currentMetadata["store"] = enable
+            self.__dataclass_fields__[field_name].metadata = currentMetadata
+
+    def setUpdate(self, field_name: str, enable: bool = True) -> None:
+        """
+        Enable/Disable updating a field (update in database)
+        """
+        if field_name in self.__dataclass_fields__:
+            currentMetadata = self.__dataclass_fields__[field_name].metadata
+            currentMetadata["update"] = enable
+            self.__dataclass_fields__[field_name].metadata = currentMetadata
+
+    def setExclude(self, field_name: str, enable: bool = True) -> None:
+        """
+        Exclude a field from dict representation
+        """
+        if field_name in self.__dataclass_fields__:
+            currentMetadata = dict(self.__dataclass_fields__[field_name].metadata)
+            currentMetadata["exclude"] = enable
+            self.__dataclass_fields__[field_name].metadata = currentMetadata
 
     ########################
     ### Database methods ###

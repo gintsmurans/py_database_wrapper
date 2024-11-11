@@ -53,7 +53,8 @@ RUN apt-get update -yq \
 # Setup git
 RUN git config --global user.email "$GIT_NAME" \
     && git config --global user.name "$GIT_EMAIL" \
-    && git config --global pull.rebase true
+    && git config --global pull.rebase true \
+    && git config --global --add safe.directory /srv/app
 
 # Install python app's dev dependecies
 # * For now this is in run script as src is not mounted at build time

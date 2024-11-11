@@ -31,6 +31,7 @@ class DBWrapperPgSQL(DBWrapper):
     #######################
 
     # Meta methods
+    # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
         db: PgSQL,
