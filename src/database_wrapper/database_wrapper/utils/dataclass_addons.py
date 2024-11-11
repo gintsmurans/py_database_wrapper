@@ -1,14 +1,14 @@
 from typing import Any, Callable, Type, TypeVar
 
-T = TypeVar("T", bound=Type[Any])
+AnyDataType = TypeVar("AnyDataType", bound=Type[Any])
 
 
-def ignore_unknown_kwargs() -> Callable[[T], T]:
+def ignore_unknown_kwargs() -> Callable[[AnyDataType], AnyDataType]:
     """
     Class decorator factory that modifies the __init__ method to ignore unknown keyword arguments.
     """
 
-    def decorator(cls: T) -> T:
+    def decorator(cls: AnyDataType) -> AnyDataType:
         originalInit = cls.__init__
 
         # @wraps(originalInit)

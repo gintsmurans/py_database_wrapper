@@ -1,11 +1,11 @@
 from typing import AsyncGenerator, Any, overload
 
+from .common import OrderByItem, DataModelType
 from .db_data_model import DBDataModel
 from .db_wrapper_mixin import DBWrapperMixin
-from .db_wrapper_interface import DBWrapperInterface, OrderByItem, T
 
 
-class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
+class DBWrapperAsync(DBWrapperMixin):
     """
     Async Database wrapper class.
 
@@ -53,18 +53,18 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
     # Action methods
     async def getOne(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         customQuery: Any = None,
-    ) -> T | None:
+    ) -> DataModelType | None:
         """
         Retrieves a single record from the database by class defined id.
 
         Args:
-            emptyDataClass (T): The data model to use for the query.
+            emptyDataClass (DataModelType): The data model to use for the query.
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            T | None: The result of the query.
+            DataModelType | None: The result of the query.
         """
         # Query and filter
         _query = (
@@ -108,22 +108,22 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
 
     async def getByKey(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         idKey: str,
         idValue: Any,
         customQuery: Any = None,
-    ) -> T | None:
+    ) -> DataModelType | None:
         """
         Retrieves a single record from the database using the given key.
 
         Args:
-            emptyDataClass (T): The data model to use for the query.
+            emptyDataClass (DataModelType): The data model to use for the query.
             idKey (str): The name of the key to use for the query.
             idValue (Any): The value of the key to use for the query.
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            T | None: The result of the query.
+            DataModelType | None: The result of the query.
         """
         # Query and filter
         _query = (
@@ -161,19 +161,19 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
 
     async def getAll(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         idKey: str | None = None,
         idValue: Any | None = None,
         orderBy: OrderByItem | None = None,
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> AsyncGenerator[T, None]:
+    ) -> AsyncGenerator[DataModelType, None]:
         """
         Retrieves all records from the database.
 
         Args:
-            emptyDataClass (T): The data model to use for the query.
+            emptyDataClass (DataModelType): The data model to use for the query.
             idKey (str | None, optional): The name of the key to use for filtering. Defaults to None.
             idValue (Any | None, optional): The value of the key to use for filtering. Defaults to None.
             orderBy (OrderByItem | None, optional): The order by item to use for sorting. Defaults to None.
@@ -182,7 +182,7 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
             customQuery (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
-            AsyncGenerator[T, None]: The result of the query.
+            AsyncGenerator[DataModelType, None]: The result of the query.
         """
         # Query and filter
         _query = (
@@ -230,13 +230,13 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
 
     async def getFiltered(
         self,
-        emptyDataClass: T,
+        emptyDataClass: DataModelType,
         filter: dict[str, Any],
         orderBy: OrderByItem | None = None,
         offset: int = 0,
         limit: int = 100,
         customQuery: Any = None,
-    ) -> AsyncGenerator[T, None]:
+    ) -> AsyncGenerator[DataModelType, None]:
         # Query and filter
         _query = (
             customQuery
@@ -323,21 +323,21 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
             await newCursor.close()
 
     @overload
-    async def store(self, records: T) -> tuple[int, int]:  # type: ignore
+    async def store(self, records: DataModelType) -> tuple[int, int]:  # type: ignore
         ...
 
     @overload
-    async def store(self, records: list[T]) -> list[tuple[int, int]]: ...
+    async def store(self, records: list[DataModelType]) -> list[tuple[int, int]]: ...
 
     async def store(
         self,
-        records: T | list[T],
+        records: DataModelType | list[DataModelType],
     ) -> tuple[int, int] | list[tuple[int, int]]:
         """
         Stores a record or a list of records in the database.
 
         Args:
-            records (T | list[T]): The record or records to store.
+            records (DataModelType | list[DataModelType]): The record or records to store.
 
         Returns:
             tuple[int, int] | list[tuple[int, int]]: The id of the record and
@@ -421,18 +421,20 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
             await newCursor.close()
 
     @overload
-    async def update(self, records: T) -> int:  # type: ignore
+    async def update(self, records: DataModelType) -> int:  # type: ignore
         ...
 
     @overload
-    async def update(self, records: list[T]) -> list[int]: ...
+    async def update(self, records: list[DataModelType]) -> list[int]: ...
 
-    async def update(self, records: T | list[T]) -> int | list[int]:
+    async def update(
+        self, records: DataModelType | list[DataModelType]
+    ) -> int | list[int]:
         """
         Updates a record or a list of records in the database.
 
         Args:
-            records (T | list[T]): The record or records to update.
+            records (DataModelType | list[DataModelType]): The record or records to update.
 
         Returns:
             int | list[int]: The number of affected rows for a single record or a list of
@@ -535,18 +537,20 @@ class DBWrapperAsync(DBWrapperMixin, DBWrapperInterface):
             await newCursor.close()
 
     @overload
-    async def delete(self, records: T) -> int:  # type: ignore
+    async def delete(self, records: DataModelType) -> int:  # type: ignore
         ...
 
     @overload
-    async def delete(self, records: list[T]) -> list[int]: ...
+    async def delete(self, records: list[DataModelType]) -> list[int]: ...
 
-    async def delete(self, records: T | list[T]) -> int | list[int]:
+    async def delete(
+        self, records: DataModelType | list[DataModelType]
+    ) -> int | list[int]:
         """
         Deletes a record or a list of records from the database.
 
         Args:
-            records (T | list[T]): The record or records to delete.
+            records (DataModelType | list[DataModelType]): The record or records to delete.
 
         Returns:
             int | list[int]: The number of affected rows for a single record or a list of

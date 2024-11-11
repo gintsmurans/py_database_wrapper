@@ -4,7 +4,7 @@ from typing import Any, overload
 from psycopg import Cursor, sql
 from psycopg.rows import class_row
 
-from database_wrapper import T, DBWrapper
+from database_wrapper import DataModelType, DBWrapper
 
 from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 from .connector import (
@@ -59,13 +59,13 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     @overload
     def createCursor(
         self,
-        emptyDataClass: T,
-    ) -> Cursor[T]: ...
+        emptyDataClass: DataModelType,
+    ) -> Cursor[DataModelType]: ...
 
     def createCursor(
         self,
-        emptyDataClass: T | None = None,
-    ) -> Cursor[T] | PgCursorType:
+        emptyDataClass: DataModelType | None = None,
+    ) -> Cursor[DataModelType] | PgCursorType:
         """
         Creates a new cursor object.
 

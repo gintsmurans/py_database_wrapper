@@ -4,7 +4,7 @@ from typing import Any, overload
 from psycopg import AsyncCursor, sql
 from psycopg.rows import class_row
 
-from database_wrapper import T, DBWrapperAsync
+from database_wrapper import DataModelType, DBWrapperAsync
 
 from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 from .connector import (
@@ -68,13 +68,13 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     @overload
     async def createCursor(
         self,
-        emptyDataClass: T,
-    ) -> AsyncCursor[T]: ...
+        emptyDataClass: DataModelType,
+    ) -> AsyncCursor[DataModelType]: ...
 
     async def createCursor(
         self,
-        emptyDataClass: T | None = None,
-    ) -> AsyncCursor[T] | PgAsyncCursorType:
+        emptyDataClass: DataModelType | None = None,
+    ) -> AsyncCursor[DataModelType] | PgAsyncCursorType:
         """
         Creates a new cursor object.
 
