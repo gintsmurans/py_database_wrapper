@@ -80,22 +80,31 @@ class DBWrapperMixin:
     ### Setters ###
     ###############
 
-    def updateDb(self, db: Any) -> None:
+    def setDb(self, db: Any) -> None:
         """
         Updates the database backend object.
 
         Args:
-            db (DatabaseBackend): The new database backend object.
+            db (Any): The new database backend object.
         """
+        if db is None:
+            del self.db
+            return
+
         self.db = db
 
-    def updateDbConn(self, dbConn: Any) -> None:
+    def setDbConn(self, dbConn: Any) -> None:
         """
         Updates the database connection object.
 
         Args:
             dbConn (Any): The new database connection object.
         """
+
+        if dbConn is None:
+            del self.dbConn
+            return
+
         self.dbConn = dbConn
 
     ######################

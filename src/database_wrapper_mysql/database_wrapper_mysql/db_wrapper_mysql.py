@@ -45,23 +45,23 @@ class DBWrapperMysql(DBWrapper):
     ### Setters ###
     ###############
 
-    def updateDb(self, db: MySQL) -> None:
+    def setDb(self, db: MySQL | None) -> None:
         """
         Updates the database backend object.
 
         Args:
-            db (DatabaseBackend): The new database backend object.
+            db (MySQL | None): The new database backend object.
         """
-        self.db = db
+        super().setDb(db)
 
-    def updateDbConn(self, dbConn: MySqlConnection) -> None:
+    def setDbConn(self, dbConn: MySqlConnection | None) -> None:
         """
         Updates the database connection object.
 
         Args:
-            dbConn (Any): The new database connection object.
+            dbConn (MySqlConnection | None): The new database connection object.
         """
-        self.dbConn = dbConn
+        super().setDbConn(dbConn)
 
     ######################
     ### Helper methods ###
