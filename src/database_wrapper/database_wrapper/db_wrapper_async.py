@@ -79,8 +79,7 @@ class DBWrapperAsync(DBWrapperMixin):
         if not idValue:
             raise ValueError("Id value is not set")
 
-        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-        _params = (idValue,)
+        (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Create a SQL object for the query and format it
         querySql = self._formatFilterQuery(_query, _filter, None, None)
@@ -131,8 +130,7 @@ class DBWrapperAsync(DBWrapperMixin):
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
-        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-        _params = (idValue,)
+        (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Create a SQL object for the query and format it
         querySql = self._formatFilterQuery(_query, _filter, None, None)
@@ -193,10 +191,7 @@ class DBWrapperAsync(DBWrapperMixin):
         _params: tuple[Any, ...] = ()
         _filter = None
         if idKey and idValue:
-            _filter = (
-                f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-            )
-            _params = (idValue,)
+            (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Order and limit
         _order = self.orderQuery(orderBy)

@@ -24,7 +24,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     """
 
     # Override db instance
-    db: PgSQLWithPoolingAsync
+    db: PgSQLWithPoolingAsync | None = None
     """ Async PostgreSQL database connector """
 
     dbConn: PgAsyncConnectionType | None = None
@@ -107,16 +107,22 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
         Returns:
             PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
         """
-        assert self.db is not None, "Database connection is not set"
+        if self.db is None and self.dbConn is None:
+            raise ValueError(
+                "Database object and connection is not properly initialized"
+            )
 
         # First we need connection
-        if self.dbConn is None:
+        if self.dbConn is None and self.db is not None:
             status = await self.db.newConnection()
             if not status:
                 raise Exception("Failed to create new connection")
 
             (pgConn, _pgCur) = status
             self.dbConn = pgConn
+
+        if self.dbConn is None:
+            raise Exception("Failed to get connection")
 
         if emptyDataClass is None:
             return self.dbConn.cursor()

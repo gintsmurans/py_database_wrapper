@@ -42,7 +42,14 @@ class DBWrapper(DBWrapperMixin):
         Returns:
             The created cursor object.
         """
-        assert self.db is not None, "Database connection is not set"
+        if self.db is None and self.dbConn is None:
+            raise ValueError(
+                "Database object and connection is not properly initialized"
+            )
+
+        if self.dbConn is not None:
+            return self.dbConn.cursor()
+
         return self.db.cursor
 
     #####################
@@ -78,8 +85,7 @@ class DBWrapper(DBWrapperMixin):
         if not idValue:
             raise ValueError("Id value is not set")
 
-        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-        _params = (idValue,)
+        (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Create a SQL object for the query and format it
         querySql = self._formatFilterQuery(_query, _filter, None, None)
@@ -130,8 +136,7 @@ class DBWrapper(DBWrapperMixin):
             or emptyDataClass.queryBase()
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
-        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-        _params = (idValue,)
+        (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Create a SQL object for the query and format it
         querySql = self._formatFilterQuery(_query, _filter, None, None)
@@ -192,10 +197,7 @@ class DBWrapper(DBWrapperMixin):
         _params: tuple[Any, ...] = ()
         _filter = ""
         if idKey and idValue:
-            _filter = (
-                f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-            )
-            _params = (idValue,)
+            (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Order and limit
         _order = self.orderQuery(orderBy)
