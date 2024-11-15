@@ -4,8 +4,8 @@ from typing import Any, NotRequired, TypedDict, cast
 
 from psycopg import (
     # Async
-    AsyncConnection as PgAsyncConnection,
-    AsyncCursor as PgAsyncCursor,
+    AsyncConnection as PgConnectionAsync,
+    AsyncCursor as PgCursorAsync,
     # Sync
     Connection as PgConnection,
     Cursor as PgCursor,
@@ -24,8 +24,8 @@ from database_wrapper.utils.timer import Timer
 PgConnectionType = PgConnection[PgDictRow]
 PgCursorType = PgCursor[PgDictRow]
 
-PgAsyncConnectionType = PgAsyncConnection[PgDictRow]
-PgAsyncCursorType = PgAsyncCursor[PgDictRow]
+PgConnectionTypeAsync = PgConnectionAsync[PgDictRow]
+PgCursorTypeAsync = PgCursorAsync[PgDictRow]
 
 
 class PgConfig(TypedDict):
@@ -130,9 +130,9 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
     config: PgConfig
 
-    asyncPool: AsyncConnectionPool[PgAsyncConnectionType]
+    asyncPool: AsyncConnectionPool[PgConnectionTypeAsync]
     contextAsyncConnection: ContextVar[
-        tuple[PgAsyncConnectionType, PgAsyncCursorType] | None
+        tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None
     ]
 
     def __init__(
@@ -186,7 +186,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
             timeout=self.connectionTimeout,
             reconnect_timeout=0,
             num_workers=4,
-            connection_class=PgAsyncConnectionType,
+            connection_class=PgConnectionTypeAsync,
             kwargs={
                 "autocommit": True,
             },
@@ -198,7 +198,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
     async def newConnection(
         self,
-    ) -> tuple[PgAsyncConnectionType, PgAsyncCursorType] | None:
+    ) -> tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None:
         timer = self.timer.get()
         assert self.asyncPool, "Async pool is not initialized"
 
@@ -244,7 +244,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
         return None
 
-    async def returnConnection(self, connection: PgAsyncConnectionType) -> None:
+    async def returnConnection(self, connection: PgConnectionTypeAsync) -> None:
         """Return connection to the pool"""
         timer = self.timer.get()
         assert self.asyncPool, "Async pool is not initialized"
@@ -266,7 +266,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
     async def __aenter__(
         self,
-    ) -> tuple[PgAsyncConnectionType | None, PgAsyncCursorType | None]:
+    ) -> tuple[PgConnectionTypeAsync | None, PgCursorTypeAsync | None]:
         """Context manager"""
 
         # Init timer

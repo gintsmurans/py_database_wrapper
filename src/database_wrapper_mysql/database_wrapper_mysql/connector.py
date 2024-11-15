@@ -76,7 +76,8 @@ class MySQL(DatabaseBackend):
             cursorclass=MySqlDictCursor,
             **self.config["kwargs"],
         )
-        self.cursor = self.connection.cursor(MySqlDictCursor)
+        # TODO: Typings issue
+        self.cursor = self.connection.cursor(MySqlDictCursor)  # type: ignore
 
     def lastInsertId(self) -> int:
         assert self.cursor, "Cursor is not initialized"
@@ -91,11 +92,13 @@ class MySQL(DatabaseBackend):
         assert self.connection, "Connection is not initialized"
 
         self.logger.debug("Commit DB queries..")
-        self.connection.commit()
+        # TODO: Typings issue
+        self.connection.commit()  # type: ignore
 
     def rollback(self) -> None:
         """Rollback DB queries"""
         assert self.connection, "Connection is not initialized"
 
         self.logger.debug("Rollback DB queries..")
-        self.connection.rollback()
+        # TODO: Typings issue
+        self.connection.rollback()  # type: ignore

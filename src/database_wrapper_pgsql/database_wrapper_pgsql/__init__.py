@@ -10,7 +10,15 @@ import logging
 
 from .db_wrapper_pgsql import DBWrapperPgSQL
 from .db_wrapper_pgsql_async import DBWrapperPgSQLAsync
-from .connector import PgConfig, PgSQL, PgSQLWithPoolingAsync
+from .connector import (
+    PgConfig,
+    PgSQL,
+    PgSQLWithPoolingAsync,
+    PgConnectionType,
+    PgCursorType,
+    PgConnectionTypeAsync,
+    PgCursorTypeAsync,
+)
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_pgsql")
@@ -25,6 +33,11 @@ __all__ = [
     # Connectors
     "PgSQL",
     "PgSQLWithPoolingAsync",
+    # Connection and Cursor types
+    "PgConnectionType",
+    "PgCursorType",
+    "PgConnectionTypeAsync",
+    "PgCursorTypeAsync",
     # Helpers
     "PgConfig",
 ]

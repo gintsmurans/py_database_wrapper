@@ -9,7 +9,7 @@ Part of the database_wrapper package
 import logging
 
 from .db_wrapper_mysql import DBWrapperMysql
-from .connector import MyConfig, MySQL
+from .connector import MyConfig, MySQL, MySqlConnection, MySqlDictCursor
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_mysql")
@@ -18,7 +18,13 @@ if logger.level == logging.NOTSET:
 
 
 __all__ = [
+    # Wrappers
     "DBWrapperMysql",
-    "MyConfig",
+    # Connectors
     "MySQL",
+    # Connection and Cursor types
+    "MySqlConnection",
+    "MySqlDictCursor",
+    # Helpers
+    "MyConfig",
 ]
