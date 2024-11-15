@@ -27,7 +27,7 @@ class DBWrapperMysql(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: MySQL,
+        db: MySQL | None = None,
         dbConn: MySqlConnection | None = None,
         logger: logging.Logger | None = None,
     ):
@@ -40,6 +40,28 @@ class DBWrapperMysql(DBWrapper):
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)
+
+    ###############
+    ### Setters ###
+    ###############
+
+    def updateDb(self, db: MySQL) -> None:
+        """
+        Updates the database backend object.
+
+        Args:
+            db (DatabaseBackend): The new database backend object.
+        """
+        self.db = db
+
+    def updateDbConn(self, dbConn: MySqlConnection) -> None:
+        """
+        Updates the database connection object.
+
+        Args:
+            dbConn (Any): The new database connection object.
+        """
+        self.dbConn = dbConn
 
     ######################
     ### Helper methods ###

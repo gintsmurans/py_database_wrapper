@@ -35,7 +35,7 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: PgSQL,
+        db: PgSQL | None = None,
         dbConn: PgConnectionType | None = None,
         logger: logging.Logger | None = None,
     ):
@@ -48,6 +48,28 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
         super().__init__(db, dbConn, logger)
+
+    ###############
+    ### Setters ###
+    ###############
+
+    def updateDb(self, db: PgSQL) -> None:
+        """
+        Updates the database backend object.
+
+        Args:
+            db (DatabaseBackend): The new database backend object.
+        """
+        self.db = db
+
+    def updateDbConn(self, dbConn: PgConnectionType) -> None:
+        """
+        Updates the database connection object.
+
+        Args:
+            dbConn (Any): The new database connection object.
+        """
+        self.dbConn = dbConn
 
     ######################
     ### Helper methods ###
