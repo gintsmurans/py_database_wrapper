@@ -2,7 +2,6 @@ import logging
 
 from typing import cast, Any
 
-from .db_backend import DatabaseBackend
 from .common import OrderByItem, NoParam, DataModelType
 
 
@@ -277,7 +276,7 @@ class DBWrapperMixin:
 
     def createFilter(
         self, filter: dict[str, Any] | None
-    ) -> tuple[str, tuple[Any, ...]]:
+    ) -> tuple[Any, tuple[Any, ...]]:
         if filter is None or len(filter) == 0:
             return ("", tuple())
 

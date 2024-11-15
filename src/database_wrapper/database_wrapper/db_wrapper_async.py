@@ -66,12 +66,7 @@ class DBWrapperAsync(DBWrapperMixin):
         Returns:
             DataModelType | None: The result of the query.
         """
-        # Query and filter
-        _query = (
-            customQuery
-            or emptyDataClass.queryBase()
-            or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
-        )
+        # Figure out the id key and value
         idKey = emptyDataClass.idKey
         idValue = emptyDataClass.id
         if not idKey:
@@ -79,32 +74,12 @@ class DBWrapperAsync(DBWrapperMixin):
         if not idValue:
             raise ValueError("Id value is not set")
 
-        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-        _params = (idValue,)
-
-        # Create a SQL object for the query and format it
-        querySql = self._formatFilterQuery(_query, _filter, None, None)
-
-        # Create a new cursor
-        newCursor = await self.createCursor(emptyDataClass)
-
-        # Log
-        self.logQuery(newCursor, querySql, _params)
-
-        # Load data
-        try:
-            await newCursor.execute(querySql, _params)
-
-            # Fetch one row
-            row = await newCursor.fetchone()
-            if row is None:
-                return
-
-            # Turn data into model
-            return self.turnDataIntoModel(emptyDataClass, row)
-        finally:
-            # Close the cursor
-            await newCursor.close()
+        # Get the record
+        res = self.getAll(
+            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
+        )
+        async for row in res:
+            return row
 
     async def getByKey(
         self,
@@ -125,39 +100,12 @@ class DBWrapperAsync(DBWrapperMixin):
         Returns:
             DataModelType | None: The result of the query.
         """
-        # Query and filter
-        _query = (
-            customQuery
-            or emptyDataClass.queryBase()
-            or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
+        # Get the record
+        res = self.getAll(
+            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
         )
-        _filter = f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-        _params = (idValue,)
-
-        # Create a SQL object for the query and format it
-        querySql = self._formatFilterQuery(_query, _filter, None, None)
-
-        # Create a new cursor
-        newCursor = await self.createCursor(emptyDataClass)
-
-        # Log
-        self.logQuery(newCursor, querySql, _params)
-
-        # Load data
-        try:
-            await newCursor.execute(querySql, _params)
-
-            # Fetch one row
-            row = await newCursor.fetchone()
-            if row is None:
-                return
-
-            # Turn data into model
-            return self.turnDataIntoModel(emptyDataClass, row)
-
-        finally:
-            # Close the cursor
-            await newCursor.close()
+        async for row in res:
+            return row
 
     async def getAll(
         self,
@@ -192,11 +140,10 @@ class DBWrapperAsync(DBWrapperMixin):
         )
         _params: tuple[Any, ...] = ()
         _filter = None
+
+        # TODO: Rewrite this so that filter method with loop is not used here
         if idKey and idValue:
-            _filter = (
-                f"WHERE {self.makeIdentifier(emptyDataClass.tableAlias, idKey)} = %s"
-            )
-            _params = (idValue,)
+            (_filter, _params) = self.createFilter({idKey: idValue})
 
         # Order and limit
         _order = self.orderQuery(orderBy)

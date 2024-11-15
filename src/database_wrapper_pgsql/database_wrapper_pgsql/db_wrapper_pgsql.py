@@ -21,7 +21,7 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     """
 
     # Override db instance
-    db: PgSQL
+    db: PgSQL | None = None
     """ PostgreSQL database connector """
 
     dbConn: PgConnectionType | None = None
@@ -98,10 +98,13 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
         Returns:
             PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
         """
-        assert self.db is not None, "Database connection is not set"
+        if self.db is None and self.dbConn is None:
+            raise ValueError(
+                "Database object and connection is not properly initialized"
+            )
 
         # First we need connection
-        if self.dbConn is None:
+        if self.dbConn is None and self.db is not None:
             self.dbConn = self.db.connection
 
         # Lets make sure we have a connection
