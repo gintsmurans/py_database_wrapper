@@ -53,23 +53,23 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     ### Setters ###
     ###############
 
-    def updateDb(self, db: PgSQL) -> None:
+    def setDb(self, db: PgSQL | None) -> None:
         """
         Updates the database backend object.
 
         Args:
-            db (DatabaseBackend): The new database backend object.
+            db (PgSQL | None): The new database backend object.
         """
-        self.db = db
+        super().setDb(db)
 
-    def updateDbConn(self, dbConn: PgConnectionType) -> None:
+    def setDbConn(self, dbConn: PgConnectionType | None) -> None:
         """
         Updates the database connection object.
 
         Args:
-            dbConn (Any): The new database connection object.
+            dbConn (PgConnectionType | None): The new database connection object.
         """
-        self.dbConn = dbConn
+        super().setDbConn(dbConn)
 
     ######################
     ### Helper methods ###

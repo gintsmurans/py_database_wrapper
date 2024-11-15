@@ -45,23 +45,23 @@ class DBWrapperMSSQL(DBWrapper):
     ### Setters ###
     ###############
 
-    def updateDb(self, db: MSSQL) -> None:
+    def setDb(self, db: MSSQL | None) -> None:
         """
         Updates the database backend object.
 
         Args:
-            db (DatabaseBackend): The new database backend object.
+            db (MSSQL | None): The new database backend object.
         """
-        self.db = db
+        super().setDb(db)
 
-    def updateDbConn(self, dbConn: MssqlConnection) -> None:
+    def setDbConn(self, dbConn: MssqlConnection | None) -> None:
         """
         Updates the database connection object.
 
         Args:
-            dbConn (Any): The new database connection object.
+            dbConn (MssqlConnection | None): The new database connection object.
         """
-        self.dbConn = dbConn
+        super().setDbConn(dbConn)
 
     ######################
     ### Helper methods ###

@@ -62,23 +62,23 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     ### Setters ###
     ###############
 
-    def updateDb(self, db: PgSQLWithPoolingAsync) -> None:
+    def setDb(self, db: PgSQLWithPoolingAsync | None) -> None:
         """
         Updates the database backend object.
 
         Args:
-            db (DatabaseBackend): The new database backend object.
+            db (PgSQLWithPoolingAsync | None): The new database backend object.
         """
-        self.db = db
+        super().setDb(db)
 
-    def updateDbConn(self, dbConn: PgAsyncConnectionType) -> None:
+    def setDbConn(self, dbConn: PgAsyncConnectionType | None) -> None:
         """
         Updates the database connection object.
 
         Args:
-            dbConn (Any): The new database connection object.
+            dbConn (PgAsyncConnectionType | None): The new database connection object.
         """
-        self.dbConn = dbConn
+        super().setDbConn(dbConn)
 
     ######################
     ### Helper methods ###
