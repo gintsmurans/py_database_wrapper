@@ -43,7 +43,7 @@ class DBWrapperMixin:
     # Meta methods
     def __init__(
         self,
-        db: DatabaseBackend,
+        db: Any = None,
         dbConn: Any = None,
         logger: logging.Logger | None = None,
     ):
@@ -75,6 +75,28 @@ class DBWrapperMixin:
 
         if hasattr(self, "dbConn") and self.dbConn:
             del self.dbConn
+
+    ###############
+    ### Setters ###
+    ###############
+
+    def updateDb(self, db: Any) -> None:
+        """
+        Updates the database backend object.
+
+        Args:
+            db (DatabaseBackend): The new database backend object.
+        """
+        self.db = db
+
+    def updateDbConn(self, dbConn: Any) -> None:
+        """
+        Updates the database connection object.
+
+        Args:
+            dbConn (Any): The new database connection object.
+        """
+        self.dbConn = dbConn
 
     ######################
     ### Helper methods ###

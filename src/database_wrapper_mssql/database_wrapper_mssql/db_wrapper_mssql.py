@@ -27,7 +27,7 @@ class DBWrapperMSSQL(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: MSSQL,
+        db: MSSQL | None = None,
         dbConn: MssqlConnection | None = None,
         logger: logging.Logger | None = None,
     ):

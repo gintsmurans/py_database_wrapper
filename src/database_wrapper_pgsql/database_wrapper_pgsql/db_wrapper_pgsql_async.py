@@ -38,7 +38,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: PgSQLWithPoolingAsync,
+        db: PgSQLWithPoolingAsync | None = None,
         dbConn: PgAsyncConnectionType | None = None,
         logger: logging.Logger | None = None,
     ):
@@ -57,6 +57,28 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
             await self.db.returnConnection(self.dbConn)
 
         await super().close()
+
+    ###############
+    ### Setters ###
+    ###############
+
+    def updateDb(self, db: PgSQLWithPoolingAsync) -> None:
+        """
+        Updates the database backend object.
+
+        Args:
+            db (DatabaseBackend): The new database backend object.
+        """
+        self.db = db
+
+    def updateDbConn(self, dbConn: PgAsyncConnectionType) -> None:
+        """
+        Updates the database connection object.
+
+        Args:
+            dbConn (Any): The new database connection object.
+        """
+        self.dbConn = dbConn
 
     ######################
     ### Helper methods ###
