@@ -2,7 +2,7 @@ from typing import Any, cast
 
 from psycopg import sql
 
-from database_wrapper import OrderByItem, DataModelType
+from database_wrapper import OrderByItem, DataModelType, NoParam
 
 
 class DBWrapperPgSQLMixin:
@@ -106,6 +106,25 @@ class DBWrapperPgSQLMixin:
 
         return sql.SQL("LIMIT {} OFFSET {}").format(limit, offset)
 
+    def formatFilter(self, key: str, filter: Any) -> tuple[Any, ...]:
+        # TODO: For now we assume that we have that method from DBWrapperMixin
+        # TODO: Its 5am and I am tired, I will fix this later
+        return super().formatFilter(key, filter)  # type: ignore
+
+    def createFilter(
+        self, filter: dict[str, Any] | None
+    ) -> tuple[sql.Composed | None, tuple[Any, ...]]:
+        if filter is None or len(filter) == 0:
+            return (None, tuple())
+
+        raw = [self.formatFilter(key, filter[key]) for key in filter]
+
+        _queryItems = sql.SQL(" AND ").join([sql.SQL(tup[0]) for tup in raw])
+        _query = sql.SQL("WHERE {queryItems}").format(queryItems=_queryItems)
+        _params = tuple([val for tup in raw for val in tup[1:] if val is not NoParam])
+
+        return (_query, _params)
+
     def _formatFilterQuery(
         self,
         query: sql.SQL | sql.Composed | str,
@@ -119,6 +138,8 @@ class DBWrapperPgSQLMixin:
 
         queryParts: list[sql.Composable] = [query]
         if qFilter is not None:
+            # if isinstance(qFilter, str):
+            #     qFilter = sql.SQL(qFilter)
             queryParts.append(qFilter)
         if order is not None:
             queryParts.append(order)

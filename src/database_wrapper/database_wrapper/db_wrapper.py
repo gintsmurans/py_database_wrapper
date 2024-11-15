@@ -72,12 +72,7 @@ class DBWrapper(DBWrapperMixin):
         Returns:
             DataModelType | None: The result of the query.
         """
-        # Query and filter
-        _query = (
-            customQuery
-            or emptyDataClass.queryBase()
-            or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
-        )
+        # Figure out the id key and value
         idKey = emptyDataClass.idKey
         idValue = emptyDataClass.id
         if not idKey:
@@ -85,31 +80,12 @@ class DBWrapper(DBWrapperMixin):
         if not idValue:
             raise ValueError("Id value is not set")
 
-        (_filter, _params) = self.createFilter({idKey: idValue})
-
-        # Create a SQL object for the query and format it
-        querySql = self._formatFilterQuery(_query, _filter, None, None)
-
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
-        # Log
-        self.logQuery(newCursor, querySql, _params)
-
-        # Load data
-        try:
-            newCursor.execute(querySql, _params)
-
-            # Fetch one row
-            row = newCursor.fetchone()
-            if row is None:
-                return
-
-            # Turn data into model
-            return self.turnDataIntoModel(emptyDataClass, row)
-        finally:
-            # Close the cursor
-            newCursor.close()
+        # Get the record
+        res = self.getAll(
+            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
+        )
+        for row in res:
+            return row
 
     def getByKey(
         self,
@@ -130,38 +106,12 @@ class DBWrapper(DBWrapperMixin):
         Returns:
             DataModelType | None: The result of the query.
         """
-        # Query and filter
-        _query = (
-            customQuery
-            or emptyDataClass.queryBase()
-            or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
+        # Get the record
+        res = self.getAll(
+            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
         )
-        (_filter, _params) = self.createFilter({idKey: idValue})
-
-        # Create a SQL object for the query and format it
-        querySql = self._formatFilterQuery(_query, _filter, None, None)
-
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
-        # Log
-        self.logQuery(newCursor, querySql, _params)
-
-        # Load data
-        try:
-            newCursor.execute(querySql, _params)
-
-            # Fetch one row
-            row = newCursor.fetchone()
-            if row is None:
-                return
-
-            # Turn data into model
-            return self.turnDataIntoModel(emptyDataClass, row)
-
-        finally:
-            # Close the cursor
-            newCursor.close()
+        for row in res:
+            return row
 
     def getAll(
         self,
@@ -196,6 +146,8 @@ class DBWrapper(DBWrapperMixin):
         )
         _params: tuple[Any, ...] = ()
         _filter = ""
+
+        # TODO: Rewrite this so that filter method with loop is not used here
         if idKey and idValue:
             (_filter, _params) = self.createFilter({idKey: idValue})
 
