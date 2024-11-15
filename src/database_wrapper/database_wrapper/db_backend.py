@@ -51,9 +51,9 @@ class DatabaseBackend:
         self.connection = None
         self.cursor = None
         self.shutdownRequested = Event()
-        self.contextConnection = ContextVar(f"pg_connection_{self.name}", default=None)
+        self.contextConnection = ContextVar(f"db_connection_{self.name}", default=None)
         self.contextAsyncConnection = ContextVar(
-            f"pg_async_connection_{self.name}", default=None
+            f"db_connection_{self.name}_async", default=None
         )
 
     def __del__(self) -> None:

@@ -96,7 +96,7 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
                 Defaults to None.
 
         Returns:
-            PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
+            Cursor[DataModelType] | PgCursorType: The created cursor object.
         """
         if self.db is None and self.dbConn is None:
             raise ValueError(

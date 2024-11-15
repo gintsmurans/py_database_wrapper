@@ -9,8 +9,8 @@ from database_wrapper import DataModelType, DBWrapperAsync
 from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 from .connector import (
     # Async
-    PgAsyncConnectionType,
-    PgAsyncCursorType,
+    PgConnectionTypeAsync,
+    PgCursorTypeAsync,
     PgSQLWithPoolingAsync,
 )
 
@@ -27,7 +27,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     db: PgSQLWithPoolingAsync | None = None
     """ Async PostgreSQL database connector """
 
-    dbConn: PgAsyncConnectionType | None = None
+    dbConn: PgConnectionTypeAsync | None = None
     """ Async PostgreSQL connection object """
 
     #######################
@@ -39,7 +39,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     def __init__(
         self,
         db: PgSQLWithPoolingAsync | None = None,
-        dbConn: PgAsyncConnectionType | None = None,
+        dbConn: PgConnectionTypeAsync | None = None,
         logger: logging.Logger | None = None,
     ):
         """
@@ -71,12 +71,12 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
         """
         super().setDb(db)
 
-    def setDbConn(self, dbConn: PgAsyncConnectionType | None) -> None:
+    def setDbConn(self, dbConn: PgConnectionTypeAsync | None) -> None:
         """
         Updates the database connection object.
 
         Args:
-            dbConn (PgAsyncConnectionType | None): The new database connection object.
+            dbConn (PgConnectionTypeAsync | None): The new database connection object.
         """
         super().setDbConn(dbConn)
 
@@ -85,7 +85,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     ######################
 
     @overload
-    async def createCursor(self) -> PgAsyncCursorType: ...
+    async def createCursor(self) -> PgCursorTypeAsync: ...
 
     @overload
     async def createCursor(
@@ -96,7 +96,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     async def createCursor(
         self,
         emptyDataClass: DataModelType | None = None,
-    ) -> AsyncCursor[DataModelType] | PgAsyncCursorType:
+    ) -> AsyncCursor[DataModelType] | PgCursorTypeAsync:
         """
         Creates a new cursor object.
 
@@ -105,7 +105,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
                 Defaults to None.
 
         Returns:
-            PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
+            PgCursorTypeAsync | AsyncCursor[DBDataModel]: The created cursor object.
         """
         if self.db is None and self.dbConn is None:
             raise ValueError(

@@ -5,11 +5,8 @@ import dataclasses
 
 from enum import Enum
 from dataclasses import dataclass, field, asdict
-
 from decimal import Decimal
 from typing import Any
-
-from psycopg import sql
 
 
 @dataclass
@@ -264,7 +261,7 @@ class DBDataModel:
     ### Database methods ###
     ########################
 
-    def queryBase(self) -> sql.SQL | sql.Composed | str | None:
+    def queryBase(self) -> Any:
         """
         Base query for all queries
         """

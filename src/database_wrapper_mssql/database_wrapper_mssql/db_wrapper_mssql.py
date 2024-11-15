@@ -78,7 +78,7 @@ class DBWrapperMSSQL(DBWrapper):
             emptyDataClass (DBDataModel | None, optional): The data model to use for the cursor. Defaults to None.
 
         Returns:
-            PgAsyncCursorType | AsyncCursor[DBDataModel]: The created cursor object.
+            MssqlCursor: The created cursor object.
         """
         return self.db.connection.cursor(as_dict=True)
 
