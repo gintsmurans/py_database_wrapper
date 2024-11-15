@@ -23,7 +23,7 @@ db = MySQL({
     "database": "my_database"
 })
 db.open()
-dbWrapper = DBWrapperMySQL(db=db)
+dbWrapper = DBWrapperMySQL(dbConn=db.connection, dbCursor=db.cursor)
 
 # Simple query
 aModel = MyModel()

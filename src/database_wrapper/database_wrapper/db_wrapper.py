@@ -10,48 +10,6 @@ class DBWrapper(DBWrapperMixin):
     Database wrapper class.
     """
 
-    #######################
-    ### Class lifecycle ###
-    #######################
-
-    def close(self) -> None:
-        """
-        Close resources. Usually you should not close connections here,
-        just remove references.
-        """
-
-        raise NotImplementedError("Method not implemented")
-
-    ######################
-    ### Helper methods ###
-    ######################
-
-    @overload
-    def createCursor(self) -> Any: ...
-
-    @overload
-    def createCursor(self, emptyDataClass: DBDataModel) -> Any: ...
-
-    def createCursor(self, emptyDataClass: DBDataModel | None = None) -> Any:
-        """
-        Creates a new cursor object.
-
-        Args:
-            emptyDataClass (DataModelType | None, optional): The data model to use for the cursor. Defaults to None.
-
-        Returns:
-            The created cursor object.
-        """
-        if self.db is None and self.dbConn is None:
-            raise ValueError(
-                "Database object and connection is not properly initialized"
-            )
-
-        if self.dbConn is not None:
-            return self.dbConn.cursor()
-
-        return self.db.cursor
-
     #####################
     ### Query methods ###
     #####################
@@ -158,28 +116,19 @@ class DBWrapper(DBWrapperMixin):
         # Create a SQL object for the query and format it
         querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
 
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
         # Log
-        self.logQuery(newCursor, querySql, _params)
+        self.logQuery(self.dbCursor, querySql, _params)
 
-        # Load data
-        try:
-            # Execute the query
-            newCursor.execute(querySql, _params)
+        # Execute the query
+        self.dbCursor.execute(querySql, _params)
 
-            # Instead of fetchall(), we'll use a generator to yield results one by one
-            while True:
-                row = newCursor.fetchone()
-                if row is None:
-                    break
+        # Instead of fetchall(), we'll use a generator to yield results one by one
+        while True:
+            row = self.dbCursor.fetchone()
+            if row is None:
+                break
 
-                yield self.turnDataIntoModel(emptyDataClass, row)
-
-        finally:
-            # Ensure the cursor is closed after the generator is exhausted or an error occurs
-            newCursor.close()
+            yield self.turnDataIntoModel(emptyDataClass, row)
 
     def getFiltered(
         self,
@@ -205,30 +154,21 @@ class DBWrapper(DBWrapperMixin):
         # Create SQL query
         querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
 
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
         # Log
-        self.logQuery(newCursor, querySql, _params)
+        self.logQuery(self.dbCursor, querySql, _params)
 
-        # Load data
-        try:
-            # Execute the query
-            newCursor.execute(querySql, _params)
+        # Execute the query
+        self.dbCursor.execute(querySql, _params)
 
-            # Instead of fetchall(), we'll use a generator to yield results one by one
-            while True:
-                row = newCursor.fetchone()
-                if row is None:
-                    break
+        # Instead of fetchall(), we'll use a generator to yield results one by one
+        while True:
+            row = self.dbCursor.fetchone()
+            if row is None:
+                break
 
-                yield self.turnDataIntoModel(emptyDataClass, row)
+            yield self.turnDataIntoModel(emptyDataClass, row)
 
-        finally:
-            # Ensure the cursor is closed after the generator is exhausted or an error occurs
-            newCursor.close()
-
-    def _store(
+    def _insert(
         self,
         emptyDataClass: DBDataModel,
         schemaName: str | None,
@@ -254,35 +194,27 @@ class DBWrapper(DBWrapperMixin):
         returnKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
         insertQuery = self._formatInsertQuery(tableIdentifier, storeData, returnKey)
 
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
         # Log
-        self.logQuery(newCursor, insertQuery, tuple(values))
+        self.logQuery(self.dbCursor, insertQuery, tuple(values))
 
         # Insert
-        try:
-            newCursor.execute(insertQuery, tuple(values))
-            affectedRows = newCursor.rowcount
-            result = newCursor.fetchone()
+        self.dbCursor.execute(insertQuery, tuple(values))
+        affectedRows = self.dbCursor.rowcount
+        result = self.dbCursor.fetchone()
 
-            return (
-                result.id if result and hasattr(result, "id") else 0,
-                affectedRows,
-            )
-
-        finally:
-            # Close the cursor
-            newCursor.close()
+        return (
+            result.id if result and hasattr(result, "id") else 0,
+            affectedRows,
+        )
 
     @overload
-    def store(self, records: DataModelType) -> tuple[int, int]:  # type: ignore
+    def insert(self, records: DataModelType) -> tuple[int, int]:  # type: ignore
         ...
 
     @overload
-    def store(self, records: list[DataModelType]) -> list[tuple[int, int]]: ...
+    def insert(self, records: list[DataModelType]) -> list[tuple[int, int]]: ...
 
-    def store(
+    def insert(
         self,
         records: DataModelType | list[DataModelType],
     ) -> tuple[int, int] | list[tuple[int, int]]:
@@ -310,7 +242,7 @@ class DBWrapper(DBWrapperMixin):
             if not storeIdKey or not storeData:
                 continue
 
-            res = self._store(
+            res = self._insert(
                 row,
                 row.schemaName,
                 row.tableName,
@@ -356,22 +288,14 @@ class DBWrapper(DBWrapperMixin):
         updateKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
         updateQuery = self._formatUpdateQuery(tableIdentifier, updateKey, updateData)
 
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
         # Log
-        self.logQuery(newCursor, updateQuery, tuple(values))
+        self.logQuery(self.dbCursor, updateQuery, tuple(values))
 
         # Update
-        try:
-            newCursor.execute(updateQuery, tuple(values))
-            affectedRows = newCursor.rowcount
+        self.dbCursor.execute(updateQuery, tuple(values))
+        affectedRows = self.dbCursor.rowcount
 
-            return affectedRows
-
-        finally:
-            # Close the cursor
-            newCursor.close()
+        return affectedRows
 
     @overload
     def update(self, records: DataModelType) -> int:  # type: ignore
@@ -470,22 +394,14 @@ class DBWrapper(DBWrapperMixin):
         deleteKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
         delete_query = self._formatDeleteQuery(tableIdentifier, deleteKey)
 
-        # Create a new cursor
-        newCursor = self.createCursor(emptyDataClass)
-
         # Log
-        self.logQuery(newCursor, delete_query, (idValue,))
+        self.logQuery(self.dbCursor, delete_query, (idValue,))
 
         # Delete
-        try:
-            newCursor.execute(delete_query, (idValue,))
-            affected_rows = newCursor.rowcount
+        self.dbCursor.execute(delete_query, (idValue,))
+        affected_rows = self.dbCursor.rowcount
 
-            return affected_rows
-
-        finally:
-            # Close the cursor
-            newCursor.close()
+        return affected_rows
 
     @overload
     def delete(self, records: DataModelType) -> int:  # type: ignore

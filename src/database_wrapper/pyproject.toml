@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "database_wrapper"
-version = "0.1.44"
+version = "0.1.45"
 description = "A Different Approach to Database Wrappers in Python"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -45,10 +45,10 @@ Code = "https://github.com/gintsmurans/py_database_wrapper"
 Download = "https://pypi.org/project/database_wrapper/"
 
 [project.optional-dependencies]
-pgsql = ["database_wrapper_pgsql == 0.1.44"]
-mysql = ["database_wrapper_mysql == 0.1.44"]
-mssql = ["database_wrapper_mssql == 0.1.44"]
-sqlite = ["database_wrapper_sqlite == 0.1.44"]
+pgsql = ["database_wrapper_pgsql == 0.1.45"]
+mysql = ["database_wrapper_mysql == 0.1.45"]
+mssql = ["database_wrapper_mssql == 0.1.45"]
+sqlite = ["database_wrapper_sqlite == 0.1.45"]
 all = ["database_wrapper[pgsql,mysql,mssql,sqlite]"]
 dev = [
     # Development
@@ -59,6 +59,7 @@ dev = [
     "black >= 24.1.0",
     "types-setuptools >= 61.0.0",
     "types-pymssql >= 2.1.0",
+    "types-mysqlclient >= 2.2.0",
     # Database drivers
     "psycopg[binary] >= 3.2.0",
     "psycopg[pool] >= 3.2.0",

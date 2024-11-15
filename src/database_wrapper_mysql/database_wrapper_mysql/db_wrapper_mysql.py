@@ -1,23 +1,19 @@
 import logging
 from typing import Any
 
-from MySQLdb.connections import Connection as MySqlConnection
-from MySQLdb.cursors import DictCursor as MySqlDictCursor
-
 from database_wrapper import DBWrapper
 
-from .connector import MySQL
+from .connector import MySqlConnection, MySqlDictCursor
 
 
 class DBWrapperMysql(DBWrapper):
-    """Base model for all RV4 models"""
+    """Wrapper for MySQL database"""
 
-    # Override db instance
-    db: MySQL
-    """ MySQL database connector """
-
-    dbConn: MySqlConnection | None = None
+    dbConn: MySqlConnection
     """ MySQL connection object """
+
+    dbCursor: MySqlDictCursor
+    """ MySQL cursor object """
 
     #######################
     ### Class lifecycle ###
@@ -27,8 +23,8 @@ class DBWrapperMysql(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: MySQL | None = None,
-        dbConn: MySqlConnection | None = None,
+        dbConn: MySqlConnection,
+        dbCursor: MySqlDictCursor,
         logger: logging.Logger | None = None,
     ):
         """
@@ -39,20 +35,11 @@ class DBWrapperMysql(DBWrapper):
             dbConn (MySqlConnection, optional): The MySQL connection object. Defaults to None.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(db, dbConn, logger)
+        super().__init__(dbConn, dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
-
-    def setDb(self, db: MySQL | None) -> None:
-        """
-        Updates the database backend object.
-
-        Args:
-            db (MySQL | None): The new database backend object.
-        """
-        super().setDb(db)
 
     def setDbConn(self, dbConn: MySqlConnection | None) -> None:
         """
@@ -92,6 +79,3 @@ class DBWrapperMysql(DBWrapper):
         if limit == 0:
             return None
         return f"LIMIT {offset},{limit}"
-
-    def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:
-        return self.db.connection.cursor(MySqlDictCursor)

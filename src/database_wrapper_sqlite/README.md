@@ -23,7 +23,7 @@ db = Sqlite({
     "database": "my_database.db",
 })
 db.open()
-dbWrapper = DBWrapperSqlite(db=db)
+dbWrapper = DBWrapperSqlite(dbConn=db.connection, dbCursor=db.cursor)
 
 # Simple query
 aModel = MyModel()

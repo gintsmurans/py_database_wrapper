@@ -10,8 +10,8 @@ class DBWrapperMixin:
     Mixin class for the DBWrapper class to provide methods that can be
     used by both sync and async versions of the DBWrapper class.
 
-    :property db: Database backend object.
     :property dbConn: Database connection object.
+    :property dbCursor: Database cursor object.
     :property logger: Logger object
     """
 
@@ -19,16 +19,14 @@ class DBWrapperMixin:
     ### Instance properties ###
     ###########################
 
-    # Db backend
-    db: Any
-    """Database backend object"""
-
     dbConn: Any
     """
     Database connection object.
+    """
 
-    Its not always set. Currently is used as a placeholder for async connections.
-    For sync connections db - DatabaseBackend.connection is used.
+    dbCursor: Any
+    """
+    Database cursor object.
     """
 
     # logger
@@ -42,8 +40,8 @@ class DBWrapperMixin:
     # Meta methods
     def __init__(
         self,
-        db: Any = None,
-        dbConn: Any = None,
+        dbConn: Any,
+        dbCursor: Any,
         logger: logging.Logger | None = None,
     ):
         """
@@ -53,8 +51,8 @@ class DBWrapperMixin:
             db (DatabaseBackend): The DatabaseBackend object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        self.db = db
         self.dbConn = dbConn
+        self.dbCursor = dbCursor
 
         if logger is None:
             loggerName = f"{__name__}.{self.__class__.__name__}"
@@ -69,28 +67,15 @@ class DBWrapperMixin:
         self.logger.debug("Dealloc")
 
         # Force remove instances so that there are no circular references
-        if hasattr(self, "db") and self.db:
-            del self.db
-
         if hasattr(self, "dbConn") and self.dbConn:
             del self.dbConn
+
+        if hasattr(self, "dbCursor") and self.dbCursor:
+            del self.dbCursor
 
     ###############
     ### Setters ###
     ###############
-
-    def setDb(self, db: Any) -> None:
-        """
-        Updates the database backend object.
-
-        Args:
-            db (Any): The new database backend object.
-        """
-        if db is None:
-            del self.db
-            return
-
-        self.db = db
 
     def setDbConn(self, dbConn: Any) -> None:
         """
