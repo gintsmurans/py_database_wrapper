@@ -2,14 +2,11 @@ import logging
 
 from database_wrapper import DBWrapper
 
-from .connector import MssqlConnection, MssqlCursor
+from .connector import MssqlCursor
 
 
 class DBWrapperMSSQL(DBWrapper):
     """Database wrapper for mssql database"""
-
-    dbConn: MssqlConnection
-    """ MsSQL connection object """
 
     dbCursor: MssqlCursor
     """ MsSQL cursor object """
@@ -22,32 +19,30 @@ class DBWrapperMSSQL(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbConn: MssqlConnection,
-        dbCursor: MssqlCursor,
+        dbCursor: MssqlCursor | None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MSSQL): The MSSQL connector.
-            dbConn (MssqlConnection, optional): The MSSQL connection object. Defaults to None.
+            dbCursor (MssqlCursor): The MsSQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(dbConn, dbCursor, logger)
+        super().__init__(dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDbConn(self, dbConn: MssqlConnection | None) -> None:
+    def setDbCursor(self, dbCursor: MssqlCursor) -> None:
         """
-        Updates the database connection object.
+        Updates the database cursor object.
 
         Args:
-            dbConn (MssqlConnection | None): The new database connection object.
+            dbCursor (MssqlCursor): The new database cursor object.
         """
-        super().setDbConn(dbConn)
+        super().setDbCursor(dbCursor)
 
     #####################
     ### Query methods ###

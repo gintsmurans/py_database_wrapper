@@ -25,7 +25,7 @@ db = PgSQLWithPoolingAsync({
 await db.openPool()
 try:
     async with db as (dbConn, dbCursor):
-        dbWrapper = DBWrapperPgSQLAsync(dbConn=dbConn, dbCursor=dbCursor)
+        dbWrapper = DBWrapperPgSQLAsync(dbCursor=dbCursor)
 
         # Simple query
         aModel = MyModel()

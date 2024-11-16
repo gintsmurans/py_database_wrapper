@@ -5,16 +5,13 @@ from psycopg import Cursor, sql
 from database_wrapper import DBWrapper
 
 from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
-from .connector import PgConnectionType, PgCursorType
+from .connector import PgCursorType
 
 
 class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     """
     Sync database wrapper for postgres
     """
-
-    dbConn: PgConnectionType
-    """ PostgreSQL connection object """
 
     dbCursor: PgCursorType
     """ PostgreSQL cursor object """
@@ -27,32 +24,30 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbConn: PgConnectionType,
-        dbCursor: PgCursorType,
+        dbCursor: PgCursorType | None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The PostgreSQL connector.
-            dbConn (MySqlConnection, optional): The PostgreSQL connection object. Defaults to None.
+            dbCursor (PgCursorType): The PostgreSQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(dbConn, dbCursor, logger)
+        super().__init__(dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDbConn(self, dbConn: PgConnectionType | None) -> None:
+    def setDbCursor(self, dbCursor: PgCursorType) -> None:
         """
-        Updates the database connection object.
+        Updates the database cursor object.
 
         Args:
-            dbConn (PgConnectionType | None): The new database connection object.
+            dbCursor (PgCursorType): The new database cursor object.
         """
-        super().setDbConn(dbConn)
+        super().setDbCursor(dbCursor)
 
     ######################
     ### Helper methods ###
@@ -72,5 +67,5 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
-        queryString = query.as_string(self.dbConn)
+        queryString = query.as_string(self.dbCursor)
         logging.getLogger().debug(f"Query: {queryString}")

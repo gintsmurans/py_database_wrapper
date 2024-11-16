@@ -5,7 +5,7 @@ from psycopg import sql
 from database_wrapper import DBWrapperAsync
 
 from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
-from .connector import PgConnectionTypeAsync, PgCursorTypeAsync
+from .connector import PgCursorTypeAsync
 
 
 class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
@@ -14,9 +14,6 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
 
     This is meant to be used in async environments.
     """
-
-    dbConn: PgConnectionTypeAsync
-    """ Async PostgreSQL connection object """
 
     dbCursor: PgCursorTypeAsync
     """ Async PostgreSQL cursor object """
@@ -29,32 +26,30 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbConn: PgConnectionTypeAsync,
-        dbCursor: PgCursorTypeAsync,
+        dbCursor: PgCursorTypeAsync | None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The PostgreSQL database connector.
-            dbConn (MySqlConnection, optional): The PostgreSQL connection object. Defaults to None.
+            dbCursor (PgCursorTypeAsync): The PostgreSQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(dbConn, dbCursor, logger)
+        super().__init__(dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDbConn(self, dbConn: PgConnectionTypeAsync | None) -> None:
+    def setDbCursor(self, dbCursor: PgCursorTypeAsync) -> None:
         """
-        Updates the database connection object.
+        Updates the database cursor object.
 
         Args:
-            dbConn (PgConnectionTypeAsync | None): The new database connection object.
+            dbCursor (PgCursorTypeAsync): The new database cursor object.
         """
-        super().setDbConn(dbConn)
+        super().setDbCursor(dbCursor)
 
     ######################
     ### Helper methods ###
@@ -74,5 +69,5 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
-        queryString = query.as_string(self.dbConn)
+        queryString = query.as_string(self.dbCursor)
         logging.getLogger().debug(f"Query: {queryString}")

@@ -10,7 +10,6 @@ class DBWrapperMixin:
     Mixin class for the DBWrapper class to provide methods that can be
     used by both sync and async versions of the DBWrapper class.
 
-    :property dbConn: Database connection object.
     :property dbCursor: Database cursor object.
     :property logger: Logger object
     """
@@ -18,11 +17,6 @@ class DBWrapperMixin:
     ###########################
     ### Instance properties ###
     ###########################
-
-    dbConn: Any
-    """
-    Database connection object.
-    """
 
     dbCursor: Any
     """
@@ -40,7 +34,6 @@ class DBWrapperMixin:
     # Meta methods
     def __init__(
         self,
-        dbConn: Any,
         dbCursor: Any,
         logger: logging.Logger | None = None,
     ):
@@ -51,7 +44,6 @@ class DBWrapperMixin:
             db (DatabaseBackend): The DatabaseBackend object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        self.dbConn = dbConn
         self.dbCursor = dbCursor
 
         if logger is None:
@@ -67,9 +59,6 @@ class DBWrapperMixin:
         self.logger.debug("Dealloc")
 
         # Force remove instances so that there are no circular references
-        if hasattr(self, "dbConn") and self.dbConn:
-            del self.dbConn
-
         if hasattr(self, "dbCursor") and self.dbCursor:
             del self.dbCursor
 
@@ -77,19 +66,19 @@ class DBWrapperMixin:
     ### Setters ###
     ###############
 
-    def setDbConn(self, dbConn: Any) -> None:
+    def setDbCursor(self, dbCursor: Any) -> None:
         """
-        Updates the database connection object.
+        Updates the database cursor object.
 
         Args:
-            dbConn (Any): The new database connection object.
+            dbCursor (Any): The new database cursor object.
         """
 
-        if dbConn is None:
-            del self.dbConn
+        if dbCursor is None:
+            del self.dbCursor
             return
 
-        self.dbConn = dbConn
+        self.dbCursor = dbCursor
 
     ######################
     ### Helper methods ###

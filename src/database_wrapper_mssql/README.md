@@ -23,7 +23,7 @@ db = MSSQL({
     "database": "master"
 })
 db.open()
-dbWrapper = DBWrapperMSSQL(dbConn=db.connection, dbCursor=db.cursor)
+dbWrapper = DBWrapperMSSQL(dbCursor=db.cursor)
 
 # Simple query
 aModel = MyModel()

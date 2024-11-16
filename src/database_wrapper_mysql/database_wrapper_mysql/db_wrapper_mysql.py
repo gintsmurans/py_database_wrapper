@@ -3,14 +3,11 @@ from typing import Any
 
 from database_wrapper import DBWrapper
 
-from .connector import MySqlConnection, MySqlDictCursor
+from .connector import MySqlDictCursor
 
 
 class DBWrapperMysql(DBWrapper):
     """Wrapper for MySQL database"""
-
-    dbConn: MySqlConnection
-    """ MySQL connection object """
 
     dbCursor: MySqlDictCursor
     """ MySQL cursor object """
@@ -23,32 +20,30 @@ class DBWrapperMysql(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbConn: MySqlConnection,
-        dbCursor: MySqlDictCursor,
+        dbCursor: MySqlDictCursor | None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The MySQL connector.
-            dbConn (MySqlConnection, optional): The MySQL connection object. Defaults to None.
+            dbCursor (MySqlDictCursor): The MySQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(dbConn, dbCursor, logger)
+        super().__init__(dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDbConn(self, dbConn: MySqlConnection | None) -> None:
+    def setDbCursor(self, dbCursor: MySqlDictCursor) -> None:
         """
-        Updates the database connection object.
+        Updates the database cursor object.
 
         Args:
-            dbConn (MySqlConnection | None): The new database connection object.
+            dbCursor (MySqlDictCursor): The new database cursor object.
         """
-        super().setDbConn(dbConn)
+        super().setDbCursor(dbCursor)
 
     ######################
     ### Helper methods ###
