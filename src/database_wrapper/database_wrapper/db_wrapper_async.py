@@ -42,10 +42,16 @@ class DBWrapperAsync(DBWrapperMixin):
 
         # Get the record
         res = self.getAll(
-            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
+            emptyDataClass,
+            idKey,
+            idValue,
+            limit=1,
+            customQuery=customQuery,
         )
         async for row in res:
             return row
+        else:
+            return None
 
     async def getByKey(
         self,
@@ -68,10 +74,16 @@ class DBWrapperAsync(DBWrapperMixin):
         """
         # Get the record
         res = self.getAll(
-            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
+            emptyDataClass,
+            idKey,
+            idValue,
+            limit=1,
+            customQuery=customQuery,
         )
         async for row in res:
             return row
+        else:
+            return None
 
     async def getAll(
         self,
@@ -130,7 +142,7 @@ class DBWrapperAsync(DBWrapperMixin):
             if row is None:
                 break
 
-            yield self.turnDataIntoModel(emptyDataClass, row)
+            yield self.turnDataIntoModel(emptyDataClass.__class__, row)
 
     async def getFiltered(
         self,
@@ -168,7 +180,7 @@ class DBWrapperAsync(DBWrapperMixin):
             if row is None:
                 break
 
-            yield self.turnDataIntoModel(emptyDataClass, row)
+            yield self.turnDataIntoModel(emptyDataClass.__class__, row)
 
     async def _insert(
         self,

@@ -1,7 +1,7 @@
 import time
 import logging
 
-from typing import Any, TypedDict
+from typing import Any, AsyncGenerator, Generator, TypedDict
 from contextlib import asynccontextmanager, contextmanager
 
 
@@ -32,7 +32,7 @@ class Timer:
 
     # * Class generator
     @contextmanager
-    def enter(self, name: str):
+    def enter(self, name: str) -> Generator["Timer"]:
         self.level += 1
         self.start(name=name)
 
@@ -43,7 +43,7 @@ class Timer:
             self.level -= 1
 
     @asynccontextmanager
-    async def aenter(self, name: str):
+    async def aenter(self, name: str) -> AsyncGenerator["Timer"]:
         self.level += 1
         self.start(name=name)
 
@@ -69,7 +69,7 @@ class Timer:
         self.stop()
 
     # * Start / stop
-    def start(self, name: str | None = None, skipAppend: bool = False):
+    def start(self, name: str | None = None, skipAppend: bool = False) -> None:
         if name is None:
             name = self.name
 
@@ -95,7 +95,7 @@ class Timer:
         self,
         name: str | None = None,
         skipRemove: bool = False,
-    ):
+    ) -> None:
         if name is None:
             name = self.name
         endTime = time.perf_counter()
@@ -127,7 +127,7 @@ class Timer:
                     self.start(name=prevTimerName, skipAppend=True)
 
     # * Stats
-    def resetTimers(self):
+    def resetTimers(self) -> None:
         """Resets the current timer. Call this at the start of an iteration."""
         self.startTimes = {}
         self.totalTimes = {}
@@ -139,10 +139,12 @@ class Timer:
 
         all_fn_names = [k for k in self.totalTimes.keys()]
         if len(all_fn_names) == 0:
-            return
+            return None
 
         # Max width of level column
-        max_level_width = max([self.totalTimes[k].get("level") for k in all_fn_names])
+        max_level_width = max(
+            [self.totalTimes[k].get("level", 0) for k in all_fn_names]
+        )
         if max_level_width % 2 == 1:
             max_level_width += 1
         max_level_width = max(max_level_width, 6)
@@ -218,6 +220,7 @@ class Timer:
             return timerStats
 
         logging.getLogger().debug(timerStats)
+        return None
 
     def printTimerStatsJSON(self, returnData: bool = False) -> str | None:
         """Prints the current timing information into a JSON string."""
@@ -227,7 +230,7 @@ class Timer:
         """Prints the current timing information into a CSV string."""
         all_fn_names = list(self.totalTimes.keys())
         if not all_fn_names:
-            return
+            return None
 
         # Prepare header
         header = all_fn_names + ["Total"]
@@ -242,7 +245,7 @@ class Timer:
         data_rows: "list[list[str]]" = []
         for i in range(max_index + 1):
             row: "list[str]" = []
-            row_total = 0
+            row_total = 0.0
             for name in all_fn_names:
                 runtime = self.totalTimes[name].get("runtimes", {}).get(i)
                 if runtime is not None:
@@ -256,7 +259,7 @@ class Timer:
 
         # Prepare total row
         total_row: "list[str]" = []
-        grand_total = 0
+        grand_total = 0.0
         for name in all_fn_names:
             total = sum(self.totalTimes[name].get("runtimes", {}).values()) * 1000
             total_row.append(f"{total:.4f}")
@@ -273,6 +276,7 @@ class Timer:
             return output
 
         logging.getLogger().info(f"\n{output}")
+        return None
 
     def printTimerStats(
         self,
@@ -292,6 +296,8 @@ class Timer:
         elif outputFormat == "csv":
             return self.printTimerStatsCSV(returnData=returnData)
 
+        return None
+
     def totalTime(self, totalTimes: dict[str, TimerProperties]) -> float:
         """Returns the total amount accumulated across all functions in seconds."""
-        return sum([timer.get("total") for _name, timer in totalTimes.items()])
+        return sum([timer.get("total", 0) for _name, timer in totalTimes.items()])

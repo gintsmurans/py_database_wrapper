@@ -4,7 +4,7 @@ import re
 
 from decimal import Decimal
 from enum import Enum
-from typing import Any
+from typing import Any, Type
 
 
 class SerializeType(Enum):
@@ -31,6 +31,9 @@ def jsonEncoder(obj: Any) -> Any:
 
 def serializeValue(value: Any, sType: SerializeType) -> Any:
     if sType == SerializeType.DATETIME:
+        if not isinstance(value, datetime.datetime):
+            return value
+
         return value.isoformat()
 
     if sType == SerializeType.JSON:
@@ -44,7 +47,7 @@ def serializeValue(value: Any, sType: SerializeType) -> Any:
 def deserializeValue(
     value: Any,
     sType: SerializeType,
-    enumClass: Enum | None = None,
+    enumClass: Type[Enum] | None = None,
 ) -> Any:
     if sType == SerializeType.DATETIME:
         if isinstance(value, datetime.datetime):
@@ -60,7 +63,7 @@ def deserializeValue(
         return datetime.datetime.now(datetime.UTC)
 
     if sType == SerializeType.JSON:
-        if isinstance(value, dict) or isinstance(value, list):
+        if isinstance(value, dict) or isinstance(value, list) or value is None:
             return value  # type: ignore
 
         return json.loads(value)
@@ -74,6 +77,6 @@ def deserializeValue(
         if isinstance(value, Enum):
             return value
 
-        return enumClass.__class__(value)
+        return enumClass(value)
 
     return value

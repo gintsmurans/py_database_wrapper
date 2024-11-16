@@ -44,6 +44,8 @@ class DBWrapper(DBWrapperMixin):
         )
         for row in res:
             return row
+        else:
+            return None
 
     def getByKey(
         self,
@@ -70,6 +72,8 @@ class DBWrapper(DBWrapperMixin):
         )
         for row in res:
             return row
+        else:
+            return None
 
     def getAll(
         self,
@@ -128,7 +132,7 @@ class DBWrapper(DBWrapperMixin):
             if row is None:
                 break
 
-            yield self.turnDataIntoModel(emptyDataClass, row)
+            yield self.turnDataIntoModel(emptyDataClass.__class__, row)
 
     def getFiltered(
         self,
@@ -166,7 +170,7 @@ class DBWrapper(DBWrapperMixin):
             if row is None:
                 break
 
-            yield self.turnDataIntoModel(emptyDataClass, row)
+            yield self.turnDataIntoModel(emptyDataClass.__class__, row)
 
     def _insert(
         self,

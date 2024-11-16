@@ -59,7 +59,7 @@ class PgSQL(DatabaseBackend):
     connection: PgConnectionType | None
     cursor: PgCursorType | None
 
-    def open(self):
+    def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
             self.close()

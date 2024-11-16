@@ -1,6 +1,6 @@
 import logging
 
-from typing import cast, Any
+from typing import Type, cast, Any
 
 from .common import OrderByItem, NoParam, DataModelType
 
@@ -36,7 +36,7 @@ class DBWrapperMixin:
         self,
         dbCursor: Any = None,
         logger: logging.Logger | None = None,
-    ):
+    ) -> None:
         """
         Initializes a new instance of the DBWrapper class.
 
@@ -52,7 +52,7 @@ class DBWrapperMixin:
         else:
             self.logger = logger
 
-    def __del__(self):
+    def __del__(self) -> None:
         """
         Deallocates the instance of the DBWrapper class.
         """
@@ -113,7 +113,7 @@ class DBWrapperMixin:
 
     def turnDataIntoModel(
         self,
-        emptyDataClass: DataModelType,
+        emptyDataClass: Type[DataModelType],
         dbData: dict[str, Any],
     ) -> DataModelType:
         """
@@ -129,7 +129,7 @@ class DBWrapperMixin:
             DataModelType: The data model filled with data.
         """
 
-        result = emptyDataClass.__class__()
+        result = emptyDataClass()
         result.fillDataFromDict(dbData)
         result.raw_data = dbData
 

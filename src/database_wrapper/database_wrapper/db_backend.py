@@ -185,7 +185,7 @@ class DatabaseBackend:
     ### Helpers ###
     ###############
 
-    def fixSocketTimeouts(self, fd: Any):
+    def fixSocketTimeouts(self, fd: Any) -> None:
         # Lets do some socket magic
         s = socket.fromfd(fd, socket.AF_INET, socket.SOCK_STREAM)
         # Enable sending of keep-alive messages

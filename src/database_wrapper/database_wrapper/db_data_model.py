@@ -1,10 +1,11 @@
+from enum import Enum
 import re
 import json
 import datetime
 import dataclasses
 
 from dataclasses import dataclass, field, asdict
-from typing import Any, Literal
+from typing import Any, Callable, Literal, NotRequired, Type, TypeVar, TypedDict, cast
 
 from .serialization import (
     SerializeType,
@@ -12,6 +13,18 @@ from .serialization import (
     jsonEncoder,
     serializeValue,
 )
+
+EnumType = TypeVar("EnumType", bound=Enum)
+
+
+class MetadataDict(TypedDict):
+    db_field: tuple[str, str]
+    store: bool
+    update: bool
+    exclude: NotRequired[bool]
+    serialize: NotRequired[Callable[[Any], Any] | SerializeType | None]
+    deserialize: NotRequired[Callable[[Any], Any] | None]
+    enum_class: NotRequired[Type[Enum] | None]
 
 
 @dataclass
@@ -101,7 +114,7 @@ class DBDataModel:
     ### Conversion methods ###
     ##########################
 
-    def fillDataFromDict(self, kwargs: dict[str, Any]):
+    def fillDataFromDict(self, kwargs: dict[str, Any]) -> None:
         fieldNames = set([f.name for f in dataclasses.fields(self)])
         for key in kwargs:
             if key in fieldNames:
@@ -110,9 +123,9 @@ class DBDataModel:
         self.__post_init__()
 
     # Init data
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = fieldObj.metadata
+            metadata = cast(MetadataDict, fieldObj.metadata)
             value = getattr(self, fieldName)
 
             # If serialize is set, and serialize is a SerializeType,
@@ -127,12 +140,8 @@ class DBDataModel:
             else:
                 deserialize = metadata.get("deserialize", None)
                 if deserialize is not None:
-                    if isinstance(deserialize, SerializeType):
-                        value = deserializeValue(value, deserialize, enumClass)
-                        setattr(self, fieldName, value)
-                    else:
-                        value = deserialize(value)
-                        setattr(self, fieldName, value)
+                    value = deserialize(value)
+                    setattr(self, fieldName, value)
 
     # String - representation
     def __repr__(self) -> str:
@@ -147,7 +156,7 @@ class DBDataModel:
         for field in pairs:
             classField = self.__dataclass_fields__.get(field[0], None)
             if classField is not None:
-                metadata = classField.metadata
+                metadata = cast(MetadataDict, classField.metadata)
                 if not "exclude" in metadata or not metadata["exclude"]:
                     newDict[field[0]] = field[1]
 
@@ -168,7 +177,7 @@ class DBDataModel:
             },
         }
         for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = fieldObj.metadata
+            metadata = cast(MetadataDict, fieldObj.metadata)
             assert (
                 "db_field" in metadata
                 and isinstance(metadata["db_field"], tuple)
@@ -248,7 +257,10 @@ class DBDataModel:
         Enable/Disable storing a field (insert into database)
         """
         if fieldName in self.__dataclass_fields__:
-            currentMetadata = self.__dataclass_fields__[fieldName].metadata
+            currentMetadata = cast(
+                MetadataDict,
+                dict(self.__dataclass_fields__[fieldName].metadata),
+            )
             currentMetadata["store"] = enable
             self.__dataclass_fields__[fieldName].metadata = currentMetadata
 
@@ -257,7 +269,10 @@ class DBDataModel:
         Enable/Disable updating a field (update in database)
         """
         if fieldName in self.__dataclass_fields__:
-            currentMetadata = self.__dataclass_fields__[fieldName].metadata
+            currentMetadata = cast(
+                MetadataDict,
+                dict(self.__dataclass_fields__[fieldName].metadata),
+            )
             currentMetadata["update"] = enable
             self.__dataclass_fields__[fieldName].metadata = currentMetadata
 
@@ -266,7 +281,10 @@ class DBDataModel:
         Exclude a field from dict representation
         """
         if fieldName in self.__dataclass_fields__:
-            currentMetadata = dict(self.__dataclass_fields__[fieldName].metadata)
+            currentMetadata = cast(
+                MetadataDict,
+                dict(self.__dataclass_fields__[fieldName].metadata),
+            )
             currentMetadata["exclude"] = enable
             self.__dataclass_fields__[fieldName].metadata = currentMetadata
 
@@ -286,7 +304,7 @@ class DBDataModel:
         """
         storeData: dict[str, Any] = {}
         for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = fieldObj.metadata
+            metadata = cast(MetadataDict, fieldObj.metadata)
             if "store" in metadata and metadata["store"] == True:
                 storeData[fieldName] = getattr(self, fieldName)
 
@@ -312,7 +330,7 @@ class DBDataModel:
 
         updateData: dict[str, Any] = {}
         for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = fieldObj.metadata
+            metadata = cast(MetadataDict, fieldObj.metadata)
             if "update" in metadata and metadata["update"] == True:
                 updateData[fieldName] = getattr(self, fieldName)
 

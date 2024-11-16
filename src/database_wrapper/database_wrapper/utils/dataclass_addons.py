@@ -12,7 +12,7 @@ def ignore_unknown_kwargs() -> Callable[[AnyDataType], AnyDataType]:
         originalInit = cls.__init__
 
         # @wraps(originalInit)
-        def newInit(self: Any, *args: Any, **kwargs: Any):
+        def newInit(self: Any, *args: Any, **kwargs: Any) -> None:
             # Filter out kwargs that are not properties of the class
             valid_kwargs = {k: v for k, v in kwargs.items() if hasattr(self, k)}
             originalInit(self, *args, **valid_kwargs)
