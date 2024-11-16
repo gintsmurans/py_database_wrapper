@@ -74,6 +74,9 @@ class PgSQL(DatabaseBackend):
         if "kwargs" not in self.config or not self.config["kwargs"]:
             self.config["kwargs"] = {}
 
+        if "autocommit" not in self.config["kwargs"]:
+            self.config["kwargs"]["autocommit"] = True
+
         self.logger.debug("Connecting to DB")
         self.connection = cast(
             PgConnectionType,
@@ -182,8 +185,8 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         if not "kwargs" in self.config or not self.config["kwargs"]:
             self.config["kwargs"] = {}
 
-        if not "auto_commit" in self.config["kwargs"]:
-            self.config["kwargs"]["auto_commit"] = True
+        if not "autocommit" in self.config["kwargs"]:
+            self.config["kwargs"]["autocommit"] = True
 
         # Connection pooling defaults
         if not "maxconnections" in self.config or not self.config["maxconnections"]:
