@@ -208,9 +208,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
             reconnect_timeout=0,
             num_workers=4,
             connection_class=PgConnectionTypeAsync,
-            kwargs={
-                "autocommit": True,
-            },
+            kwargs=self.config["kwargs"],
             **self.config["pool_kwargs"],
         )
 
