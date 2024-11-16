@@ -12,6 +12,7 @@ from .db_data_model import DBDataModel, DBDefaultsDataModel
 from .common import OrderByItem, DataModelType, NoParam
 from .db_wrapper import DBWrapper
 from .db_wrapper_async import DBWrapperAsync
+from .serialization import SerializeType
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper")
@@ -34,4 +35,5 @@ __all__ = [
     "OrderByItem",
     "NoParam",
     "utils",
+    "SerializeType",
 ]
