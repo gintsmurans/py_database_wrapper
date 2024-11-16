@@ -4,7 +4,7 @@ import datetime
 import dataclasses
 
 from dataclasses import dataclass, field, asdict
-from typing import Any
+from typing import Any, Literal
 
 from .serialization import (
     SerializeType,
@@ -237,7 +237,10 @@ class DBDataModel:
 
         return 0
 
-    def validate(self) -> bool:
+    def validate(self) -> Literal[True] | str:
+        """
+        True if the instance is valid, otherwise an error message.
+        """
         raise NotImplementedError("`validate` is not implemented")
 
     def setStore(self, fieldName: str, enable: bool = True) -> None:
