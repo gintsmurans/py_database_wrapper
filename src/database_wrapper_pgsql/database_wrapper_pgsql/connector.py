@@ -214,6 +214,12 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
             **self.config["pool_kwargs"],
         )
 
+    def __del__(self) -> None:
+        """Destructor"""
+        del self.cursor
+        del self.connection
+        del self.poolAsync
+
     ##################
     ### Connection ###
     ##################
