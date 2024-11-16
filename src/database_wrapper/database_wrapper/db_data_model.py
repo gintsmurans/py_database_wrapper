@@ -119,15 +119,16 @@ class DBDataModel:
             # we use our serialization function
             # Here we actually need to deserialize the value to correct class type
             serialize = metadata.get("serialize", None)
+            enumClass = metadata.get("enum_class", None)
             if serialize is not None and isinstance(serialize, SerializeType):
-                value = deserializeValue(value, serialize)
+                value = deserializeValue(value, serialize, enumClass)
                 setattr(self, fieldName, value)
 
             else:
                 deserialize = metadata.get("deserialize", None)
                 if deserialize is not None:
                     if isinstance(deserialize, SerializeType):
-                        value = deserializeValue(value, deserialize)
+                        value = deserializeValue(value, deserialize, enumClass)
                         setattr(self, fieldName, value)
                     else:
                         value = deserialize(value)
