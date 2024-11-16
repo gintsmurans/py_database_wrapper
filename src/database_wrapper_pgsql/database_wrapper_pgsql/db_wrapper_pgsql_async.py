@@ -26,7 +26,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbCursor: PgCursorTypeAsync | None,
+        dbCursor: PgCursorTypeAsync | None = None,
         logger: logging.Logger | None = None,
     ):
         """

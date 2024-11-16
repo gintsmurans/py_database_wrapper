@@ -34,7 +34,7 @@ class DBWrapperMixin:
     # Meta methods
     def __init__(
         self,
-        dbCursor: Any,
+        dbCursor: Any = None,
         logger: logging.Logger | None = None,
     ):
         """

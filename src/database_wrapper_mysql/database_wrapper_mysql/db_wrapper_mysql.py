@@ -20,7 +20,7 @@ class DBWrapperMysql(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbCursor: MySqlDictCursor | None,
+        dbCursor: MySqlDictCursor | None = None,
         logger: logging.Logger | None = None,
     ):
         """
