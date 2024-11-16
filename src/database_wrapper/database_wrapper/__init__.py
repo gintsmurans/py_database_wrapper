@@ -8,7 +8,7 @@ import logging
 
 from . import utils
 from .db_backend import DatabaseBackend
-from .db_data_model import DBDataModel, DBDefaultsDataModel
+from .db_data_model import MetadataDict, DBDataModel, DBDefaultsDataModel
 from .common import OrderByItem, DataModelType, NoParam
 from .db_wrapper import DBWrapper
 from .db_wrapper_async import DBWrapperAsync
@@ -31,6 +31,7 @@ __all__ = [
     "DBWrapper",
     "DBWrapperAsync",
     # Helpers
+    "MetadataDict",
     "DataModelType",
     "OrderByItem",
     "NoParam",
