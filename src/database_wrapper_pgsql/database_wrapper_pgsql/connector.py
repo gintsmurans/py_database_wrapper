@@ -40,7 +40,12 @@ class PgConfig(TypedDict):
 
 class PgSQL(DatabaseBackend):
     """
-    PostgreSQL database implementation
+    PostgreSQL database implementation.
+
+    Instance is created without actually connecting to the database.
+    When you are ready to connect, call open() method.
+
+    Close is called automatically when class is destroyed.
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig
@@ -120,7 +125,13 @@ class PgSQL(DatabaseBackend):
 
 class PgSQLAsync(DatabaseBackend):
     """
-    PostgreSQL database async implementation
+    PostgreSQL database async implementation.
+
+    Instance is created without actually connecting to the database.
+    When you are ready to connect, call await open() method.
+
+    ! Note: Close is not called automatically when class is destroyed.
+    ! You need to call it manually in async environment.
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig
@@ -219,7 +230,20 @@ class PgSQLAsync(DatabaseBackend):
 
 class PgSQLWithPooling(DatabaseBackend):
     """
-    PostgreSQL database implementation with connection pooling
+    PostgreSQL database implementation with connection pooling.
+
+    Instance is created without actually connecting to the database.
+    When you are ready to connect, call openPool() method.
+
+    Then you can use newConnection() to get connection from the pool and
+    returnConnection() to return it back.
+    Or use context manager to get connection and return it back automatically,
+    for example:
+
+        pool = PgSQLWithPooling(config)
+        pool.openPool()
+        with pool as (connection, cursor):
+            cursor.execute("SELECT 1")
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig
@@ -309,12 +333,6 @@ class PgSQLWithPooling(DatabaseBackend):
             **self.config["pool_kwargs"],
         )
 
-    def __del__(self) -> None:
-        """Destructor"""
-        del self.cursor
-        del self.connection
-        del self.pool
-
     ##################
     ### Connection ###
     ##################
@@ -344,18 +362,6 @@ class PgSQLWithPooling(DatabaseBackend):
         res = self.newConnection()
         if res:
             (self.connection, self.cursor) = res
-
-    def close(self) -> None:
-        """Close connection by returning it to the pool"""
-
-        if self.cursor:
-            self.logger.debug("Closing cursor")
-            self.cursor.close()
-            self.cursor = None
-
-        if self.connection:
-            self.returnConnection(self.connection)
-            self.connection = None
 
     def newConnection(
         self,
@@ -467,7 +473,21 @@ class PgSQLWithPooling(DatabaseBackend):
 
 class PgSQLWithPoolingAsync(DatabaseBackend):
     """
-    PostgreSQL database implementation with async connection pooling
+    PostgreSQL database implementation with async connection pooling.
+
+    Instance is created without actually connecting to the database.
+    When you are ready to connect, call await openPool() method.
+
+    Then you can use newConnection() to get connection from the pool and
+    returnConnection() to return it back.
+
+    Or use context manager to get connection and return it back automatically,
+    for example:
+
+        pool = PgSQLWithPoolingAsync(config)
+        await pool.openPool()
+        async with pool as (connection, cursor):
+            await cursor.execute("SELECT 1")
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig

@@ -83,6 +83,9 @@ class DatabaseBackend:
         self.loggerName = f"{__name__}.{self.__class__.__name__}.{self.name}"
         self.logger = logging.getLogger(self.loggerName)
 
+        self.pool = None
+        self.poolAsync = None
+
         self.connection = None
         self.cursor = None
         self.shutdownRequested = Event()
@@ -102,6 +105,9 @@ class DatabaseBackend:
         # Clean just in case
         del self.connection
         del self.cursor
+
+        del self.pool
+        del self.poolAsync
 
     ###############
     ### Context ###
