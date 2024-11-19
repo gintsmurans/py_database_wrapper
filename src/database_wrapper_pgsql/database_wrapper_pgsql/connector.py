@@ -58,8 +58,8 @@ class PgSQL(DatabaseBackend):
 
     config: PgConfig
 
-    connection: PgConnectionType | None
-    cursor: PgCursorType | None
+    connection: PgConnectionType
+    cursor: PgCursorType
 
     def open(self) -> None:
         # Free resources
@@ -144,8 +144,8 @@ class PgSQLAsync(DatabaseBackend):
 
     config: PgConfig
 
-    connection: PgConnectionTypeAsync | None
-    cursor: PgCursorTypeAsync | None
+    connection: PgConnectionTypeAsync
+    cursor: PgCursorTypeAsync
 
     def __del__(self) -> None:
         """Destructor"""
@@ -184,9 +184,6 @@ class PgSQLAsync(DatabaseBackend):
             row_factory=PgDictRowFactory,  # type: ignore
             **self.config["kwargs"],
         )
-        if self.connection is None:
-            raise Exception("Failed to connect to database")
-
         self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
 
         # Lets do some socket magic
@@ -197,12 +194,10 @@ class PgSQLAsync(DatabaseBackend):
         if self.cursor:
             self.logger.debug("Closing cursor")
             await self.cursor.close()
-            self.cursor = None
 
         if self.connection:
             self.logger.debug("Closing connection")
             await self.connection.close()
-            self.connection = None
 
     ############
     ### Data ###
@@ -488,6 +483,10 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         await pool.openPool()
         async with pool as (connection, cursor):
             await cursor.execute("SELECT 1")
+
+
+    ! Note: Close is not called automatically when class is destroyed.
+    ! You need to call `await closePool()` manually in async environment.
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig
