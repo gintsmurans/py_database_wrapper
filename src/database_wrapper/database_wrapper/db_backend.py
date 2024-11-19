@@ -5,8 +5,6 @@ from typing import Any
 from threading import Event
 from contextvars import ContextVar
 
-from .utils.timer import Timer
-
 
 class DatabaseBackend:
     config: Any
@@ -46,10 +44,6 @@ class DatabaseBackend:
     logger: logging.Logger
     """ Logger """
 
-    # TODO: Accept custom timer and actually use it
-    timer: ContextVar[Timer | None]
-    """ Timer for measuring time spent in database """
-
     shutdownRequested: Event
     """
     Event to signal shutdown
@@ -88,7 +82,6 @@ class DatabaseBackend:
 
         self.loggerName = f"{__name__}.{self.__class__.__name__}.{self.name}"
         self.logger = logging.getLogger(self.loggerName)
-        self.timer = ContextVar(f"db_timer", default=None)
 
         self.connection = None
         self.cursor = None

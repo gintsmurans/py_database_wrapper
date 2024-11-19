@@ -17,8 +17,6 @@ from psycopg.rows import (
 from psycopg_pool import ConnectionPool, AsyncConnectionPool
 
 from database_wrapper import DatabaseBackend
-from database_wrapper.utils.timer import Timer
-
 
 PgConnectionType = PgConnection[PgDictRow]
 PgCursorType = PgCursor[PgDictRow]
@@ -264,13 +262,7 @@ class PgSQLWithPooling(DatabaseBackend):
     def newConnection(
         self,
     ) -> tuple[PgConnectionType, PgCursorType] | None:
-        timer = self.timer.get()
         assert self.pool, "Pool is not initialized"
-
-        # Create dummy timer
-        if timer is None:
-            timer = Timer("db")
-            self.timer.set(timer)
 
         # Log
         self.logger.debug("Getting connection from the pool")
@@ -286,10 +278,9 @@ class PgSQLWithPooling(DatabaseBackend):
                 # Lets do some socket magic
                 self.fixSocketTimeouts(connection.fileno())
 
-                with timer.enter("PgSQLWithPooling.__aenter__.ping"):
-                    with connection.transaction():
-                        cursor.execute("SELECT 1")
-                        cursor.fetchone()
+                with connection.transaction():
+                    cursor.execute("SELECT 1")
+                    cursor.fetchone()
 
                 return (connection, cursor)
 
@@ -309,12 +300,7 @@ class PgSQLWithPooling(DatabaseBackend):
 
     def returnConnection(self, connection: PgConnectionType) -> None:
         """Return connection to the pool"""
-        timer = self.timer.get()
         assert self.pool, "Pool is not initialized"
-
-        # Create dummy timer
-        if timer is None:
-            timer = Timer("db")
 
         # Log
         self.logger.debug("Putting connection back to the pool")
@@ -324,8 +310,6 @@ class PgSQLWithPooling(DatabaseBackend):
 
         # Debug
         self.logger.debug(self.pool.get_stats())
-        timer.printTimerStats()
-        timer.resetTimers()
 
     ###############
     ### Context ###
@@ -335,10 +319,6 @@ class PgSQLWithPooling(DatabaseBackend):
         self,
     ) -> tuple[PgConnectionType | None, PgCursorType | None]:
         """Context manager"""
-
-        # Init timer
-        timer = Timer("db")
-        self.timer.set(timer)
 
         # Lets set the context var so that it is set even if we fail to get connection
         self.contextConnection.set(None)
@@ -362,7 +342,6 @@ class PgSQLWithPooling(DatabaseBackend):
 
         # Reset context
         self.contextConnection.set(None)
-        self.timer.set(None)
 
     ############
     ### Data ###
@@ -533,13 +512,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     async def newConnection(
         self,
     ) -> tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None:
-        timer = self.timer.get()
         assert self.poolAsync, "Async pool is not initialized"
-
-        # Create dummy timer
-        if timer is None:
-            timer = Timer("db")
-            self.timer.set(timer)
 
         # Log
         self.logger.debug("Getting connection from the pool")
@@ -557,10 +530,9 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
                 # Lets do some socket magic
                 self.fixSocketTimeouts(connection.fileno())
 
-                async with timer.aenter("PgSQLWithPoolingAsync.__aenter__.ping"):
-                    async with connection.transaction():
-                        await cursor.execute("SELECT 1")
-                        await cursor.fetchone()
+                async with connection.transaction():
+                    await cursor.execute("SELECT 1")
+                    await cursor.fetchone()
 
                 return (connection, cursor)
 
@@ -580,12 +552,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
     async def returnConnection(self, connection: PgConnectionTypeAsync) -> None:
         """Return connection to the pool"""
-        timer = self.timer.get()
         assert self.poolAsync, "Async pool is not initialized"
-
-        # Create dummy timer
-        if timer is None:
-            timer = Timer("db")
 
         # Log
         self.logger.debug("Putting connection back to the pool")
@@ -595,8 +562,6 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
         # Debug
         self.logger.debug(self.poolAsync.get_stats())
-        timer.printTimerStats()
-        timer.resetTimers()
 
     ###############
     ### Context ###
@@ -606,10 +571,6 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         self,
     ) -> tuple[PgConnectionTypeAsync | None, PgCursorTypeAsync | None]:
         """Context manager"""
-
-        # Init timer
-        timer = Timer("db")
-        self.timer.set(timer)
 
         # Lets set the context var so that it is set even if we fail to get connection
         self.contextConnectionAsync.set(None)
@@ -633,7 +594,6 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
         # Reset context
         self.contextConnectionAsync.set(None)
-        self.timer.set(None)
 
     ############
     ### Data ###
