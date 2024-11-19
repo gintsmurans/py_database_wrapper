@@ -136,6 +136,13 @@ class PgSQLAsync(DatabaseBackend):
     connection: PgConnectionTypeAsync | None
     cursor: PgCursorTypeAsync | None
 
+    def __del__(self) -> None:
+        """Destructor"""
+
+        # Just to be sure as async does not have __del__
+        del self.cursor
+        del self.connection
+
     async def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
@@ -173,6 +180,18 @@ class PgSQLAsync(DatabaseBackend):
 
         # Lets do some socket magic
         self.fixSocketTimeouts(self.connection.fileno())
+
+    async def close(self) -> Any:
+        """Close connections"""
+        if self.cursor:
+            self.logger.debug("Closing cursor")
+            await self.cursor.close()
+            self.cursor = None
+
+        if self.connection:
+            self.logger.debug("Closing connection")
+            await self.connection.close()
+            self.connection = None
 
     ############
     ### Data ###
