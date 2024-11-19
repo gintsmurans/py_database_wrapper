@@ -8,7 +8,6 @@ from psycopg import (
     # Sync
     Connection as PgConnection,
     Cursor as PgCursor,
-    connect as PgConnect,
 )
 from psycopg.rows import (
     DictRow as PgDictRow,
@@ -78,7 +77,7 @@ class PgSQL(DatabaseBackend):
         self.logger.debug("Connecting to DB")
         self.connection = cast(
             PgConnectionType,
-            PgConnect(
+            PgConnection.connect(
                 host=self.config["hostname"],
                 port=self.config["port"],
                 sslmode=self.config["ssl"],
@@ -117,6 +116,86 @@ class PgSQL(DatabaseBackend):
 
         self.logger.debug(f"Rollback DB queries")
         self.connection.rollback()
+
+
+class PgSQLAsync(DatabaseBackend):
+    """
+    PostgreSQL database async implementation
+
+    :param config: Configuration for PostgreSQL
+    :type config: PgConfig
+
+    Defaults:
+        port = 5432
+        ssl = prefer
+
+    """
+
+    config: PgConfig
+
+    connection: PgConnectionTypeAsync | None
+    cursor: PgCursorTypeAsync | None
+
+    async def open(self) -> None:
+        # Free resources
+        if hasattr(self, "connection") and self.connection:
+            self.close()
+
+        # Set defaults
+        if "port" not in self.config or not self.config["port"]:
+            self.config["port"] = 5432
+
+        if "ssl" not in self.config or not self.config["ssl"]:
+            self.config["ssl"] = "prefer"
+
+        if "kwargs" not in self.config or not self.config["kwargs"]:
+            self.config["kwargs"] = {}
+
+        if "autocommit" not in self.config["kwargs"]:
+            self.config["kwargs"]["autocommit"] = True
+
+        self.logger.debug("Connecting to DB")
+        self.connection = await PgConnectionAsync.connect(
+            host=self.config["hostname"],
+            port=self.config["port"],
+            sslmode=self.config["ssl"],
+            user=self.config["username"],
+            password=self.config["password"],
+            dbname=self.config["database"],
+            connect_timeout=self.connectionTimeout,
+            row_factory=PgDictRowFactory,  # type: ignore
+            **self.config["kwargs"],
+        )
+        if self.connection is None:
+            raise Exception("Failed to connect to database")
+
+        self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
+
+        # Lets do some socket magic
+        self.fixSocketTimeouts(self.connection.fileno())
+
+    ############
+    ### Data ###
+    ############
+
+    def affectedRows(self) -> int:
+        assert self.cursor, "Cursor is not initialized"
+
+        return self.cursor.rowcount
+
+    async def commit(self) -> None:
+        """Commit DB queries"""
+        assert self.connection, "Connection is not initialized"
+
+        self.logger.debug(f"Commit DB queries")
+        await self.connection.commit()
+
+    async def rollback(self) -> None:
+        """Rollback DB queries"""
+        assert self.connection, "Connection is not initialized"
+
+        self.logger.debug(f"Rollback DB queries")
+        await self.connection.rollback()
 
 
 class PgSQLWithPooling(DatabaseBackend):
