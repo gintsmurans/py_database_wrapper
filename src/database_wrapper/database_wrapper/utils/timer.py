@@ -32,7 +32,7 @@ class Timer:
 
     # * Class generator
     @contextmanager
-    def enter(self, name: str) -> Generator["Timer"]:
+    def enter(self, name: str) -> Generator["Timer", None, None]:
         self.level += 1
         self.start(name=name)
 
@@ -43,7 +43,7 @@ class Timer:
             self.level -= 1
 
     @asynccontextmanager
-    async def aenter(self, name: str) -> AsyncGenerator["Timer"]:
+    async def aenter(self, name: str) -> AsyncGenerator["Timer", None]:
         self.level += 1
         self.start(name=name)
 

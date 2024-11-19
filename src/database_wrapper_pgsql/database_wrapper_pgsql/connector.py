@@ -14,7 +14,7 @@ from psycopg.rows import (
     DictRow as PgDictRow,
     dict_row as PgDictRowFactory,
 )
-from psycopg_pool import AsyncConnectionPool
+from psycopg_pool import ConnectionPool, AsyncConnectionPool
 
 from database_wrapper import DatabaseBackend
 from database_wrapper.utils.timer import Timer
@@ -121,9 +121,276 @@ class PgSQL(DatabaseBackend):
         self.connection.rollback()
 
 
+class PgSQLWithPooling(DatabaseBackend):
+    """
+    PostgreSQL database implementation with connection pooling
+
+    :param config: Configuration for PostgreSQL
+    :type config: PgConfig
+    :param connectionTimeout: Connection timeout
+    :type connectionTimeout: int
+    :param instanceName: Name of the instance
+    :type instanceName: str
+
+    Defaults:
+        port = 5432
+        ssl = prefer
+        maxconnections = 5
+    """
+
+    config: PgConfig
+    """ Configuration """
+
+    pool: ConnectionPool[PgConnectionType]
+    """ Connection pool """
+
+    connection: PgConnectionType | None
+    """ Connection to database """
+
+    cursor: PgCursorType | None
+    """ Cursor to database """
+
+    contextConnection: ContextVar[tuple[PgConnectionType, PgCursorType] | None]
+    """ Connection used in context manager """
+
+    ########################
+    ### Class Life Cycle ###
+    ########################
+
+    def __init__(
+        self,
+        dbConfig: PgConfig,
+        connectionTimeout: int = 5,
+        instanceName: str = "postgresql_pool",
+    ) -> None:
+        """
+        Main concept here is that in init we do not connect to database,
+        so that class instances can be safely made regardless of connection statuss.
+
+        Remember to call openPool() after creating instance to actually open the pool to the database
+        and also closePool() to close the pool.
+        """
+
+        super().__init__(dbConfig, connectionTimeout, instanceName)
+
+        # Set defaults
+        if not "port" in self.config or not self.config["port"]:
+            self.config["port"] = 5432
+
+        if not "ssl" in self.config or not self.config["ssl"]:
+            self.config["ssl"] = "prefer"
+
+        if not "kwargs" in self.config or not self.config["kwargs"]:
+            self.config["kwargs"] = {}
+
+        if not "autocommit" in self.config["kwargs"]:
+            self.config["kwargs"]["autocommit"] = True
+
+        # Connection pooling defaults
+        if not "maxconnections" in self.config or not self.config["maxconnections"]:
+            self.config["maxconnections"] = 5
+
+        if not "pool_kwargs" in self.config or not self.config["pool_kwargs"]:
+            self.config["pool_kwargs"] = {}
+
+        connStr = (
+            f"postgresql://{self.config['username']}:{self.config['password']}@{self.config['hostname']}:{self.config['port']}"
+            f"/{self.config['database']}?connect_timeout={self.connectionTimeout}&application_name={self.name}"
+            f"&sslmode={self.config['ssl']}"
+        )
+        self.pool = ConnectionPool(
+            connStr,
+            open=False,
+            min_size=2,
+            max_size=self.config["maxconnections"],
+            max_lifetime=20 * 60,
+            max_idle=400,
+            timeout=self.connectionTimeout,
+            reconnect_timeout=0,
+            num_workers=4,
+            connection_class=PgConnectionType,
+            kwargs=self.config["kwargs"],
+            **self.config["pool_kwargs"],
+        )
+
+    def __del__(self) -> None:
+        """Destructor"""
+        del self.cursor
+        del self.connection
+        del self.pool
+
+    ##################
+    ### Connection ###
+    ##################
+
+    def openPool(self) -> None:
+        self.pool.open(wait=True, timeout=self.connectionTimeout)
+
+    def closePool(self) -> None:
+        """Close Pool"""
+
+        if self.shutdownRequested.is_set():
+            return
+        self.shutdownRequested.set()
+
+        # Close pool
+        self.logger.debug("Closing connection pool")
+        self.close()
+        if hasattr(self, "pool") and self.pool.closed is False:
+            self.pool.close()
+
+    def open(self) -> None:
+        """Get connection from the pool and keep it in the class"""
+        if self.connection:
+            self.close()
+
+        # Create new connection
+        res = self.newConnection()
+        if res:
+            (self.connection, self.cursor) = res
+
+    def close(self) -> None:
+        """Close connection by returning it to the pool"""
+
+        if self.cursor:
+            self.logger.debug("Closing cursor")
+            self.cursor.close()
+            self.cursor = None
+
+        if self.connection:
+            self.returnConnection(self.connection)
+            self.connection = None
+
+    def newConnection(
+        self,
+    ) -> tuple[PgConnectionType, PgCursorType] | None:
+        timer = self.timer.get()
+        assert self.pool, "Pool is not initialized"
+
+        # Create dummy timer
+        if timer is None:
+            timer = Timer("db")
+            self.timer.set(timer)
+
+        # Log
+        self.logger.debug("Getting connection from the pool")
+
+        # Get connection from the pool
+        tries = 0
+        while not self.shutdownRequested.is_set():
+            connection = None
+            try:
+                connection = self.pool.getconn(timeout=self.connectionTimeout)
+                cursor = connection.cursor(row_factory=PgDictRowFactory)
+
+                # Lets do some socket magic
+                self.fixSocketTimeouts(connection.fileno())
+
+                with timer.enter("PgSQLWithPooling.__aenter__.ping"):
+                    with connection.transaction():
+                        cursor.execute("SELECT 1")
+                        cursor.fetchone()
+
+                return (connection, cursor)
+
+            except Exception as e:
+                if connection:
+                    connection.close()
+                    self.pool.putconn(connection)
+
+                self.logger.error(f"Error while getting connection from the pool: {e}")
+                self.shutdownRequested.wait(self.slowDownTimeout)
+                tries += 1
+                if tries >= 3:
+                    break
+                continue
+
+        return None
+
+    def returnConnection(self, connection: PgConnectionType) -> None:
+        """Return connection to the pool"""
+        timer = self.timer.get()
+        assert self.pool, "Pool is not initialized"
+
+        # Create dummy timer
+        if timer is None:
+            timer = Timer("db")
+
+        # Log
+        self.logger.debug("Putting connection back to the pool")
+
+        # Put connection back to the pool
+        self.pool.putconn(connection)
+
+        # Debug
+        self.logger.debug(self.pool.get_stats())
+        timer.printTimerStats()
+        timer.resetTimers()
+
+    ###############
+    ### Context ###
+    ###############
+
+    def __enter__(
+        self,
+    ) -> tuple[PgConnectionType | None, PgCursorType | None]:
+        """Context manager"""
+
+        # Init timer
+        timer = Timer("db")
+        self.timer.set(timer)
+
+        # Lets set the context var so that it is set even if we fail to get connection
+        self.contextConnection.set(None)
+
+        res = self.newConnection()
+        if res:
+            self.contextConnection.set(res)
+            return res
+
+        return (
+            None,
+            None,
+        )
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        """Context manager"""
+
+        testData = self.contextConnection.get()
+        if testData:
+            self.returnConnection(testData[0])
+
+        # Reset context
+        self.contextConnection.set(None)
+        self.timer.set(None)
+
+    ############
+    ### Data ###
+    ############
+
+    def affectedRows(self) -> int:
+        assert self.cursor, "Cursor is not initialized"
+
+        return self.cursor.rowcount
+
+    def commit(self) -> None:
+        """Commit DB queries"""
+        assert self.connection, "Connection is not initialized"
+
+        self.logger.debug(f"Commit DB queries")
+        self.connection.commit()
+
+    def rollback(self) -> None:
+        """Rollback DB queries"""
+        assert self.connection, "Connection is not initialized"
+
+        self.logger.debug(f"Rollback DB queries")
+        self.connection.rollback()
+
+
 class PgSQLWithPoolingAsync(DatabaseBackend):
     """
-    PostgreSQL database implementation with async and connection pooling
+    PostgreSQL database implementation with async connection pooling
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig

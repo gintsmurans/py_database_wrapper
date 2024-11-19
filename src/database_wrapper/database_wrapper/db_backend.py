@@ -158,7 +158,7 @@ class DatabaseBackend:
             self.connection.close()
             self.connection = None
 
-    async def newConnection(self) -> Any:
+    def newConnection(self) -> Any:
         """
         Create new connection
 
@@ -169,7 +169,7 @@ class DatabaseBackend:
         """
         raise Exception("Not implemented")
 
-    async def returnConnection(self, connection: Any) -> Any:
+    def returnConnection(self, connection: Any) -> Any:
         """
         Return connection to pool
 
