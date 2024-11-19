@@ -13,6 +13,7 @@ from .common import OrderByItem, DataModelType, NoParam
 from .db_wrapper import DBWrapper
 from .db_wrapper_async import DBWrapperAsync
 from .serialization import SerializeType
+from .utils.dataclass_addons import ignore_unknown_kwargs
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper")
@@ -37,4 +38,5 @@ __all__ = [
     "NoParam",
     "utils",
     "SerializeType",
+    "ignore_unknown_kwargs",
 ]
