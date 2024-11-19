@@ -146,7 +146,7 @@ class PgSQLAsync(DatabaseBackend):
     async def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
-            self.close()
+            await self.close()
 
         # Set defaults
         if "port" not in self.config or not self.config["port"]:
