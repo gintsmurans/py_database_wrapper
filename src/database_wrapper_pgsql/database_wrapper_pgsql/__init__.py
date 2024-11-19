@@ -15,6 +15,7 @@ from .connector import (
     PgConfig,
     # Connectors
     PgSQL,
+    PgSQLAsync,
     PgSQLWithPooling,
     PgSQLWithPoolingAsync,
     # Connection and Cursor types
@@ -36,6 +37,7 @@ __all__ = [
     "DBWrapperPgSQLAsync",
     # Connectors
     "PgSQL",
+    "PgSQLAsync",
     "PgSQLWithPooling",
     "PgSQLWithPoolingAsync",
     # Connection and Cursor types
