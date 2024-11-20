@@ -74,7 +74,7 @@ def deserializeValue(
                 "enumClass (enum_class) must be provided when deserializing Enum"
             )
 
-        if isinstance(value, Enum):
+        if isinstance(value, Enum) or value is None:
             return value
 
         return enumClass(value)

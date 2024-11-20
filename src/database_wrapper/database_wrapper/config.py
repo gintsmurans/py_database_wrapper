@@ -3,7 +3,7 @@ from typing import Any
 CONFIG: dict[str, Any] = {
     # These are supposed to be set automatically by a git pre-compile script
     # They are one git commit hash behind, if used automatically
-    "git_commit_hash": "f131637e25ea89260b2570bf3edb9cc0a3db465d",
-    "git_commit_date": "19.11.2024 23:33",
-    "app_version": "0.1.67",
+    "git_commit_hash": "5d71fb214ba7697031b60b2be70683c6d361fec1",
+    "git_commit_date": "20.11.2024 00:01",
+    "app_version": "0.1.68",
 }
