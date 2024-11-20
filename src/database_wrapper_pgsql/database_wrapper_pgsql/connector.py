@@ -1,13 +1,16 @@
+from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
-from typing import Any, NotRequired, TypedDict, cast
+from typing import Any, AsyncIterator, Iterator, NotRequired, TypedDict, cast
 
 from psycopg import (
     # Async
     AsyncConnection as PgConnectionAsync,
     AsyncCursor as PgCursorAsync,
+    AsyncTransaction,
     # Sync
     Connection as PgConnection,
     Cursor as PgCursor,
+    Transaction,
 )
 from psycopg.rows import (
     DictRow as PgDictRow,
@@ -98,6 +101,24 @@ class PgSQL(DatabaseBackend):
 
         # Lets do some socket magic
         self.fixSocketTimeouts(self.connection.fileno())
+
+    ####################
+    ### Transactions ###
+    ####################
+
+    @contextmanager
+    def transaction(
+        self,
+        dbConn: PgConnectionType | None = None,
+    ) -> Iterator[Transaction]:
+        """Transaction context manager"""
+        if dbConn:
+            with dbConn.transaction() as trans:
+                yield trans
+
+        assert self.connection, "Connection is not initialized"
+        with self.connection.transaction() as trans:
+            yield trans
 
     ############
     ### Data ###
@@ -198,6 +219,24 @@ class PgSQLAsync(DatabaseBackend):
         if self.connection:
             self.logger.debug("Closing connection")
             await self.connection.close()
+
+    ####################
+    ### Transactions ###
+    ####################
+
+    @asynccontextmanager
+    async def transaction(
+        self,
+        dbConn: PgConnectionTypeAsync | None = None,
+    ) -> AsyncIterator[AsyncTransaction]:
+        """Transaction context manager"""
+        if dbConn:
+            async with dbConn.transaction() as trans:
+                yield trans
+
+        assert self.connection, "Connection is not initialized"
+        async with self.connection.transaction() as trans:
+            yield trans
 
     ############
     ### Data ###
@@ -441,6 +480,24 @@ class PgSQLWithPooling(DatabaseBackend):
 
         # Reset context
         self.contextConnection.set(None)
+
+    ####################
+    ### Transactions ###
+    ####################
+
+    @contextmanager
+    def transaction(
+        self,
+        dbConn: PgConnectionType | None = None,
+    ) -> Iterator[Transaction]:
+        """Transaction context manager"""
+        if dbConn:
+            with dbConn.transaction() as trans:
+                yield trans
+
+        assert self.connection, "Connection is not initialized"
+        with self.connection.transaction() as trans:
+            yield trans
 
     ############
     ### Data ###
@@ -711,6 +768,24 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
         # Reset context
         self.contextConnectionAsync.set(None)
+
+    ####################
+    ### Transactions ###
+    ####################
+
+    @asynccontextmanager
+    async def transaction(
+        self,
+        dbConn: PgConnectionTypeAsync | None = None,
+    ) -> AsyncIterator[AsyncTransaction]:
+        """Transaction context manager"""
+        if dbConn:
+            async with dbConn.transaction() as trans:
+                yield trans
+
+        assert self.connection, "Connection is not initialized"
+        async with self.connection.transaction() as trans:
+            yield trans
 
     ############
     ### Data ###

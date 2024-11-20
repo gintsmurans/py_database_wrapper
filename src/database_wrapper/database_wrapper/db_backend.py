@@ -203,6 +203,32 @@ class DatabaseBackend:
             socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connectionTimeout * 1000
         )
 
+    ####################
+    ### Transactions ###
+    ####################
+
+    def beginTransaction(self) -> Any:
+        """Start transaction"""
+        raise Exception("Not implemented")
+
+    def commitTransaction(self) -> Any:
+        """Commit transaction"""
+        raise Exception("Not implemented")
+
+    def rollbackTransaction(self) -> Any:
+        """Rollback transaction"""
+        raise Exception("Not implemented")
+
+    # @contextmanager
+    def transaction(self, dbConn: Any = None) -> Any:
+        """
+        Transaction context manager
+
+        ! When overriding this method, remember to use context manager.
+        ! Its not defined here, so that it can be used in both sync and async methods.
+        """
+        raise Exception("Not implemented")
+
     ############
     ### Data ###
     ############
