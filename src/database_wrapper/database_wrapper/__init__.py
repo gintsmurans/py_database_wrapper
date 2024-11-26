@@ -6,8 +6,7 @@ database_wrapper package - Base for database wrappers
 
 import logging
 
-from pep249 import Connection as ConnectionABC, Cursor as CursorABC
-
+from .abc import ConnectionABC, CursorABC, CursorAsyncABC, ConnectionAsyncABC
 from . import utils
 from .db_backend import DatabaseBackend
 from .db_data_model import MetadataDict, DBDataModel, DBDefaultsDataModel
@@ -44,4 +43,6 @@ __all__ = [
     # Abstract classes
     "ConnectionABC",
     "CursorABC",
+    "CursorAsyncABC",
+    "ConnectionAsyncABC",
 ]
