@@ -36,7 +36,7 @@ class MSSQL(DatabaseBackend):
     connection: MssqlConnection
     cursor: MssqlCursor
 
-    def open(self):
+    def open(self) -> None:
         self.logger.debug("Connecting to DB")
 
         # Set defaults

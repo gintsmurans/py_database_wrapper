@@ -1,23 +1,15 @@
 import logging
-from pymssql import (
-    Connection as MssqlConnection,
-    Cursor as MssqlCursor,
-)
 
-from database_wrapper import DBWrapper, DBDataModel
+from database_wrapper import DBWrapper
 
-from .connector import MSSQL
+from .connector import MssqlCursor
 
 
 class DBWrapperMSSQL(DBWrapper):
     """Database wrapper for mssql database"""
 
-    # Override db instance
-    db: MSSQL
-    """ MSSQL database connector """
-
-    dbConn: MssqlConnection | None = None
-    """ MsSQL connection object """
+    dbCursor: MssqlCursor
+    """ MsSQL cursor object """
 
     #######################
     ### Class lifecycle ###
@@ -27,60 +19,30 @@ class DBWrapperMSSQL(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: MSSQL | None = None,
-        dbConn: MssqlConnection | None = None,
+        dbCursor: MssqlCursor | None = None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MSSQL): The MSSQL connector.
-            dbConn (MssqlConnection, optional): The MSSQL connection object. Defaults to None.
+            dbCursor (MssqlCursor): The MsSQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(db, dbConn, logger)
+        super().__init__(dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDb(self, db: MSSQL | None) -> None:
+    def setDbCursor(self, dbCursor: MssqlCursor) -> None:
         """
-        Updates the database backend object.
+        Updates the database cursor object.
 
         Args:
-            db (MSSQL | None): The new database backend object.
+            dbCursor (MssqlCursor): The new database cursor object.
         """
-        super().setDb(db)
-
-    def setDbConn(self, dbConn: MssqlConnection | None) -> None:
-        """
-        Updates the database connection object.
-
-        Args:
-            dbConn (MssqlConnection | None): The new database connection object.
-        """
-        super().setDbConn(dbConn)
-
-    ######################
-    ### Helper methods ###
-    ######################
-
-    def createCursor(
-        self,
-        emptyDataClass: DBDataModel | None = None,
-    ) -> MssqlCursor:
-        """
-        Creates a new cursor object.
-
-        Args:
-            emptyDataClass (DBDataModel | None, optional): The data model to use for the cursor. Defaults to None.
-
-        Returns:
-            MssqlCursor: The created cursor object.
-        """
-        return self.db.connection.cursor(as_dict=True)
+        super().setDbCursor(dbCursor)
 
     #####################
     ### Query methods ###

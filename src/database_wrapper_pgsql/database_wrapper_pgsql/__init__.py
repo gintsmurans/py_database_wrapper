@@ -11,9 +11,14 @@ import logging
 from .db_wrapper_pgsql import DBWrapperPgSQL
 from .db_wrapper_pgsql_async import DBWrapperPgSQLAsync
 from .connector import (
+    # Basics
     PgConfig,
+    # Connectors
     PgSQL,
+    PgSQLAsync,
+    PgSQLWithPooling,
     PgSQLWithPoolingAsync,
+    # Connection and Cursor types
     PgConnectionType,
     PgCursorType,
     PgConnectionTypeAsync,
@@ -32,6 +37,8 @@ __all__ = [
     "DBWrapperPgSQLAsync",
     # Connectors
     "PgSQL",
+    "PgSQLAsync",
+    "PgSQLWithPooling",
     "PgSQLWithPoolingAsync",
     # Connection and Cursor types
     "PgConnectionType",

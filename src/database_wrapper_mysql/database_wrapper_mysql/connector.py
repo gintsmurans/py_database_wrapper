@@ -35,7 +35,7 @@ class MySQL(DatabaseBackend):
     connection: MySqlConnection
     cursor: MySqlDictCursor
 
-    def open(self):
+    def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
             self.close()

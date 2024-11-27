@@ -1,8 +1,7 @@
-from typing import Any, cast
+from typing import Any
 
 from psycopg import sql
-
-from database_wrapper import OrderByItem, DataModelType, NoParam
+from database_wrapper import OrderByItem, NoParam
 
 
 class DBWrapperPgSQLMixin:
@@ -28,26 +27,6 @@ class DBWrapperPgSQLMixin:
             return sql.Identifier(schema, name)
 
         return sql.Identifier(name)
-
-    def turnDataIntoModel(
-        self,
-        emptyDataClass: DataModelType,
-        dbData: dict[str, Any],
-    ) -> DataModelType:
-        """
-        Turns the given data into a data model.
-        By default we are pretty sure that there is no factory in the cursor,
-        So we need to create a new instance of the data model and fill it with data
-
-        Args:
-            emptyDataClass (DataModelType): The data model to use.
-            dbData (dict[str, Any]): The data to turn into a model.
-
-        Returns:
-            DataModelType: The data model filled with data.
-        """
-
-        return cast(DataModelType, dbData)
 
     #####################
     ### Query methods ###

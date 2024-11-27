@@ -1,23 +1,16 @@
 import logging
 from typing import Any
 
-from MySQLdb.connections import Connection as MySqlConnection
-from MySQLdb.cursors import DictCursor as MySqlDictCursor
-
 from database_wrapper import DBWrapper
 
-from .connector import MySQL
+from .connector import MySqlDictCursor
 
 
 class DBWrapperMysql(DBWrapper):
-    """Base model for all RV4 models"""
+    """Wrapper for MySQL database"""
 
-    # Override db instance
-    db: MySQL
-    """ MySQL database connector """
-
-    dbConn: MySqlConnection | None = None
-    """ MySQL connection object """
+    dbCursor: MySqlDictCursor
+    """ MySQL cursor object """
 
     #######################
     ### Class lifecycle ###
@@ -27,41 +20,30 @@ class DBWrapperMysql(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        db: MySQL | None = None,
-        dbConn: MySqlConnection | None = None,
+        dbCursor: MySqlDictCursor | None = None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            db (MySQL): The MySQL connector.
-            dbConn (MySqlConnection, optional): The MySQL connection object. Defaults to None.
+            dbCursor (MySqlDictCursor): The MySQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(db, dbConn, logger)
+        super().__init__(dbCursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDb(self, db: MySQL | None) -> None:
+    def setDbCursor(self, dbCursor: MySqlDictCursor) -> None:
         """
-        Updates the database backend object.
+        Updates the database cursor object.
 
         Args:
-            db (MySQL | None): The new database backend object.
+            dbCursor (MySqlDictCursor): The new database cursor object.
         """
-        super().setDb(db)
-
-    def setDbConn(self, dbConn: MySqlConnection | None) -> None:
-        """
-        Updates the database connection object.
-
-        Args:
-            dbConn (MySqlConnection | None): The new database connection object.
-        """
-        super().setDbConn(dbConn)
+        super().setDbCursor(dbCursor)
 
     ######################
     ### Helper methods ###
@@ -92,6 +74,3 @@ class DBWrapperMysql(DBWrapper):
         if limit == 0:
             return None
         return f"LIMIT {offset},{limit}"
-
-    def createCursor(self, emptyDataClass: Any | None = None) -> MySqlDictCursor:
-        return self.db.connection.cursor(MySqlDictCursor)

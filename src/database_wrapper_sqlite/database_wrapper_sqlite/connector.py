@@ -25,7 +25,7 @@ class Sqlite(DatabaseBackend):
     connection: Any
     cursor: Any
 
-    def open(self):
+    def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
             self.close()
