@@ -107,7 +107,7 @@ class DBWrapper(DBWrapperMixin):
             or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
         )
         _params: tuple[Any, ...] = ()
-        _filter = ""
+        _filter = None
 
         # TODO: Rewrite this so that filter method with loop is not used here
         if idKey and idValue:
