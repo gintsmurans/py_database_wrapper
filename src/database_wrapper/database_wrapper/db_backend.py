@@ -1,7 +1,7 @@
 import logging
 import socket
 
-from typing import Any
+from typing import Any, Coroutine
 from threading import Event
 from contextvars import ContextVar
 
@@ -177,6 +177,16 @@ class DatabaseBackend:
 
         Args:
             connection (Any): Connection to return to pool
+        """
+        raise Exception("Not implemented")
+
+    def ping(self) -> bool | Coroutine[Any, Any, bool]:
+        """
+        Check if connection is alive.
+        This should be done in try except block and bool should be returned.
+
+        Returns:
+            bool: Connection status
         """
         raise Exception("Not implemented")
 

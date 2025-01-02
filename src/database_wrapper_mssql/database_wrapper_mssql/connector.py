@@ -36,6 +36,10 @@ class MSSQL(DatabaseBackend):
     connection: MssqlConnection
     cursor: MssqlCursor
 
+    ##################
+    ### Connection ###
+    ##################
+
     def open(self) -> None:
         self.logger.debug("Connecting to DB")
 
@@ -62,6 +66,20 @@ class MSSQL(DatabaseBackend):
             **self.config["kwargs"],
         )
         self.cursor = self.connection.cursor(as_dict=True)
+
+    def ping(self) -> bool:
+        try:
+            self.cursor.execute("SELECT 1")
+            self.cursor.fetchone()
+        except Exception as e:
+            self.logger.debug(f"Error while pinging the database: {e}")
+            return False
+
+        return True
+
+    ############
+    ### Data ###
+    ############
 
     def lastInsertId(self) -> int:
         assert self.cursor, "Cursor is not initialized"
