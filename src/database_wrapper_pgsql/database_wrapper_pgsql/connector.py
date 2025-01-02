@@ -64,6 +64,10 @@ class PgSQL(DatabaseBackend):
     connection: PgConnectionType
     cursor: PgCursorType
 
+    ##################
+    ### Connection ###
+    ##################
+
     def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
@@ -101,6 +105,16 @@ class PgSQL(DatabaseBackend):
 
         # Lets do some socket magic
         self.fixSocketTimeouts(self.connection.fileno())
+
+    def ping(self) -> bool:
+        try:
+            self.cursor.execute("SELECT 1")
+            self.cursor.fetchone()
+        except Exception as e:
+            self.logger.debug(f"Error while pinging the database: {e}")
+            return False
+
+        return True
 
     ####################
     ### Transactions ###
@@ -219,6 +233,16 @@ class PgSQLAsync(DatabaseBackend):
         if self.connection:
             self.logger.debug("Closing connection")
             await self.connection.close()
+
+    async def ping(self) -> bool:
+        try:
+            await self.cursor.execute("SELECT 1")
+            await self.cursor.fetchone()
+        except Exception as e:
+            self.logger.debug(f"Error while pinging the database: {e}")
+            return False
+
+        return True
 
     ####################
     ### Transactions ###

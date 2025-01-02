@@ -35,6 +35,10 @@ class MySQL(DatabaseBackend):
     connection: MySqlConnection
     cursor: MySqlDictCursor
 
+    ##################
+    ### Connection ###
+    ##################
+
     def open(self) -> None:
         # Free resources
         if hasattr(self, "connection") and self.connection:
@@ -78,6 +82,20 @@ class MySQL(DatabaseBackend):
         )
         # TODO: Typings issue
         self.cursor = self.connection.cursor(MySqlDictCursor)  # type: ignore
+
+    def ping(self) -> bool:
+        try:
+            self.cursor.execute("SELECT 1")
+            self.cursor.fetchone()
+        except Exception as e:
+            self.logger.debug(f"Error while pinging the database: {e}")
+            return False
+
+        return True
+
+    ############
+    ### Data ###
+    ############
 
     def lastInsertId(self) -> int:
         assert self.cursor, "Cursor is not initialized"
