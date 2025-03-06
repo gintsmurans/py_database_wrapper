@@ -70,4 +70,4 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
             params (tuple[Any, ...]): The parameters to log.
         """
         queryString = query.as_string(self.dbCursor)
-        logging.getLogger().debug(f"Query: {queryString}")
+        logging.getLogger().debug(f"Query: {queryString} with params: {params}")
