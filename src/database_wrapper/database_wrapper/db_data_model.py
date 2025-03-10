@@ -386,7 +386,7 @@ class DBDefaultsDataModel(DBDataModel):
             "serialize": SerializeType.DATETIME,
         },
     )
-    """updated_at is readonly by default and should be present in all tables"""
+    """updated_at should be present in all tables and is updated automatically"""
 
     enabled: bool = field(
         default=True,
