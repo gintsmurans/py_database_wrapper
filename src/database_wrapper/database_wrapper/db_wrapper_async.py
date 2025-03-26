@@ -217,7 +217,7 @@ class DBWrapperAsync(DBWrapperMixin):
         result = await self.dbCursor.fetchone()
 
         return (
-            result["id"] if result and "id" in result else 0,
+            result[idKey] if result and idKey in result else 0,
             affectedRows,
         )
 

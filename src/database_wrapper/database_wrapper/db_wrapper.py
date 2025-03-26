@@ -207,7 +207,7 @@ class DBWrapper(DBWrapperMixin):
         result = self.dbCursor.fetchone()
 
         return (
-            result.id if result and hasattr(result, "id") else 0,
+            result[idKey] if result and idKey in result else 0,
             affectedRows,
         )
 
