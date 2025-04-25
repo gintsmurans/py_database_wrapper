@@ -56,7 +56,10 @@ def deserializeValue(
         if value and isinstance(value, str):
             pattern = r"^\d+(\.\d+)?$"
             if re.match(pattern, value):
-                return datetime.datetime.fromtimestamp(float(value))
+                timestamp = float(value)
+                if timestamp > 1e10:  # Check if timestamp is in milliseconds
+                    timestamp /= 1000
+                return datetime.datetime.fromtimestamp(timestamp)
 
             return datetime.datetime.fromisoformat(value)
 
