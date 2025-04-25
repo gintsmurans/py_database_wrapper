@@ -1,6 +1,5 @@
 import datetime
 import json
-import re
 
 from decimal import Decimal
 from enum import Enum
@@ -53,17 +52,14 @@ def deserializeValue(
         if isinstance(value, datetime.datetime):
             return value
 
-        if value and isinstance(value, str):
-            pattern = r"^\d+(\.\d+)?$"
-            if re.match(pattern, value):
-                timestamp = float(value)
-                if timestamp > 1e10:  # Check if timestamp is in milliseconds
-                    timestamp /= 1000
-                return datetime.datetime.fromtimestamp(timestamp)
+        value = str(value)
+        if value.replace(".", "", 1).isdigit():
+            timestamp = float(value)
+            if timestamp > 1e10:  # Check if timestamp is in milliseconds
+                timestamp /= 1000
+            return datetime.datetime.fromtimestamp(timestamp)
 
-            return datetime.datetime.fromisoformat(value)
-
-        return datetime.datetime.now(datetime.UTC)
+        return datetime.datetime.fromisoformat(value)
 
     if sType == SerializeType.JSON:
         if isinstance(value, dict) or isinstance(value, list) or value is None:
