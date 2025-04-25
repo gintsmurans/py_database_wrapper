@@ -13,7 +13,7 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     Sync database wrapper for postgres
     """
 
-    dbCursor: PgCursorType
+    dbCursor: PgCursorType | None
     """ PostgreSQL cursor object """
 
     #######################
@@ -40,7 +40,7 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     ### Setters ###
     ###############
 
-    def setDbCursor(self, dbCursor: PgCursorType) -> None:
+    def setDbCursor(self, dbCursor: PgCursorType | None) -> None:
         """
         Updates the database cursor object.
 

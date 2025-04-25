@@ -9,7 +9,7 @@ from .connector import MySqlDictCursor
 class DBWrapperMysql(DBWrapper):
     """Wrapper for MySQL database"""
 
-    dbCursor: MySqlDictCursor
+    dbCursor: MySqlDictCursor | None
     """ MySQL cursor object """
 
     #######################
@@ -36,7 +36,7 @@ class DBWrapperMysql(DBWrapper):
     ### Setters ###
     ###############
 
-    def setDbCursor(self, dbCursor: MySqlDictCursor) -> None:
+    def setDbCursor(self, dbCursor: MySqlDictCursor | None) -> None:
         """
         Updates the database cursor object.
 

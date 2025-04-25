@@ -15,7 +15,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     This is meant to be used in async environments.
     """
 
-    dbCursor: PgCursorTypeAsync
+    dbCursor: PgCursorTypeAsync | None
     """ Async PostgreSQL cursor object """
 
     #######################
@@ -42,7 +42,7 @@ class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
     ### Setters ###
     ###############
 
-    def setDbCursor(self, dbCursor: PgCursorTypeAsync) -> None:
+    def setDbCursor(self, dbCursor: PgCursorTypeAsync | None) -> None:
         """
         Updates the database cursor object.
 

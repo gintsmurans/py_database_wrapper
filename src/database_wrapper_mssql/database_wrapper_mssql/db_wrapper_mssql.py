@@ -8,7 +8,7 @@ from .connector import MssqlCursor
 class DBWrapperMSSQL(DBWrapper):
     """Database wrapper for mssql database"""
 
-    dbCursor: MssqlCursor
+    dbCursor: MssqlCursor | None
     """ MsSQL cursor object """
 
     #######################
@@ -35,7 +35,7 @@ class DBWrapperMSSQL(DBWrapper):
     ### Setters ###
     ###############
 
-    def setDbCursor(self, dbCursor: MssqlCursor) -> None:
+    def setDbCursor(self, dbCursor: MssqlCursor | None) -> None:
         """
         Updates the database cursor object.
 
