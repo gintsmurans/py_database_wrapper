@@ -128,6 +128,10 @@ class DBDataModel:
             metadata = cast(MetadataDict, fieldObj.metadata)
             value = getattr(self, fieldName)
 
+            # If value is not set, we skip it
+            if value is None:
+                continue
+
             # If serialize is set, and serialize is a SerializeType,
             # we use our serialization function
             # Here we actually need to deserialize the value to correct class type
