@@ -9,9 +9,9 @@ from typing import Any, Callable, Literal, NotRequired, Type, TypeVar, TypedDict
 
 from .serialization import (
     SerializeType,
-    deserializeValue,
-    jsonEncoder,
-    serializeValue,
+    deserialize_value,
+    json_encoder,
+    serialize_value,
 )
 
 EnumType = TypeVar("EnumType", bound=Enum)
@@ -34,34 +34,34 @@ class DBDataModel:
     Base class for all database models.
 
     Attributes:
-    - schemaName (str): The name of the schema in the database.
-    - tableName (str): The name of the table in the database.
-    - tableAlias (str): The alias of the table in the database.
-    - idKey (str): The name of the primary key column in the database.
-    - idValue (Any): The value of the primary key for the current instance.
+    - schema_name (str): The name of the schema in the database.
+    - table_name (str): The name of the table in the database.
+    - table_alias (str): The alias of the table in the database.
+    - id_key (str): The name of the primary key column in the database.
+    - id_value (Any): The value of the primary key for the current instance.
     - id (int): The primary key value for the current instance.
 
     Methods:
     - __post_init__(): Initializes the instance after it has been created.
     - __repr__(): Returns a string representation of the instance.
     - __str__(): Returns a JSON string representation of the instance.
-    - toDict(): Returns a dictionary representation of the instance.
-    - toFormattedDict(): Returns a formatted dictionary representation of the instance.
-    - toJsonSchema(): Returns a JSON schema for the instance.
-    - jsonEncoder(obj: Any): Encodes the given object as JSON.
-    - toJsonString(pretty: bool = False): Returns a JSON string representation of the instance.
-    - strToDatetime(value: Any): Converts a string to a datetime object.
-    - strToBool(value: Any): Converts a string to a boolean value.
-    - strToInt(value: Any): Converts a string to an integer value.
+    - to_dict(): Returns a dictionary representation of the instance.
+    - to_formatted_dict(): Returns a formatted dictionary representation of the instance.
+    - to_json_schema(): Returns a JSON schema for the instance.
+    - json_encoder(obj: Any): Encodes the given object as JSON.
+    - to_json_string(pretty: bool = False): Returns a JSON string representation of the instance.
+    - str_to_datetime(value: Any): Converts a string to a datetime object.
+    - str_to_bool(value: Any): Converts a string to a boolean value.
+    - str_to_int(value: Any): Converts a string to an integer value.
     - validate(): Validates the instance.
 
     To enable storing and updating fields that by default are not stored or updated, use the following methods:
-    - setStore(fieldName: str, enable: bool = True): Enable/Disable storing a field.
-    - setUpdate(fieldName: str, enable: bool = True): Enable/Disable updating a field.
+    - set_store(field_name: str, enable: bool = True): Enable/Disable storing a field.
+    - set_update(field_name: str, enable: bool = True): Enable/Disable updating a field.
 
     To exclude a field from the dictionary representation of the instance, set metadata key "exclude" to True.
     To change exclude status of a field, use the following method:
-    - setExclude(fieldName: str, enable: bool = True): Exclude a field from dict representation.
+    - set_exclude(field_name: str, enable: bool = True): Exclude a field from dict representation.
     """
 
     ######################
@@ -69,24 +69,24 @@ class DBDataModel:
     ######################
 
     @property
-    def schemaName(self) -> str | None:
+    def schema_name(self) -> str | None:
         return None
 
     @property
-    def tableName(self) -> str:
-        raise NotImplementedError("`tableName` property is not implemented")
+    def table_name(self) -> str:
+        raise NotImplementedError("`table_name` property is not implemented")
 
     @property
-    def tableAlias(self) -> str | None:
+    def table_alias(self) -> str | None:
         return None
 
     @property
-    def idKey(self) -> str:
+    def id_key(self) -> str:
         return "id"
 
     @property
-    def idValue(self) -> Any:
-        return getattr(self, self.idKey)
+    def id_value(self) -> Any:
+        return getattr(self, self.id_key)
 
     # Id should be readonly by default and should be always present if record exists
     id: int = field(
@@ -115,19 +115,19 @@ class DBDataModel:
     ### Conversion methods ###
     ##########################
 
-    def fillDataFromDict(self, kwargs: dict[str, Any]) -> None:
-        fieldNames = set([f.name for f in dataclasses.fields(self)])
+    def fill_data_from_dict(self, kwargs: dict[str, Any]) -> None:
+        field_names = set([f.name for f in dataclasses.fields(self)])
         for key in kwargs:
-            if key in fieldNames:
+            if key in field_names:
                 setattr(self, key, kwargs[key])
 
         self.__post_init__()
 
     # Init data
     def __post_init__(self) -> None:
-        for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = cast(MetadataDict, fieldObj.metadata)
-            value = getattr(self, fieldName)
+        for field_name, field_obj in self.__dataclass_fields__.items():
+            metadata = cast(MetadataDict, field_obj.metadata)
+            value = getattr(self, field_name)
 
             # If value is not set, we skip it
             if value is None:
@@ -137,85 +137,85 @@ class DBDataModel:
             # we use our serialization function
             # Here we actually need to deserialize the value to correct class type
             serialize = metadata.get("serialize", None)
-            enumClass = metadata.get("enum_class", None)
+            enum_class = metadata.get("enum_class", None)
             timezone = metadata.get("timezone", None)
             if serialize is not None and isinstance(serialize, SerializeType):
-                value = deserializeValue(value, serialize, enumClass, timezone)
-                setattr(self, fieldName, value)
+                value = deserialize_value(value, serialize, enum_class, timezone)
+                setattr(self, field_name, value)
 
             else:
                 deserialize = metadata.get("deserialize", None)
                 if deserialize is not None:
                     value = deserialize(value)
-                    setattr(self, fieldName, value)
+                    setattr(self, field_name, value)
 
     # String - representation
     def __repr__(self) -> str:
         return "<%s %s>" % (self.__class__.__name__, self.__dict__)
 
     def __str__(self) -> str:
-        return self.toJsonString()
+        return self.to_json_string()
 
     # Dict
-    def dictFilter(self, pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-        newDict: dict[str, Any] = {}
+    def dict_filter(self, pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        new_dict: dict[str, Any] = {}
         for field in pairs:
-            classField = self.__dataclass_fields__.get(field[0], None)
-            if classField is not None:
-                metadata = cast(MetadataDict, classField.metadata)
+            class_field = self.__dataclass_fields__.get(field[0], None)
+            if class_field is not None:
+                metadata = cast(MetadataDict, class_field.metadata)
                 if not "exclude" in metadata or not metadata["exclude"]:
-                    newDict[field[0]] = field[1]
+                    new_dict[field[0]] = field[1]
 
-        return newDict
+        return new_dict
 
-    def toDict(self) -> dict[str, Any]:
-        return asdict(self, dict_factory=self.dictFilter)
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self, dict_factory=self.dict_filter)
 
-    def toFormattedDict(self) -> dict[str, Any]:
-        return self.toDict()
+    def to_formatted_dict(self) -> dict[str, Any]:
+        return self.to_dict()
 
     # JSON
-    def toJsonSchema(self) -> dict[str, Any]:
+    def to_json_schema(self) -> dict[str, Any]:
         schema: dict[str, Any] = {
             "type": "object",
             "properties": {
                 "id": {"type": "number"},
             },
         }
-        for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = cast(MetadataDict, fieldObj.metadata)
+        for field_name, field_obj in self.__dataclass_fields__.items():
+            metadata = cast(MetadataDict, field_obj.metadata)
             assert (
                 "db_field" in metadata
                 and isinstance(metadata["db_field"], tuple)
                 and len(metadata["db_field"]) == 2
-            ), f"db_field metadata is not set for {fieldName}"
-            fieldType: str = metadata["db_field"][1]
-            schema["properties"][fieldName] = {"type": fieldType}
+            ), f"db_field metadata is not set for {field_name}"
+            field_type: str = metadata["db_field"][1]
+            schema["properties"][field_name] = {"type": field_type}
 
         return schema
 
-    def jsonEncoder(self, obj: Any) -> Any:
-        return jsonEncoder(obj)
+    def json_encoder(self, obj: Any) -> Any:
+        return json_encoder(obj)
 
-    def toJsonString(self, pretty: bool = False) -> str:
+    def to_json_string(self, pretty: bool = False) -> str:
         if pretty:
             return json.dumps(
-                self.toDict(),
+                self.to_dict(),
                 ensure_ascii=False,
                 sort_keys=True,
                 indent=4,
                 separators=(",", ": "),
-                default=self.jsonEncoder,
+                default=self.json_encoder,
             )
 
-        return json.dumps(self.toDict(), default=self.jsonEncoder)
+        return json.dumps(self.to_dict(), default=self.json_encoder)
 
     #######################
     ### Helper methods ####
     #######################
 
     @staticmethod
-    def strToDatetime(value: Any) -> datetime.datetime:
+    def str_to_datetime(value: Any) -> datetime.datetime:
         if isinstance(value, datetime.datetime):
             return value
 
@@ -229,7 +229,7 @@ class DBDataModel:
         return datetime.datetime.now(datetime.UTC)
 
     @staticmethod
-    def strToBool(value: Any) -> bool:
+    def str_to_bool(value: Any) -> bool:
         if isinstance(value, bool):
             return value
 
@@ -243,7 +243,7 @@ class DBDataModel:
         return False
 
     @staticmethod
-    def strToInt(value: Any) -> int:
+    def str_to_int(value: Any) -> int:
         if isinstance(value, int):
             return value
 
@@ -258,61 +258,61 @@ class DBDataModel:
         """
         raise NotImplementedError("`validate` is not implemented")
 
-    def setStore(self, fieldName: str, enable: bool = True) -> None:
+    def set_store(self, field_name: str, enable: bool = True) -> None:
         """
         Enable/Disable storing a field (insert into database)
         """
-        if fieldName in self.__dataclass_fields__:
-            currentMetadata = cast(
+        if field_name in self.__dataclass_fields__:
+            current_metadata = cast(
                 MetadataDict,
-                dict(self.__dataclass_fields__[fieldName].metadata),
+                dict(self.__dataclass_fields__[field_name].metadata),
             )
-            currentMetadata["store"] = enable
-            self.__dataclass_fields__[fieldName].metadata = currentMetadata
+            current_metadata["store"] = enable
+            self.__dataclass_fields__[field_name].metadata = current_metadata
 
-    def setUpdate(self, fieldName: str, enable: bool = True) -> None:
+    def set_update(self, field_name: str, enable: bool = True) -> None:
         """
         Enable/Disable updating a field (update in database)
         """
-        if fieldName in self.__dataclass_fields__:
-            currentMetadata = cast(
+        if field_name in self.__dataclass_fields__:
+            current_metadata = cast(
                 MetadataDict,
-                dict(self.__dataclass_fields__[fieldName].metadata),
+                dict(self.__dataclass_fields__[field_name].metadata),
             )
-            currentMetadata["update"] = enable
-            self.__dataclass_fields__[fieldName].metadata = currentMetadata
+            current_metadata["update"] = enable
+            self.__dataclass_fields__[field_name].metadata = current_metadata
 
-    def setExclude(self, fieldName: str, enable: bool = True) -> None:
+    def set_exclude(self, field_name: str, enable: bool = True) -> None:
         """
         Exclude a field from dict representation
         """
-        if fieldName in self.__dataclass_fields__:
-            currentMetadata = cast(
+        if field_name in self.__dataclass_fields__:
+            current_metadata = cast(
                 MetadataDict,
-                dict(self.__dataclass_fields__[fieldName].metadata),
+                dict(self.__dataclass_fields__[field_name].metadata),
             )
-            currentMetadata["exclude"] = enable
-            self.__dataclass_fields__[fieldName].metadata = currentMetadata
+            current_metadata["exclude"] = enable
+            self.__dataclass_fields__[field_name].metadata = current_metadata
 
     ########################
     ### Database methods ###
     ########################
 
-    def queryBase(self) -> Any:
+    def query_base(self) -> Any:
         """
         Base query for all queries
         """
         return None
 
-    def storeData(self) -> dict[str, Any] | None:
+    def store_data(self) -> dict[str, Any] | None:
         """
         Store data to database
         """
-        storeData: dict[str, Any] = {}
-        for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = cast(MetadataDict, fieldObj.metadata)
+        store_data: dict[str, Any] = {}
+        for field_name, field_obj in self.__dataclass_fields__.items():
+            metadata = cast(MetadataDict, field_obj.metadata)
             if "store" in metadata and metadata["store"] == True:
-                storeData[fieldName] = getattr(self, fieldName)
+                store_data[field_name] = getattr(self, field_name)
 
                 # If serialize is set, and serialize is a SerializeType,
                 # we use our serialization function.
@@ -321,24 +321,24 @@ class DBDataModel:
                 serialize = metadata.get("serialize", None)
                 if serialize is not None:
                     if isinstance(serialize, SerializeType):
-                        storeData[fieldName] = serializeValue(
-                            storeData[fieldName], serialize
+                        store_data[field_name] = serialize_value(
+                            store_data[field_name], serialize
                         )
                     else:
-                        storeData[fieldName] = serialize(storeData[fieldName])
+                        store_data[field_name] = serialize(store_data[field_name])
 
-        return storeData
+        return store_data
 
-    def updateData(self) -> dict[str, Any] | None:
+    def update_data(self) -> dict[str, Any] | None:
         """
         Update data to database
         """
 
-        updateData: dict[str, Any] = {}
-        for fieldName, fieldObj in self.__dataclass_fields__.items():
-            metadata = cast(MetadataDict, fieldObj.metadata)
+        update_data: dict[str, Any] = {}
+        for field_name, field_obj in self.__dataclass_fields__.items():
+            metadata = cast(MetadataDict, field_obj.metadata)
             if "update" in metadata and metadata["update"] == True:
-                updateData[fieldName] = getattr(self, fieldName)
+                update_data[field_name] = getattr(self, field_name)
 
                 # If serialize is set, and serialize is a SerializeType,
                 # we use our serialization function.
@@ -347,13 +347,13 @@ class DBDataModel:
                 serialize = metadata.get("serialize", None)
                 if serialize is not None:
                     if isinstance(serialize, SerializeType):
-                        updateData[fieldName] = serializeValue(
-                            updateData[fieldName], serialize
+                        update_data[field_name] = serialize_value(
+                            update_data[field_name], serialize
                         )
                     else:
-                        updateData[fieldName] = serialize(updateData[fieldName])
+                        update_data[field_name] = serialize(update_data[field_name])
 
-        return updateData
+        return update_data
 
 
 @dataclass
@@ -411,7 +411,7 @@ class DBDefaultsDataModel(DBDataModel):
         },
     )
 
-    def updateData(self) -> dict[str, Any] | None:
+    def update_data(self) -> dict[str, Any] | None:
         """
         Update data to database
         """
@@ -419,4 +419,4 @@ class DBDefaultsDataModel(DBDataModel):
         # Update updated_at
         self.updated_at = datetime.datetime.now(datetime.UTC)
 
-        return super().updateData()
+        return super().update_data()

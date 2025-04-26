@@ -10,20 +10,20 @@ class DatabaseBackend:
     config: Any
     """ Database configuration """
 
-    connectionTimeout: int
+    connection_timeout: int
     """ Connection timeout """
 
     name: str
     """ Instance name """
 
     # TODO: This should be made to increase exponentially
-    slowDownTimeout: int
+    slow_down_timeout: int
     """ How long to wait before trying to reconnect """
 
     pool: Any
     """ Connection pool """
 
-    poolAsync: Any
+    pool_async: Any
     """ Async connection pool """
 
     connection: Any
@@ -32,19 +32,19 @@ class DatabaseBackend:
     cursor: Any
     """ Cursor to database """
 
-    contextConnection: ContextVar[Any | None]
+    context_connection: ContextVar[Any | None]
     """ Connection used in context manager """
 
-    contextConnectionAsync: ContextVar[Any | None]
+    context_connection_async: ContextVar[Any | None]
     """ Connection used in async context manager """
 
-    loggerName: str
+    logger_name: str
     """ Logger name """
 
     logger: logging.Logger
     """ Logger """
 
-    shutdownRequested: Event
+    shutdown_requested: Event
     """
     Event to signal shutdown
     Used to stop database pool from creating new connections
@@ -56,16 +56,16 @@ class DatabaseBackend:
 
     def __init__(
         self,
-        dbConfig: Any,
-        connectionTimeout: int = 5,
-        instanceName: str = "database_backend",
-        slowDownTimeout: int = 5,
+        db_config: Any,
+        connection_timeout: int = 5,
+        instance_name: str = "database_backend",
+        slow_down_timeout: int = 5,
     ) -> None:
         """
         Main concept here is that in init we do not connect to database,
         so that class instances can be safely made regardless of connection statuss.
 
-        Remember to call open() or openPool() before using this class.
+        Remember to call open() or open_pool() before using this class.
         Close will be called automatically when class is destroyed.
 
         Contexts are not implemented here, but in child classes should be used
@@ -75,23 +75,24 @@ class DatabaseBackend:
         if not upon destroying the class, an error will be raised that method was not awaited.
         """
 
-        self.config = dbConfig
-        self.connectionTimeout = connectionTimeout
-        self.name = instanceName
-        self.slowDownTimeout = slowDownTimeout
+        self.config = db_config
+        self.connection_timeout = connection_timeout
+        self.name = instance_name
+        self.slow_down_timeout = slow_down_timeout
 
-        self.loggerName = f"{__name__}.{self.__class__.__name__}.{self.name}"
-        self.logger = logging.getLogger(self.loggerName)
+        self.logger_name = f"{__name__}.{self.__class__.__name__}.{self.name}"
+        self.logger = logging.getLogger(self.logger_name)
 
         self.pool = None
-        self.poolAsync = None
+        self.pool_async = None
 
         self.connection = None
         self.cursor = None
-        self.shutdownRequested = Event()
-        self.contextConnection = ContextVar(f"db_connection_{self.name}", default=None)
-        self.contextConnectionAsync = ContextVar(
-            f"db_connection_{self.name}_async", default=None
+        self.shutdown_requested = Event()
+        self.context_connection = ContextVar(f"db_connection_{self.name}", default=None)
+        self.context_connection_async = ContextVar(
+            f"db_connection_{self.name}_async",
+            default=None,
         )
 
     def __del__(self) -> None:
@@ -100,14 +101,14 @@ class DatabaseBackend:
 
         # Clean up connections
         self.close()
-        self.closePool()
+        self.close_pool()
 
         # Clean just in case
         del self.connection
         del self.cursor
 
         del self.pool
-        del self.poolAsync
+        del self.pool_async
 
     ###############
     ### Context ###
@@ -133,11 +134,11 @@ class DatabaseBackend:
     ### Connection ###
     ##################
 
-    def openPool(self) -> Any:
+    def open_pool(self) -> Any:
         """Open connection pool"""
         ...
 
-    def closePool(self) -> Any:
+    def close_pool(self) -> Any:
         """Close connection pool"""
         ...
 
@@ -157,7 +158,7 @@ class DatabaseBackend:
             self.connection.close()
             self.connection = None
 
-    def newConnection(self) -> Any:
+    def new_connection(self) -> Any:
         """
         Create new connection
 
@@ -168,7 +169,7 @@ class DatabaseBackend:
         """
         raise Exception("Not implemented")
 
-    def returnConnection(self, connection: Any) -> Any:
+    def return_connection(self, connection: Any) -> Any:
         """
         Return connection to pool
 
@@ -212,14 +213,14 @@ class DatabaseBackend:
     ### Helpers ###
     ###############
 
-    def fixSocketTimeouts(self, fd: Any) -> None:
+    def fix_socket_timeouts(self, fd: Any) -> None:
         # Lets do some socket magic
         s = socket.fromfd(fd, socket.AF_INET, socket.SOCK_STREAM)
         # Enable sending of keep-alive messages
         s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         # Time the connection needs to remain idle before start sending
         # keepalive probes
-        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, self.connectionTimeout)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, self.connection_timeout)
         # Time between individual keepalive probes
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 1)
         # The maximum number of keepalive probes should send before dropping
@@ -228,27 +229,27 @@ class DatabaseBackend:
         # To set timeout for an RTO you must set TCP_USER_TIMEOUT timeout
         # (in milliseconds) for socket.
         s.setsockopt(
-            socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connectionTimeout * 1000
+            socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connection_timeout * 1000
         )
 
     ####################
     ### Transactions ###
     ####################
 
-    def beginTransaction(self) -> Any:
+    def begin_transaction(self) -> Any:
         """Start transaction"""
         raise Exception("Not implemented")
 
-    def commitTransaction(self) -> Any:
+    def commit_transaction(self) -> Any:
         """Commit transaction"""
         raise Exception("Not implemented")
 
-    def rollbackTransaction(self) -> Any:
+    def rollback_transaction(self) -> Any:
         """Rollback transaction"""
         raise Exception("Not implemented")
 
     # @contextmanager
-    def transaction(self, dbConn: Any = None) -> Any:
+    def transaction(self, db_conn: Any = None) -> Any:
         """
         Transaction context manager
 
@@ -261,11 +262,11 @@ class DatabaseBackend:
     ### Data ###
     ############
 
-    def lastInsertId(self) -> int:
+    def last_insert_id(self) -> int:
         """Get last inserted row id generated by auto increment"""
         raise Exception("Not implemented")
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         """Get affected rows count"""
         raise Exception("Not implemented")
 
