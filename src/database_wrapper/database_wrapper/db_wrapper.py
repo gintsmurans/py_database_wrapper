@@ -15,200 +15,218 @@ class DBWrapper(DBWrapperMixin):
     #####################
 
     # Action methods
-    def getOne(
+    def get_one(
         self,
-        emptyDataClass: DataModelType,
-        customQuery: Any = None,
+        empty_data_class: DataModelType,
+        custom_query: Any = None,
     ) -> DataModelType | None:
         """
         Retrieves a single record from the database by class defined id.
 
         Args:
-            emptyDataClass (DataModelType): The data model to use for the query.
-            customQuery (Any, optional): The custom query to use for the query. Defaults to None.
+            empty_data_class (DataModelType): The data model to use for the query.
+            custom_query (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
             DataModelType | None: The result of the query.
         """
         # Figure out the id key and value
-        idKey = emptyDataClass.idKey
-        idValue = emptyDataClass.id
-        if not idKey:
+        id_key = empty_data_class.id_key
+        id_value = empty_data_class.id
+        if not id_key:
             raise ValueError("Id key is not set")
-        if not idValue:
+        if not id_value:
             raise ValueError("Id value is not set")
 
         # Get the record
-        res = self.getAll(
-            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
+        res = self.get_all(
+            empty_data_class,
+            id_key,
+            id_value,
+            limit=1,
+            custom_query=custom_query,
         )
         for row in res:
             return row
         else:
             return None
 
-    def getByKey(
+    def get_by_key(
         self,
-        emptyDataClass: DataModelType,
-        idKey: str,
-        idValue: Any,
-        customQuery: Any = None,
+        empty_data_class: DataModelType,
+        id_key: str,
+        id_value: Any,
+        custom_query: Any = None,
     ) -> DataModelType | None:
         """
         Retrieves a single record from the database using the given key.
 
         Args:
-            emptyDataClass (DataModelType): The data model to use for the query.
-            idKey (str): The name of the key to use for the query.
-            idValue (Any): The value of the key to use for the query.
-            customQuery (Any, optional): The custom query to use for the query. Defaults to None.
+            empty_data_class (DataModelType): The data model to use for the query.
+            id_key (str): The name of the key to use for the query.
+            id_value (Any): The value of the key to use for the query.
+            custom_query (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
             DataModelType | None: The result of the query.
         """
         # Get the record
-        res = self.getAll(
-            emptyDataClass, idKey, idValue, limit=1, customQuery=customQuery
+        res = self.get_all(
+            empty_data_class,
+            id_key,
+            id_value,
+            limit=1,
+            custom_query=custom_query,
         )
         for row in res:
             return row
         else:
             return None
 
-    def getAll(
+    def get_all(
         self,
-        emptyDataClass: DataModelType,
-        idKey: str | None = None,
-        idValue: Any | None = None,
-        orderBy: OrderByItem | None = None,
+        empty_data_class: DataModelType,
+        id_key: str | None = None,
+        id_value: Any | None = None,
+        order_by: OrderByItem | None = None,
         offset: int = 0,
         limit: int = 100,
-        customQuery: Any = None,
+        custom_query: Any = None,
     ) -> Generator[DataModelType, None, None]:
         """
         Retrieves all records from the database.
 
         Args:
-            emptyDataClass (DataModelType): The data model to use for the query.
-            idKey (str | None, optional): The name of the key to use for filtering. Defaults to None.
-            idValue (Any | None, optional): The value of the key to use for filtering. Defaults to None.
-            orderBy (OrderByItem | None, optional): The order by item to use for sorting. Defaults to None.
+            empty_data_class (DataModelType): The data model to use for the query.
+            id_key (str | None, optional): The name of the key to use for filtering. Defaults to None.
+            id_value (Any | None, optional): The value of the key to use for filtering. Defaults to None.
+            order_by (OrderByItem | None, optional): The order by item to use for sorting. Defaults to None.
             offset (int, optional): The number of results to skip. Defaults to 0.
             limit (int, optional): The maximum number of results to return. Defaults to 100.
-            customQuery (Any, optional): The custom query to use for the query. Defaults to None.
+            custom_query (Any, optional): The custom query to use for the query. Defaults to None.
 
         Returns:
             Generator[DataModelType, None, None]: The result of the query.
         """
         # Query and filter
         _query = (
-            customQuery
-            or emptyDataClass.queryBase()
-            or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
+            custom_query
+            or empty_data_class.query_base()
+            or self.filter_query(
+                empty_data_class.schema_name,
+                empty_data_class.table_name,
+            )
         )
         _params: tuple[Any, ...] = ()
         _filter = None
 
         # TODO: Rewrite this so that filter method with loop is not used here
-        if idKey and idValue:
-            (_filter, _params) = self.createFilter({idKey: idValue})
+        if id_key and id_value:
+            (_filter, _params) = self.create_filter({id_key: id_value})
 
         # Order and limit
-        _order = self.orderQuery(orderBy)
-        _limit = self.limitQuery(offset, limit)
+        _order = self.order_query(order_by)
+        _limit = self.limit_query(offset, limit)
 
         # Create a SQL object for the query and format it
-        querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
+        query_sql = self._format_filter_query(_query, _filter, _order, _limit)
 
         # Log
-        self.logQuery(self.dbCursor, querySql, _params)
+        self.log_query(self.db_cursor, query_sql, _params)
 
         # Execute the query
-        self.dbCursor.execute(querySql, _params)
+        self.db_cursor.execute(query_sql, _params)
 
         # Instead of fetchall(), we'll use a generator to yield results one by one
         while True:
-            row = self.dbCursor.fetchone()
+            row = self.db_cursor.fetchone()
             if row is None:
                 break
 
-            yield self.turnDataIntoModel(emptyDataClass.__class__, row)
+            yield self.turn_data_into_model(empty_data_class.__class__, row)
 
-    def getFiltered(
+    def get_filtered(
         self,
-        emptyDataClass: DataModelType,
+        empty_data_class: DataModelType,
         filter: dict[str, Any],
-        orderBy: OrderByItem | None = None,
+        order_by: OrderByItem | None = None,
         offset: int = 0,
         limit: int = 100,
-        customQuery: Any = None,
+        custom_query: Any = None,
     ) -> Generator[DataModelType, None, None]:
         # Query and filter
         _query = (
-            customQuery
-            or emptyDataClass.queryBase()
-            or self.filterQuery(emptyDataClass.schemaName, emptyDataClass.tableName)
+            custom_query
+            or empty_data_class.query_base()
+            or self.filter_query(
+                empty_data_class.schema_name,
+                empty_data_class.table_name,
+            )
         )
-        (_filter, _params) = self.createFilter(filter)
+        (_filter, _params) = self.create_filter(filter)
 
         # Order and limit
-        _order = self.orderQuery(orderBy)
-        _limit = self.limitQuery(offset, limit)
+        _order = self.order_query(order_by)
+        _limit = self.limit_query(offset, limit)
 
         # Create SQL query
-        querySql = self._formatFilterQuery(_query, _filter, _order, _limit)
+        query_sql = self._format_filter_query(_query, _filter, _order, _limit)
 
         # Log
-        self.logQuery(self.dbCursor, querySql, _params)
+        self.log_query(self.db_cursor, query_sql, _params)
 
         # Execute the query
-        self.dbCursor.execute(querySql, _params)
+        self.db_cursor.execute(query_sql, _params)
 
         # Instead of fetchall(), we'll use a generator to yield results one by one
         while True:
-            row = self.dbCursor.fetchone()
+            row = self.db_cursor.fetchone()
             if row is None:
                 break
 
-            yield self.turnDataIntoModel(emptyDataClass.__class__, row)
+            yield self.turn_data_into_model(empty_data_class.__class__, row)
 
     def _insert(
         self,
-        emptyDataClass: DBDataModel,
-        schemaName: str | None,
-        tableName: str,
-        storeData: dict[str, Any],
-        idKey: str,
+        empty_data_class: DBDataModel,
+        schema_name: str | None,
+        table_name: str,
+        store_data: dict[str, Any],
+        id_key: str,
     ) -> tuple[int, int]:
         """
         Stores a record in the database.
 
         Args:
-            emptyDataClass (DBDataModel): The data model to use for the query.
-            schemaName (str | None): The name of the schema to store the record in.
-            tableName (str): The name of the table to store the record in.
-            storeData (dict[str, Any]): The data to store.
-            idKey (str): The name of the key to use for the query.
+            empty_data_class (DBDataModel): The data model to use for the query.
+            schema_name (str | None): The name of the schema to store the record in.
+            table_name (str): The name of the table to store the record in.
+            store_data (dict[str, Any]): The data to store.
+            id_key (str): The name of the key to use for the query.
 
         Returns:
             tuple[int, int]: The id of the record and the number of affected rows.
         """
-        values = list(storeData.values())
-        tableIdentifier = self.makeIdentifier(schemaName, tableName)
-        returnKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        insertQuery = self._formatInsertQuery(tableIdentifier, storeData, returnKey)
+        values = list(store_data.values())
+        table_identifier = self.make_identifier(schema_name, table_name)
+        return_key = self.make_identifier(empty_data_class.table_alias, id_key)
+        insert_query = self._format_insert_query(
+            table_identifier,
+            store_data,
+            return_key,
+        )
 
         # Log
-        self.logQuery(self.dbCursor, insertQuery, tuple(values))
+        self.log_query(self.db_cursor, insert_query, tuple(values))
 
         # Insert
-        self.dbCursor.execute(insertQuery, tuple(values))
-        affectedRows = self.dbCursor.rowcount
-        result = self.dbCursor.fetchone()
+        self.db_cursor.execute(insert_query, tuple(values))
+        affected_rows = self.db_cursor.rowcount
+        result = self.db_cursor.fetchone()
 
         return (
-            result[idKey] if result and idKey in result else 0,
-            affectedRows,
+            result[id_key] if result and id_key in result else 0,
+            affected_rows,
         )
 
     @overload
@@ -235,71 +253,73 @@ class DBWrapper(DBWrapperMixin):
         """
         status: list[tuple[int, int]] = []
 
-        oneRecord = False
+        one_record = False
         if not isinstance(records, list):
-            oneRecord = True
+            one_record = True
             records = [records]
 
         for row in records:
-            storeIdKey = row.idKey
-            storeData = row.storeData()
-            if not storeIdKey or not storeData:
+            store_id_key = row.id_key
+            store_data = row.store_data()
+            if not store_id_key or not store_data:
                 continue
 
             res = self._insert(
                 row,
-                row.schemaName,
-                row.tableName,
-                storeData,
-                storeIdKey,
+                row.schema_name,
+                row.table_name,
+                store_data,
+                store_id_key,
             )
             if res:
                 row.id = res[0]  # update the id of the row
 
             status.append(res)
 
-        if oneRecord:
+        if one_record:
             return status[0]
 
         return status
 
     def _update(
         self,
-        emptyDataClass: DBDataModel,
-        schemaName: str | None,
-        tableName: str,
-        updateData: dict[str, Any],
-        updateId: tuple[str, Any],
+        empty_data_class: DBDataModel,
+        schema_name: str | None,
+        table_name: str,
+        update_data: dict[str, Any],
+        update_id: tuple[str, Any],
     ) -> int:
         """
         Updates a record in the database.
 
         Args:
-            emptyDataClass (DBDataModel): The data model to use for the query.
-            schemaName (str | None): The name of the schema to update the record in.
-            tableName (str): The name of the table to update the record in.
-            updateData (dict[str, Any]): The data to update.
-            updateId (tuple[str, Any]): The id of the record to update.
+            empty_data_class (DBDataModel): The data model to use for the query.
+            schema_name (str | None): The name of the schema to update the record in.
+            table_name (str): The name of the table to update the record in.
+            update_data (dict[str, Any]): The data to update.
+            update_id (tuple[str, Any]): The id of the record to update.
 
         Returns:
             int: The number of affected rows.
         """
-        (idKey, idValue) = updateId
-        values = list(updateData.values())
-        values.append(idValue)
+        (id_key, id_value) = update_id
+        values = list(update_data.values())
+        values.append(id_value)
 
-        tableIdentifier = self.makeIdentifier(schemaName, tableName)
-        updateKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        updateQuery = self._formatUpdateQuery(tableIdentifier, updateKey, updateData)
+        table_identifier = self.make_identifier(schema_name, table_name)
+        update_key = self.make_identifier(empty_data_class.table_alias, id_key)
+        update_query = self._format_update_query(
+            table_identifier, update_key, update_data
+        )
 
         # Log
-        self.logQuery(self.dbCursor, updateQuery, tuple(values))
+        self.log_query(self.db_cursor, update_query, tuple(values))
 
         # Update
-        self.dbCursor.execute(updateQuery, tuple(values))
-        affectedRows = self.dbCursor.rowcount
+        self.db_cursor.execute(update_query, tuple(values))
+        affected_rows = self.db_cursor.rowcount
 
-        return affectedRows
+        return affected_rows
 
     @overload
     def update(self, records: DataModelType) -> int:  # type: ignore
@@ -321,53 +341,53 @@ class DBWrapper(DBWrapperMixin):
         """
         status: list[int] = []
 
-        oneRecord = False
+        one_record = False
         if not isinstance(records, list):
-            oneRecord = True
+            one_record = True
             records = [records]
 
         for row in records:
-            updateData = row.updateData()
-            updateIdKey = row.idKey
-            updateIdValue = row.id
-            if not updateData or not updateIdKey or not updateIdValue:
+            update_data = row.update_data()
+            update_id_key = row.id_key
+            update_id_value = row.id
+            if not update_data or not update_id_key or not update_id_value:
                 continue
 
             status.append(
                 self._update(
                     row,
-                    row.schemaName,
-                    row.tableName,
-                    updateData,
+                    row.schema_name,
+                    row.table_name,
+                    update_data,
                     (
-                        updateIdKey,
-                        updateIdValue,
+                        update_id_key,
+                        update_id_value,
                     ),
                 )
             )
 
-        if oneRecord:
+        if one_record:
             return status[0]
 
         return status
 
-    def updateData(
+    def update_data(
         self,
         record: DBDataModel,
-        updateData: dict[str, Any],
-        updateIdKey: str | None = None,
-        updateIdValue: Any = None,
+        update_data: dict[str, Any],
+        update_id_key: str | None = None,
+        update_id_value: Any = None,
     ) -> int:
-        updateIdKey = updateIdKey or record.idKey
-        updateIdValue = updateIdValue or record.id
+        update_id_key = update_id_key or record.id_key
+        update_id_value = update_id_value or record.id
         status = self._update(
             record,
-            record.schemaName,
-            record.tableName,
-            updateData,
+            record.schema_name,
+            record.table_name,
+            update_data,
             (
-                updateIdKey,
-                updateIdValue,
+                update_id_key,
+                update_id_value,
             ),
         )
 
@@ -375,35 +395,35 @@ class DBWrapper(DBWrapperMixin):
 
     def _delete(
         self,
-        emptyDataClass: DBDataModel,
-        schemaName: str | None,
-        tableName: str,
-        deleteId: tuple[str, Any],
+        empty_data_class: DBDataModel,
+        schema_name: str | None,
+        table_name: str,
+        delete_id: tuple[str, Any],
     ) -> int:
         """
         Deletes a record from the database.
 
         Args:
-            emptyDataClass (DBDataModel): The data model to use for the query.
-            schemaName (str | None): The name of the schema to delete the record from.
-            tableName (str): The name of the table to delete the record from.
-            deleteId (tuple[str, Any]): The id of the record to delete.
+            empty_data_class (DBDataModel): The data model to use for the query.
+            schema_name (str | None): The name of the schema to delete the record from.
+            table_name (str): The name of the table to delete the record from.
+            delete_id (tuple[str, Any]): The id of the record to delete.
 
         Returns:
             int: The number of affected rows.
         """
-        (idKey, idValue) = deleteId
+        (id_key, id_value) = delete_id
 
-        tableIdentifier = self.makeIdentifier(schemaName, tableName)
-        deleteKey = self.makeIdentifier(emptyDataClass.tableAlias, idKey)
-        delete_query = self._formatDeleteQuery(tableIdentifier, deleteKey)
+        table_identifier = self.make_identifier(schema_name, table_name)
+        delete_key = self.make_identifier(empty_data_class.table_alias, id_key)
+        delete_query = self._format_delete_query(table_identifier, delete_key)
 
         # Log
-        self.logQuery(self.dbCursor, delete_query, (idValue,))
+        self.log_query(self.db_cursor, delete_query, (id_value,))
 
         # Delete
-        self.dbCursor.execute(delete_query, (idValue,))
-        affected_rows = self.dbCursor.rowcount
+        self.db_cursor.execute(delete_query, (id_value,))
+        affected_rows = self.db_cursor.rowcount
 
         return affected_rows
 
@@ -427,30 +447,30 @@ class DBWrapper(DBWrapperMixin):
         """
         status: list[int] = []
 
-        oneRecord = False
+        one_record = False
         if not isinstance(records, list):
-            oneRecord = True
+            one_record = True
             records = [records]
 
         for row in records:
-            deleteIdKey = row.idKey
-            deleteIdValue = row.id
-            if not deleteIdKey or not deleteIdValue:
+            delete_id_key = row.id_key
+            delete_id_value = row.id
+            if not delete_id_key or not delete_id_value:
                 continue
 
             status.append(
                 self._delete(
                     row,
-                    row.schemaName,
-                    row.tableName,
+                    row.schema_name,
+                    row.table_name,
                     (
-                        deleteIdKey,
-                        deleteIdValue,
+                        delete_id_key,
+                        delete_id_value,
                     ),
                 )
             )
 
-        if oneRecord:
+        if one_record:
             return status[0]
 
         return status

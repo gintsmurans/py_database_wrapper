@@ -13,7 +13,7 @@ class DBWrapperPgSQLMixin:
     ### Helper methods ###
     ######################
 
-    def makeIdentifier(self, schema: str | None, name: str) -> sql.Identifier | str:
+    def make_identifier(self, schema: str | None, name: str) -> sql.Identifier | str:
         """
         Creates a SQL identifier object from the given name.
 
@@ -32,50 +32,50 @@ class DBWrapperPgSQLMixin:
     ### Query methods ###
     #####################
 
-    def filterQuery(
+    def filter_query(
         self,
-        schemaName: str | None,
-        tableName: str,
+        schema_name: str | None,
+        table_name: str,
     ) -> sql.SQL | sql.Composed | str:
         """
         Creates a SQL query to filter data from the given table.
 
         Args:
-            schemaName (str): The name of the schema to filter data from.
-            tableName (str): The name of the table to filter data from.
+            schema_name (str): The name of the schema to filter data from.
+            table_name (str): The name of the table to filter data from.
 
         Returns:
             sql.SQL | sql.Composed: The created SQL query object.
         """
         return sql.SQL("SELECT * FROM {table}").format(
-            table=self.makeIdentifier(schemaName, tableName)
+            table=self.make_identifier(schema_name, table_name),
         )
 
-    def orderQuery(
+    def order_query(
         self,
-        orderBy: OrderByItem | None = None,
+        order_by: OrderByItem | None = None,
     ) -> sql.SQL | sql.Composed | None:
         """
         Creates a SQL query to order the results by the given column.
 
         Args:
-            orderBy (OrderByItem | None, optional): The column to order the results by. Defaults to None.
+            order_by (OrderByItem | None, optional): The column to order the results by. Defaults to None.
 
         Returns:
             Any: The created SQL query object.
 
         TODO: Fix return type
         """
-        if orderBy is None:
+        if order_by is None:
             return None
 
-        orderList = [
+        order_list = [
             f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-            for item in orderBy
+            for item in order_by
         ]
-        return sql.SQL("ORDER BY %s" % ", ".join(orderList))  # type: ignore
+        return sql.SQL("ORDER BY %s" % ", ".join(order_list))  # type: ignore
 
-    def limitQuery(
+    def limit_query(
         self,
         offset: int = 0,
         limit: int = 100,
@@ -85,29 +85,29 @@ class DBWrapperPgSQLMixin:
 
         return sql.SQL("LIMIT {} OFFSET {}").format(limit, offset)
 
-    def formatFilter(self, key: str, filter: Any) -> tuple[Any, ...]:
+    def format_filter(self, key: str, filter: Any) -> tuple[Any, ...]:
         # TODO: For now we assume that we have that method from DBWrapperMixin
         # TODO: Its 5am and I am tired, I will fix this later
-        return super().formatFilter(key, filter)  # type: ignore
+        return super().format_filter(key, filter)  # type: ignore
 
-    def createFilter(
+    def create_filter(
         self, filter: dict[str, Any] | None
     ) -> tuple[sql.Composed | None, tuple[Any, ...]]:
         if filter is None or len(filter) == 0:
             return (None, tuple())
 
-        raw = [self.formatFilter(key, filter[key]) for key in filter]
+        raw = [self.format_filter(key, filter[key]) for key in filter]
 
-        _queryItems = sql.SQL(" AND ").join([sql.SQL(tup[0]) for tup in raw])
-        _query = sql.SQL("WHERE {queryItems}").format(queryItems=_queryItems)
+        _query_items = sql.SQL(" AND ").join([sql.SQL(tup[0]) for tup in raw])
+        _query = sql.SQL("WHERE {queryItems}").format(query_items=_query_items)
         _params = tuple([val for tup in raw for val in tup[1:] if val is not NoParam])
 
         return (_query, _params)
 
-    def _formatFilterQuery(
+    def _format_filter_query(
         self,
         query: sql.SQL | sql.Composed | str,
-        qFilter: sql.SQL | sql.Composed | None,
+        q_filter: sql.SQL | sql.Composed | None,
         order: sql.SQL | sql.Composed | None,
         limit: sql.SQL | sql.Composed | None,
     ) -> sql.Composed:
@@ -115,57 +115,58 @@ class DBWrapperPgSQLMixin:
         if isinstance(query, str):
             query = sql.SQL(query)  # type: ignore
 
-        queryParts: list[sql.Composable] = [query]
-        if qFilter is not None:
-            # if isinstance(qFilter, str):
-            #     qFilter = sql.SQL(qFilter)
-            queryParts.append(qFilter)
+        query_parts: list[sql.Composable] = [query]
+        if q_filter is not None:
+            # if isinstance(q_filter, str):
+            #     q_filter = sql.SQL(q_filter)
+            query_parts.append(q_filter)
         if order is not None:
-            queryParts.append(order)
+            query_parts.append(order)
         if limit is not None:
-            queryParts.append(limit)
+            query_parts.append(limit)
 
-        return sql.SQL(" ").join(queryParts)
+        return sql.SQL(" ").join(query_parts)
 
-    def _formatInsertQuery(
+    def _format_insert_query(
         self,
-        tableIdentifier: sql.Identifier | str,
-        storeData: dict[str, Any],
-        returnKey: sql.Identifier | str,
+        table_identifier: sql.Identifier | str,
+        store_data: dict[str, Any],
+        return_key: sql.Identifier | str,
     ) -> sql.Composed:
-        keys = storeData.keys()
-        values = list(storeData.values())
+        keys = store_data.keys()
+        values = list(store_data.values())
 
         return sql.SQL(
             "INSERT INTO {table} ({columns}) VALUES ({values}) RETURNING {id_key}"
         ).format(
-            table=tableIdentifier,
+            table=table_identifier,
             columns=sql.SQL(", ").join(map(sql.Identifier, keys)),
             values=sql.SQL(", ").join(sql.Placeholder() * len(values)),
-            id_key=returnKey,
+            id_key=return_key,
         )
 
-    def _formatUpdateQuery(
+    def _format_update_query(
         self,
-        tableIdentifier: sql.Identifier | str,
-        updateKey: sql.Identifier | str,
-        updateData: dict[str, Any],
+        table_identifier: sql.Identifier | str,
+        update_key: sql.Identifier | str,
+        update_data: dict[str, Any],
     ) -> sql.Composed:
-        keys = updateData.keys()
+        keys = update_data.keys()
         set_clause = sql.SQL(", ").join(
             sql.Identifier(key) + sql.SQL(" = %s") for key in keys
         )
         return sql.SQL("UPDATE {table} SET {set_clause} WHERE {id_key} = %s").format(
-            table=tableIdentifier,
+            table=table_identifier,
             set_clause=set_clause,
-            id_key=updateKey,
+            id_key=update_key,
         )
 
-    def _formatDeleteQuery(
+    def _format_delete_query(
         self,
-        tableIdentifier: sql.Identifier | str,
-        deleteKey: sql.Identifier | str,
+        table_identifier: sql.Identifier | str,
+        delete_key: sql.Identifier | str,
     ) -> sql.Composed:
         return sql.SQL("DELETE FROM {table} WHERE {id_key} = %s").format(
-            table=tableIdentifier, id_key=deleteKey
+            table=table_identifier,
+            id_key=delete_key,
         )

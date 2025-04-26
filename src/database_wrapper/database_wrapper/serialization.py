@@ -12,7 +12,7 @@ class SerializeType(Enum):
     ENUM = "enum"
 
 
-def jsonEncoder(obj: Any) -> Any:
+def json_encoder(obj: Any) -> Any:
     if isinstance(obj, Decimal):
         return float(obj)
 
@@ -28,27 +28,27 @@ def jsonEncoder(obj: Any) -> Any:
     return str(obj)
 
 
-def serializeValue(value: Any, sType: SerializeType) -> Any:
-    if sType == SerializeType.DATETIME:
+def serialize_value(value: Any, s_type: SerializeType) -> Any:
+    if s_type == SerializeType.DATETIME:
         if not isinstance(value, datetime.datetime):
             return value
 
         return value.isoformat()
 
-    if sType == SerializeType.JSON:
-        return json.dumps(value, default=jsonEncoder)
+    if s_type == SerializeType.JSON:
+        return json.dumps(value, default=json_encoder)
 
-    if sType == SerializeType.ENUM:
+    if s_type == SerializeType.ENUM:
         return value.value
     return value
 
 
-def deserializeValue(
+def deserialize_value(
     value: Any,
-    sType: SerializeType,
-    enumClass: Type[Enum] | None = None,
+    s_type: SerializeType,
+    enum_class: Type[Enum] | None = None,
 ) -> Any:
-    if sType == SerializeType.DATETIME:
+    if s_type == SerializeType.DATETIME:
         if isinstance(value, datetime.datetime):
             return value
 
@@ -61,21 +61,19 @@ def deserializeValue(
 
         return datetime.datetime.fromisoformat(value)
 
-    if sType == SerializeType.JSON:
+    if s_type == SerializeType.JSON:
         if isinstance(value, dict) or isinstance(value, list) or value is None:
             return value  # type: ignore
 
         return json.loads(value)
 
-    if sType == SerializeType.ENUM:
-        if enumClass is None:
-            raise ValueError(
-                "enumClass (enum_class) must be provided when deserializing Enum"
-            )
+    if s_type == SerializeType.ENUM:
+        if enum_class is None:
+            raise ValueError("enum_class must be provided when deserializing Enum")
 
         if isinstance(value, Enum) or value is None:
             return value
 
-        return enumClass(value)
+        return enum_class(value)
 
     return value

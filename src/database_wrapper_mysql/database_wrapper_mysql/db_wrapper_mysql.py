@@ -9,7 +9,7 @@ from .connector import MySqlDictCursor
 class DBWrapperMysql(DBWrapper):
     """Wrapper for MySQL database"""
 
-    dbCursor: MySqlDictCursor | None
+    db_cursor: MySqlDictCursor | None
     """ MySQL cursor object """
 
     #######################
@@ -20,36 +20,36 @@ class DBWrapperMysql(DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbCursor: MySqlDictCursor | None = None,
+        db_cursor: MySqlDictCursor | None = None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            dbCursor (MySqlDictCursor): The MySQL database cursor object.
+            db_cursor (MySqlDictCursor): The MySQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(dbCursor, logger)
+        super().__init__(db_cursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDbCursor(self, dbCursor: MySqlDictCursor | None) -> None:
+    def set_db_cursor(self, db_cursor: MySqlDictCursor | None) -> None:
         """
         Updates the database cursor object.
 
         Args:
-            dbCursor (MySqlDictCursor): The new database cursor object.
+            db_cursor (MySqlDictCursor): The new database cursor object.
         """
-        super().setDbCursor(dbCursor)
+        super().set_db_cursor(db_cursor)
 
     ######################
     ### Helper methods ###
     ######################
 
-    def logQuery(
+    def log_query(
         self,
         cursor: MySqlDictCursor,
         query: Any,
@@ -63,14 +63,14 @@ class DBWrapperMysql(DBWrapper):
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
-        queryString = cursor.mogrify(query, params)
-        logging.getLogger().debug(f"Query: {queryString}")
+        query_string = cursor.mogrify(query, params)
+        logging.getLogger().debug(f"Query: {query_string}")
 
     #####################
     ### Query methods ###
     #####################
 
-    def limitQuery(self, offset: int = 0, limit: int = 100) -> str | None:
+    def limit_query(self, offset: int = 0, limit: int = 100) -> str | None:
         if limit == 0:
             return None
         return f"LIMIT {offset},{limit}"

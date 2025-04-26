@@ -13,7 +13,7 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     Sync database wrapper for postgres
     """
 
-    dbCursor: PgCursorType | None
+    db_cursor: PgCursorType | None
     """ PostgreSQL cursor object """
 
     #######################
@@ -24,36 +24,36 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
     # We are overriding the __init__ method for the type hinting
     def __init__(
         self,
-        dbCursor: PgCursorType | None = None,
+        db_cursor: PgCursorType | None = None,
         logger: logging.Logger | None = None,
     ):
         """
         Initializes a new instance of the DBWrapper class.
 
         Args:
-            dbCursor (PgCursorType): The PostgreSQL database cursor object.
+            db_cursor (PgCursorType): The PostgreSQL database cursor object.
             logger (logging.Logger, optional): The logger object. Defaults to None.
         """
-        super().__init__(dbCursor, logger)
+        super().__init__(db_cursor, logger)
 
     ###############
     ### Setters ###
     ###############
 
-    def setDbCursor(self, dbCursor: PgCursorType | None) -> None:
+    def set_db_cursor(self, db_cursor: PgCursorType | None) -> None:
         """
         Updates the database cursor object.
 
         Args:
-            dbCursor (PgCursorType): The new database cursor object.
+            db_cursor (PgCursorType): The new database cursor object.
         """
-        super().setDbCursor(dbCursor)
+        super().set_db_cursor(db_cursor)
 
     ######################
     ### Helper methods ###
     ######################
 
-    def logQuery(
+    def log_query(
         self,
         cursor: Cursor[Any],
         query: sql.SQL | sql.Composed,
@@ -67,5 +67,5 @@ class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
             query (Any): The query to log.
             params (tuple[Any, ...]): The parameters to log.
         """
-        queryString = query.as_string(self.dbCursor)
-        logging.getLogger().debug(f"Query: {queryString} with params: {params}")
+        query_string = query.as_string(self.db_cursor)
+        logging.getLogger().debug(f"Query: {query_string} with params: {params}")

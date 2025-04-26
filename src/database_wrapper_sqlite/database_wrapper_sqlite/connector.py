@@ -40,11 +40,11 @@ class Sqlite(DatabaseBackend):
             "Sqlite is not yet implemented. See here: https://github.com/gintsmurans/py_database_wrapper/"
         )
 
-    def lastInsertId(self) -> int:
+    def last_insert_id(self) -> int:
         assert self.cursor, "Cursor is not initialized"
         return self.cursor.lastrowid
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
         return self.cursor.rowcount
 

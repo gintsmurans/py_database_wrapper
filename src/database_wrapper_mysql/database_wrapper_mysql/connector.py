@@ -73,7 +73,7 @@ class MySQL(DatabaseBackend):
             # We keep the same behavior not to break services that have port
             # number unspecified.
             port=self.config.get("port", 0),
-            connect_timeout=self.connectionTimeout,
+            connect_timeout=self.connection_timeout,
             use_unicode=True,
             charset=self.config["charset"],
             collation=self.config["collation"],
@@ -81,12 +81,12 @@ class MySQL(DatabaseBackend):
             **self.config["kwargs"],
         )
         # TODO: Typings issue
-        self.cursor = self.connection.cursor(MySqlDictCursor)  # type: ignore
+        self.cursor = self.connection.cursor(MySqlDictCursor)  # type: ignore[mysql does not have valid type hint]
 
     def ping(self) -> bool:
         try:
-            self.cursor.execute("SELECT 1")
-            self.cursor.fetchone()
+            self.cursor.execute("SELECT 1")  # type: ignore[mysql does not have valid type hint]
+            self.cursor.fetchone()  # type: ignore[mysql does not have valid type hint]
         except Exception as e:
             self.logger.debug(f"Error while pinging the database: {e}")
             return False
@@ -97,11 +97,11 @@ class MySQL(DatabaseBackend):
     ### Data ###
     ############
 
-    def lastInsertId(self) -> int:
+    def last_insert_id(self) -> int:
         assert self.cursor, "Cursor is not initialized"
         return self.cursor.lastrowid
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
         return self.cursor.rowcount
 
@@ -111,7 +111,7 @@ class MySQL(DatabaseBackend):
 
         self.logger.debug("Commit DB queries..")
         # TODO: Typings issue
-        self.connection.commit()  # type: ignore
+        self.connection.commit()  # type: ignore[mysql does not have valid type hint]
 
     def rollback(self) -> None:
         """Rollback DB queries"""
@@ -119,4 +119,4 @@ class MySQL(DatabaseBackend):
 
         self.logger.debug("Rollback DB queries..")
         # TODO: Typings issue
-        self.connection.rollback()  # type: ignore
+        self.connection.rollback()  # type: ignore[mysql does not have valid type hint]
