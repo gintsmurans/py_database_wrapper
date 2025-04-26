@@ -96,7 +96,7 @@ class PgSQL(DatabaseBackend):
                 user=self.config["username"],
                 password=self.config["password"],
                 dbname=self.config["database"],
-                connect_timeout=self.connectionTimeout,
+                connect_timeout=self.connection_timeout,
                 row_factory=PgDictRowFactory,  # type: ignore
                 **self.config["kwargs"],
             ),
@@ -104,7 +104,7 @@ class PgSQL(DatabaseBackend):
         self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
 
         # Lets do some socket magic
-        self.fixSocketTimeouts(self.connection.fileno())
+        self.fix_socket_timeouts(self.connection.fileno())
 
     def ping(self) -> bool:
         try:
@@ -123,11 +123,11 @@ class PgSQL(DatabaseBackend):
     @contextmanager
     def transaction(
         self,
-        dbConn: PgConnectionType | None = None,
+        db_conn: PgConnectionType | None = None,
     ) -> Iterator[Transaction]:
         """Transaction context manager"""
-        if dbConn:
-            with dbConn.transaction() as trans:
+        if db_conn:
+            with db_conn.transaction() as trans:
                 yield trans
 
         assert self.connection, "Connection is not initialized"
@@ -138,7 +138,7 @@ class PgSQL(DatabaseBackend):
     ### Data ###
     ############
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
 
         return self.cursor.rowcount
@@ -215,14 +215,14 @@ class PgSQLAsync(DatabaseBackend):
             user=self.config["username"],
             password=self.config["password"],
             dbname=self.config["database"],
-            connect_timeout=self.connectionTimeout,
+            connect_timeout=self.connection_timeout,
             row_factory=PgDictRowFactory,  # type: ignore
             **self.config["kwargs"],
         )
         self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
 
         # Lets do some socket magic
-        self.fixSocketTimeouts(self.connection.fileno())
+        self.fix_socket_timeouts(self.connection.fileno())
 
     async def close(self) -> Any:
         """Close connections"""
@@ -251,11 +251,11 @@ class PgSQLAsync(DatabaseBackend):
     @asynccontextmanager
     async def transaction(
         self,
-        dbConn: PgConnectionTypeAsync | None = None,
+        db_conn: PgConnectionTypeAsync | None = None,
     ) -> AsyncIterator[AsyncTransaction]:
         """Transaction context manager"""
-        if dbConn:
-            async with dbConn.transaction() as trans:
+        if db_conn:
+            async with db_conn.transaction() as trans:
                 yield trans
 
         assert self.connection, "Connection is not initialized"
@@ -266,7 +266,7 @@ class PgSQLAsync(DatabaseBackend):
     ### Data ###
     ############
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
 
         return self.cursor.rowcount
@@ -291,24 +291,24 @@ class PgSQLWithPooling(DatabaseBackend):
     PostgreSQL database implementation with connection pooling.
 
     Instance is created without actually connecting to the database.
-    When you are ready to connect, call openPool() method.
+    When you are ready to connect, call open_pool() method.
 
-    Then you can use newConnection() to get connection from the pool and
-    returnConnection() to return it back.
+    Then you can use new_connection() to get connection from the pool and
+    return_connection() to return it back.
     Or use context manager to get connection and return it back automatically,
     for example:
 
         pool = PgSQLWithPooling(config)
-        pool.openPool()
+        pool.open_pool()
         with pool as (connection, cursor):
             cursor.execute("SELECT 1")
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig
-    :param connectionTimeout: Connection timeout
-    :type connectionTimeout: int
-    :param instanceName: Name of the instance
-    :type instanceName: str
+    :param connection_timeout: Connection timeout
+    :type connection_timeout: int
+    :param instance_name: Name of the instance
+    :type instance_name: str
 
     Defaults:
         port = 5432
@@ -328,7 +328,7 @@ class PgSQLWithPooling(DatabaseBackend):
     cursor: PgCursorType | None
     """ Cursor to database """
 
-    contextConnection: ContextVar[tuple[PgConnectionType, PgCursorType] | None]
+    context_connection: ContextVar[tuple[PgConnectionType, PgCursorType] | None]
     """ Connection used in context manager """
 
     ########################
@@ -337,19 +337,19 @@ class PgSQLWithPooling(DatabaseBackend):
 
     def __init__(
         self,
-        dbConfig: PgConfig,
-        connectionTimeout: int = 5,
-        instanceName: str = "postgresql_pool",
+        db_config: PgConfig,
+        connection_timeout: int = 5,
+        instance_name: str = "postgresql_pool",
     ) -> None:
         """
         Main concept here is that in init we do not connect to database,
         so that class instances can be safely made regardless of connection statuss.
 
-        Remember to call openPool() after creating instance to actually open the pool to the database
-        and also closePool() to close the pool.
+        Remember to call open_pool() after creating instance to actually open the pool to the database
+        and also close_pool() to close the pool.
         """
 
-        super().__init__(dbConfig, connectionTimeout, instanceName)
+        super().__init__(db_config, connection_timeout, instance_name)
 
         # Set defaults
         if not "port" in self.config or not self.config["port"]:
@@ -371,19 +371,19 @@ class PgSQLWithPooling(DatabaseBackend):
         if not "pool_kwargs" in self.config or not self.config["pool_kwargs"]:
             self.config["pool_kwargs"] = {}
 
-        connStr = (
+        conn_str = (
             f"postgresql://{self.config['username']}:{self.config['password']}@{self.config['hostname']}:{self.config['port']}"
-            f"/{self.config['database']}?connect_timeout={self.connectionTimeout}&application_name={self.name}"
+            f"/{self.config['database']}?connect_timeout={self.connection_timeout}&application_name={self.name}"
             f"&sslmode={self.config['ssl']}"
         )
         self.pool = ConnectionPool(
-            connStr,
+            conn_str,
             open=False,
             min_size=2,
             max_size=self.config["maxconnections"],
             max_lifetime=20 * 60,
             max_idle=400,
-            timeout=self.connectionTimeout,
+            timeout=self.connection_timeout,
             reconnect_timeout=0,
             num_workers=4,
             connection_class=PgConnectionType,
@@ -395,15 +395,15 @@ class PgSQLWithPooling(DatabaseBackend):
     ### Connection ###
     ##################
 
-    def openPool(self) -> None:
-        self.pool.open(wait=True, timeout=self.connectionTimeout)
+    def open_pool(self) -> None:
+        self.pool.open(wait=True, timeout=self.connection_timeout)
 
-    def closePool(self) -> None:
+    def close_pool(self) -> None:
         """Close Pool"""
 
-        if self.shutdownRequested.is_set():
+        if self.shutdown_requested.is_set():
             return
-        self.shutdownRequested.set()
+        self.shutdown_requested.set()
 
         # Close pool
         self.logger.debug("Closing connection pool")
@@ -417,11 +417,11 @@ class PgSQLWithPooling(DatabaseBackend):
             self.close()
 
         # Create new connection
-        res = self.newConnection()
+        res = self.new_connection()
         if res:
             (self.connection, self.cursor) = res
 
-    def newConnection(
+    def new_connection(
         self,
     ) -> tuple[PgConnectionType, PgCursorType] | None:
         assert self.pool, "Pool is not initialized"
@@ -431,14 +431,14 @@ class PgSQLWithPooling(DatabaseBackend):
 
         # Get connection from the pool
         tries = 0
-        while not self.shutdownRequested.is_set():
+        while not self.shutdown_requested.is_set():
             connection = None
             try:
-                connection = self.pool.getconn(timeout=self.connectionTimeout)
+                connection = self.pool.getconn(timeout=self.connection_timeout)
                 cursor = connection.cursor(row_factory=PgDictRowFactory)
 
                 # Lets do some socket magic
-                self.fixSocketTimeouts(connection.fileno())
+                self.fix_socket_timeouts(connection.fileno())
 
                 with connection.transaction():
                     cursor.execute("SELECT 1")
@@ -452,7 +452,7 @@ class PgSQLWithPooling(DatabaseBackend):
                     self.pool.putconn(connection)
 
                 self.logger.error(f"Error while getting connection from the pool: {e}")
-                self.shutdownRequested.wait(self.slowDownTimeout)
+                self.shutdown_requested.wait(self.slow_down_timeout)
                 tries += 1
                 if tries >= 3:
                     break
@@ -460,7 +460,7 @@ class PgSQLWithPooling(DatabaseBackend):
 
         return None
 
-    def returnConnection(self, connection: PgConnectionType) -> None:
+    def return_connection(self, connection: PgConnectionType) -> None:
         """Return connection to the pool"""
         assert self.pool, "Pool is not initialized"
 
@@ -483,11 +483,11 @@ class PgSQLWithPooling(DatabaseBackend):
         """Context manager"""
 
         # Lets set the context var so that it is set even if we fail to get connection
-        self.contextConnection.set(None)
+        self.context_connection.set(None)
 
-        res = self.newConnection()
+        res = self.new_connection()
         if res:
-            self.contextConnection.set(res)
+            self.context_connection.set(res)
             return res
 
         return (
@@ -498,12 +498,12 @@ class PgSQLWithPooling(DatabaseBackend):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """Context manager"""
 
-        testData = self.contextConnection.get()
-        if testData:
-            self.returnConnection(testData[0])
+        test_data = self.context_connection.get()
+        if test_data:
+            self.return_connection(test_data[0])
 
         # Reset context
-        self.contextConnection.set(None)
+        self.context_connection.set(None)
 
     ####################
     ### Transactions ###
@@ -512,11 +512,11 @@ class PgSQLWithPooling(DatabaseBackend):
     @contextmanager
     def transaction(
         self,
-        dbConn: PgConnectionType | None = None,
+        db_conn: PgConnectionType | None = None,
     ) -> Iterator[Transaction]:
         """Transaction context manager"""
-        if dbConn:
-            with dbConn.transaction() as trans:
+        if db_conn:
+            with db_conn.transaction() as trans:
                 yield trans
 
         assert self.connection, "Connection is not initialized"
@@ -527,7 +527,7 @@ class PgSQLWithPooling(DatabaseBackend):
     ### Data ###
     ############
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
 
         return self.cursor.rowcount
@@ -552,29 +552,29 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     PostgreSQL database implementation with async connection pooling.
 
     Instance is created without actually connecting to the database.
-    When you are ready to connect, call await openPool() method.
+    When you are ready to connect, call await open_pool() method.
 
-    Then you can use newConnection() to get connection from the pool and
-    returnConnection() to return it back.
+    Then you can use new_connection() to get connection from the pool and
+    return_connection() to return it back.
 
     Or use context manager to get connection and return it back automatically,
     for example:
 
         pool = PgSQLWithPoolingAsync(config)
-        await pool.openPool()
+        await pool.open_pool()
         async with pool as (connection, cursor):
             await cursor.execute("SELECT 1")
 
 
     ! Note: Close is not called automatically when class is destroyed.
-    ! You need to call `await closePool()` manually in async environment.
+    ! You need to call `await close_pool()` manually in async environment.
 
     :param config: Configuration for PostgreSQL
     :type config: PgConfig
-    :param connectionTimeout: Connection timeout
-    :type connectionTimeout: int
-    :param instanceName: Name of the instance
-    :type instanceName: str
+    :param connection_timeout: Connection timeout
+    :type connection_timeout: int
+    :param instance_name: Name of the instance
+    :type instance_name: str
 
     Defaults:
         port = 5432
@@ -585,7 +585,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     config: PgConfig
     """ Configuration """
 
-    poolAsync: AsyncConnectionPool[PgConnectionTypeAsync]
+    pool_async: AsyncConnectionPool[PgConnectionTypeAsync]
     """ Connection pool """
 
     connection: PgConnectionTypeAsync | None
@@ -594,7 +594,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     cursor: PgCursorTypeAsync | None
     """ Cursor to database """
 
-    contextConnectionAsync: ContextVar[
+    context_connection_async: ContextVar[
         tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None
     ]
     """ Connection used in async context manager """
@@ -605,19 +605,19 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
     def __init__(
         self,
-        dbConfig: PgConfig,
-        connectionTimeout: int = 5,
-        instanceName: str = "async_postgresql",
+        db_config: PgConfig,
+        connection_timeout: int = 5,
+        instance_name: str = "async_postgresql",
     ) -> None:
         """
         Main concept here is that in init we do not connect to database,
         so that class instances can be safely made regardless of connection statuss.
 
-        Remember to call await openPool() after creating instance to actually open the pool to the database
-        and also await closePool() to close the pool.
+        Remember to call await open_pool() after creating instance to actually open the pool to the database
+        and also await close_pool() to close the pool.
         """
 
-        super().__init__(dbConfig, connectionTimeout, instanceName)
+        super().__init__(db_config, connection_timeout, instance_name)
 
         # Set defaults
         if not "port" in self.config or not self.config["port"]:
@@ -639,19 +639,19 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         if not "pool_kwargs" in self.config or not self.config["pool_kwargs"]:
             self.config["pool_kwargs"] = {}
 
-        connStr = (
+        conn_str = (
             f"postgresql://{self.config['username']}:{self.config['password']}@{self.config['hostname']}:{self.config['port']}"
-            f"/{self.config['database']}?connect_timeout={self.connectionTimeout}&application_name={self.name}"
+            f"/{self.config['database']}?connect_timeout={self.connection_timeout}&application_name={self.name}"
             f"&sslmode={self.config['ssl']}"
         )
-        self.poolAsync = AsyncConnectionPool(
-            connStr,
+        self.pool_async = AsyncConnectionPool(
+            conn_str,
             open=False,
             min_size=2,
             max_size=self.config["maxconnections"],
             max_lifetime=20 * 60,
             max_idle=400,
-            timeout=self.connectionTimeout,
+            timeout=self.connection_timeout,
             reconnect_timeout=0,
             num_workers=4,
             connection_class=PgConnectionTypeAsync,
@@ -663,27 +663,27 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         """Destructor"""
         del self.cursor
         del self.connection
-        del self.poolAsync
+        del self.pool_async
 
     ##################
     ### Connection ###
     ##################
 
-    async def openPool(self) -> None:
-        await self.poolAsync.open(wait=True, timeout=self.connectionTimeout)
+    async def open_pool(self) -> None:
+        await self.pool_async.open(wait=True, timeout=self.connection_timeout)
 
-    async def closePool(self) -> None:
+    async def close_pool(self) -> None:
         """Close Pool"""
 
-        if self.shutdownRequested.is_set():
+        if self.shutdown_requested.is_set():
             return
-        self.shutdownRequested.set()
+        self.shutdown_requested.set()
 
         # Close async pool
         self.logger.debug("Closing connection pool")
         await self.close()
-        if hasattr(self, "poolAsync") and self.poolAsync.closed is False:
-            await self.poolAsync.close()
+        if hasattr(self, "poolAsync") and self.pool_async.closed is False:
+            await self.pool_async.close()
 
     async def open(self) -> None:
         """Get connection from the pool and keep it in the class"""
@@ -691,7 +691,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
             await self.close()
 
         # Create new connection
-        res = await self.newConnection()
+        res = await self.new_connection()
         if res:
             (self.connection, self.cursor) = res
 
@@ -704,29 +704,29 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
             self.cursor = None
 
         if self.connection:
-            await self.returnConnection(self.connection)
+            await self.return_connection(self.connection)
             self.connection = None
 
-    async def newConnection(
+    async def new_connection(
         self,
     ) -> tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None:
-        assert self.poolAsync, "Async pool is not initialized"
+        assert self.pool_async, "Async pool is not initialized"
 
         # Log
         self.logger.debug("Getting connection from the pool")
 
         # Get connection from the pool
         tries = 0
-        while not self.shutdownRequested.is_set():
+        while not self.shutdown_requested.is_set():
             connection = None
             try:
-                connection = await self.poolAsync.getconn(
-                    timeout=self.connectionTimeout
+                connection = await self.pool_async.getconn(
+                    timeout=self.connection_timeout
                 )
                 cursor = connection.cursor(row_factory=PgDictRowFactory)
 
                 # Lets do some socket magic
-                self.fixSocketTimeouts(connection.fileno())
+                self.fix_socket_timeouts(connection.fileno())
 
                 async with connection.transaction():
                     await cursor.execute("SELECT 1")
@@ -737,10 +737,10 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
             except Exception as e:
                 if connection:
                     await connection.close()
-                    await self.poolAsync.putconn(connection)
+                    await self.pool_async.putconn(connection)
 
                 self.logger.error(f"Error while getting connection from the pool: {e}")
-                self.shutdownRequested.wait(self.slowDownTimeout)
+                self.shutdown_requested.wait(self.slow_down_timeout)
                 tries += 1
                 if tries >= 3:
                     break
@@ -748,18 +748,18 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
         return None
 
-    async def returnConnection(self, connection: PgConnectionTypeAsync) -> None:
+    async def return_connection(self, connection: PgConnectionTypeAsync) -> None:
         """Return connection to the pool"""
-        assert self.poolAsync, "Async pool is not initialized"
+        assert self.pool_async, "Async pool is not initialized"
 
         # Log
         self.logger.debug("Putting connection back to the pool")
 
         # Put connection back to the pool
-        await self.poolAsync.putconn(connection)
+        await self.pool_async.putconn(connection)
 
         # Debug
-        self.logger.debug(self.poolAsync.get_stats())
+        self.logger.debug(self.pool_async.get_stats())
 
     ###############
     ### Context ###
@@ -771,11 +771,11 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         """Context manager"""
 
         # Lets set the context var so that it is set even if we fail to get connection
-        self.contextConnectionAsync.set(None)
+        self.context_connection_async.set(None)
 
-        res = await self.newConnection()
+        res = await self.new_connection()
         if res:
-            self.contextConnectionAsync.set(res)
+            self.context_connection_async.set(res)
             return res
 
         return (
@@ -786,12 +786,12 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     async def __aexit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """Context manager"""
 
-        testData = self.contextConnectionAsync.get()
-        if testData:
-            await self.returnConnection(testData[0])
+        test_data = self.context_connection_async.get()
+        if test_data:
+            await self.return_connection(test_data[0])
 
         # Reset context
-        self.contextConnectionAsync.set(None)
+        self.context_connection_async.set(None)
 
     ####################
     ### Transactions ###
@@ -800,11 +800,11 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     @asynccontextmanager
     async def transaction(
         self,
-        dbConn: PgConnectionTypeAsync | None = None,
+        db_conn: PgConnectionTypeAsync | None = None,
     ) -> AsyncIterator[AsyncTransaction]:
         """Transaction context manager"""
-        if dbConn:
-            async with dbConn.transaction() as trans:
+        if db_conn:
+            async with db_conn.transaction() as trans:
                 yield trans
 
         assert self.connection, "Connection is not initialized"
@@ -815,7 +815,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     ### Data ###
     ############
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
 
         return self.cursor.rowcount
