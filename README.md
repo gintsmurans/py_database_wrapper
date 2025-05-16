@@ -66,12 +66,14 @@ We are adding `--config-settings editable_mode=strict` for vscode to be able to 
 
 ## TODO
 
-* Add sync wrappers that themselves are sync
-    * Figure out uniform naming for sync/async classes
-* Add sqlite support
-    * Would be nice to also have async support for sqlite
-* Add more tests
-* Add more usage examples
-* Create a better documentation
-* Add async support for MySQL and MSSQL - need to look into libraries that support this
-* Do we need more database support? If so, which ones?
+- [x] Rename methods, properties and variables to pep-8
+    - [x] Solved in v0.2.2
+- [ ] Add sync wrappers that themselves are sync
+    - [ ] Figure out uniform naming for sync/async classes
+- [ ] Add sqlite support
+    - [ ] Would be nice to also have async support for sqlite
+- [ ] Add more tests
+- [ ] Add more usage examples
+- [ ] Create a better documentation
+- [ ] Add async support for MySQL and MSSQL - need to look into libraries that support this
+- [ ] Do we need more database support? If so, which ones?
