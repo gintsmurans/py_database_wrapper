@@ -32,3 +32,6 @@ try:
 finally:
     await db.close()
 ```
+
+### Notes
+No wrapper at this time, as redis is just a key-value store.
