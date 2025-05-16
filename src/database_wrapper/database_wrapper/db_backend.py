@@ -191,7 +191,7 @@ class DatabaseBackend:
         """
         raise Exception("Not implemented")
 
-    def hasConnection(self) -> bool:
+    def has_connection(self) -> bool:
         """
         Check if connection is alive/set.
 
@@ -200,7 +200,7 @@ class DatabaseBackend:
         """
         return self.connection is not None
 
-    def hasCursor(self) -> bool:
+    def has_cursor(self) -> bool:
         """
         Check if cursor is alive/set.
 
