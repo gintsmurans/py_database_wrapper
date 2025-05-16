@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "database_wrapper_sqlite"
+name = "database_wrapper_redis"
 version = "0.2.4"
-description = "database_wrapper for PostgreSQL database"
+description = "database_wrapper for Redis database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -33,9 +33,10 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "sqlite"]
+keywords = ["database", "wrapper", "python", "redis"]
 dependencies = [
     "database_wrapper == 0.2.4",
+    "redis",
 ]
 
 [project.urls]
@@ -47,4 +48,4 @@ Code = "https://github.com/gintsmurans/py_database_wrapper"
 Download = "https://pypi.org/project/database_wrapper/"
 
 [tool.setuptools.package-data]
-database_wrapper_sqlite = ["py.typed"]
+database_wrapper_redis = ["py.typed"]

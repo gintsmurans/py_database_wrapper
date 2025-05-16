@@ -28,7 +28,8 @@
                     "src/database_wrapper_pgsql/",
                     "src/database_wrapper_mysql/",
                     "src/database_wrapper_mssql/",
-                    "src/database_wrapper_sqlite/"
+                    "src/database_wrapper_sqlite/",
+                    "src/database_wrapper_redis/"
                 ],
                 "[python]": {
                     "editor.formatOnSave": true,
