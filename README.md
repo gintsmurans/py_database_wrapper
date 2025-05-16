@@ -11,6 +11,7 @@ pip install database_wrapper[pgsql] # for postgres
 pip install database_wrapper[mysql] # for mysql
 pip install database_wrapper[mssql] # for mssql
 pip install database_wrapper[sqlite] # TODO: for sqlite
+pip install database_wrapper[redis] # for redis
 ```
 
 ## Usage
@@ -33,6 +34,7 @@ General usage is the same for all databases. The only difference is the import s
 * [database_wrapper_mysql](src/database_wrapper_mysql)
 * [database_wrapper_mssql](src/database_wrapper_mssql)
 * [database_wrapper_sqlite](src/database_wrapper_sqlite)
+* [database_wrapper_redis](src/database_wrapper_redis)
 
 
 ## Development
@@ -51,6 +53,7 @@ pip install -e ./src/database_wrapper_pgsql --config-settings editable_mode=stri
 pip install -e ./src/database_wrapper_mysql --config-settings editable_mode=strict
 pip install -e ./src/database_wrapper_mssql --config-settings editable_mode=strict
 pip install -e ./src/database_wrapper_sqlite --config-settings editable_mode=strict
+pip install -e ./src/database_wrapper_redis --config-settings editable_mode=strict
 ```
 
 We are adding `--config-settings editable_mode=strict` for vscode to be able to use the packages in the development environment. See [#3473](https://github.com/microsoft/pylance-release/issues/3473)

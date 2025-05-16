@@ -12,6 +12,7 @@ FILES_TO_UPDATE=(
   "src/database_wrapper_mysql/pyproject.toml"
   "src/database_wrapper_mssql/pyproject.toml"
   "src/database_wrapper_sqlite/pyproject.toml"
+  "src/database_wrapper_redis/pyproject.toml"
   "src/database_wrapper/database_wrapper/config.py"
 )
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "database_wrapper"
-version = "0.2.3"
+version = "0.2.4"
 description = "A Different Approach to Database Wrappers in Python"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -33,7 +33,7 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "pgsql", "mysql", "mssql", "sqlite"]
+keywords = ["database", "wrapper", "python", "pgsql", "mysql", "mssql", "sqlite", "redis"]
 dependencies = []
 
 [project.urls]
@@ -45,11 +45,12 @@ Code = "https://github.com/gintsmurans/py_database_wrapper"
 Download = "https://pypi.org/project/database_wrapper/"
 
 [project.optional-dependencies]
-pgsql = ["database_wrapper_pgsql == 0.2.3"]
-mysql = ["database_wrapper_mysql == 0.2.3"]
-mssql = ["database_wrapper_mssql == 0.2.3"]
-sqlite = ["database_wrapper_sqlite == 0.2.3"]
-all = ["database_wrapper[pgsql,mysql,mssql,sqlite]"]
+pgsql = ["database_wrapper_pgsql == 0.2.4"]
+mysql = ["database_wrapper_mysql == 0.2.4"]
+mssql = ["database_wrapper_mssql == 0.2.4"]
+sqlite = ["database_wrapper_sqlite == 0.2.4"]
+redis = ["database_wrapper_redis == 0.2.4"]
+all = ["database_wrapper[pgsql,mysql,mssql,sqlite,redis]"]
 dev = [
     # Development
     "ast-comments >= 1.1.2",
