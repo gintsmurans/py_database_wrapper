@@ -99,7 +99,7 @@ class DBWrapperPgSQLMixin:
         raw = [self.format_filter(key, filter[key]) for key in filter]
 
         _query_items = sql.SQL(" AND ").join([sql.SQL(tup[0]) for tup in raw])
-        _query = sql.SQL("WHERE {queryItems}").format(query_items=_query_items)
+        _query = sql.SQL("WHERE {query_items}").format(query_items=_query_items)
         _params = tuple([val for tup in raw for val in tup[1:] if val is not NoParam])
 
         return (_query, _params)
