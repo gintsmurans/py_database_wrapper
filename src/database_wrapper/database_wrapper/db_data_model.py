@@ -25,6 +25,7 @@ class MetadataDict(TypedDict):
     serialize: NotRequired[Callable[[Any], Any] | SerializeType | None]
     deserialize: NotRequired[Callable[[Any], Any] | None]
     enum_class: NotRequired[Type[Enum] | None]
+    timezone: NotRequired[str | datetime.tzinfo | None]
 
 
 @dataclass
@@ -137,8 +138,9 @@ class DBDataModel:
             # Here we actually need to deserialize the value to correct class type
             serialize = metadata.get("serialize", None)
             enumClass = metadata.get("enum_class", None)
+            timezone = metadata.get("timezone", None)
             if serialize is not None and isinstance(serialize, SerializeType):
-                value = deserializeValue(value, serialize, enumClass)
+                value = deserializeValue(value, serialize, enumClass, timezone)
                 setattr(self, fieldName, value)
 
             else:

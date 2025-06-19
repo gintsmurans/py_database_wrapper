@@ -4,6 +4,7 @@ import json
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Type
+from zoneinfo import ZoneInfo
 
 
 class SerializeType(Enum):
@@ -47,6 +48,7 @@ def deserializeValue(
     value: Any,
     sType: SerializeType,
     enumClass: Type[Enum] | None = None,
+    timezone: str | datetime.tzinfo | None = None,
 ) -> Any:
     if sType == SerializeType.DATETIME:
         if isinstance(value, datetime.datetime):
@@ -57,7 +59,11 @@ def deserializeValue(
             timestamp = float(value)
             if timestamp > 1e10:  # Check if timestamp is in milliseconds
                 timestamp /= 1000
-            return datetime.datetime.fromtimestamp(timestamp)
+
+            if timezone is not None and isinstance(timezone, str):
+                timezone = ZoneInfo(timezone)
+
+            return datetime.datetime.fromtimestamp(timestamp, tz=timezone)
 
         return datetime.datetime.fromisoformat(value)
 
