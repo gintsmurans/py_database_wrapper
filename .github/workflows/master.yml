@@ -39,8 +39,11 @@ jobs:
       - name: build database_wrapper_sqlite
         run: python -m build src/database_wrapper_sqlite
 
+      - name: build database_wrapper_redis
+        run: python -m build src/database_wrapper_redis
+
       - name: Move all distributions to dist/
-        run: mkdir -p dist && mv src/database_wrapper/dist/* dist/ && mv src/database_wrapper_pgsql/dist/* dist/ && mv src/database_wrapper_mysql/dist/* dist/ && mv src/database_wrapper_mssql/dist/* dist/ && mv src/database_wrapper_sqlite/dist/* dist/
+        run: mkdir -p dist && mv src/database_wrapper/dist/* dist/ && mv src/database_wrapper_pgsql/dist/* dist/ && mv src/database_wrapper_mysql/dist/* dist/ && mv src/database_wrapper_mssql/dist/* dist/ && mv src/database_wrapper_sqlite/dist/* dist/ && mv src/database_wrapper_redis/dist/* dist/
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

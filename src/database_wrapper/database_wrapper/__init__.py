@@ -15,6 +15,7 @@ from .db_wrapper import DBWrapper
 from .db_wrapper_async import DBWrapperAsync
 from .serialization import SerializeType
 from .utils.dataclass_addons import ignore_unknown_kwargs
+from .db_introspector import ColumnMetaIntrospector, DBIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper")
@@ -40,6 +41,8 @@ __all__ = [
     "utils",
     "SerializeType",
     "ignore_unknown_kwargs",
+    "ColumnMetaIntrospector",
+    "DBIntrospector",
     # Abstract classes
     "ConnectionABC",
     "CursorABC",

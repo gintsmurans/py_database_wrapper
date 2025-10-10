@@ -11,3 +11,4 @@ See the README.md files in the database specific packages for more information.
 * [database_wrapper_mysql](https://pypi.org/project/database_wrapper_mysql/)
 * [database_wrapper_mssql](https://pypi.org/project/database_wrapper_mssql/)
 * [database_wrapper_sqlite](https://pypi.org/project/database_wrapper_sqlite/)
+* [database_wrapper_redis](https://pypi.org/project/database_wrapper_redis/)

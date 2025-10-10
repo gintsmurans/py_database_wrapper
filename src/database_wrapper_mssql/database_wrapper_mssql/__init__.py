@@ -10,6 +10,7 @@ import logging
 
 from .db_wrapper_mssql import DBWrapperMSSQL
 from .connector import MsConfig, MSSQL, MssqlConnection, MssqlCursor
+from .mssql_introspector import MSSQLIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_mssql")
@@ -27,4 +28,5 @@ __all__ = [
     "MssqlCursor",
     # Helpers
     "MsConfig",
+    "MSSQLIntrospector",
 ]

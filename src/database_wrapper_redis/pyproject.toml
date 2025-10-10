@@ -3,9 +3,9 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "database_wrapper"
+name = "database_wrapper_redis"
 version = "0.2.7"
-description = "A Different Approach to Database Wrappers in Python"
+description = "database_wrapper for Redis database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
@@ -33,8 +33,11 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ["database", "wrapper", "python", "pgsql", "mysql", "mssql", "sqlite", "redis"]
-dependencies = []
+keywords = ["database", "wrapper", "python", "redis"]
+dependencies = [
+    "database_wrapper == 0.2.7",
+    "redis",
+]
 
 [project.urls]
 Homepage = "https://github.com/gintsmurans/py_database_wrapper"
@@ -44,33 +47,5 @@ Code = "https://github.com/gintsmurans/py_database_wrapper"
 "Issue Tracker" = "https://github.com/gintsmurans/py_database_wrapper/issues"
 Download = "https://pypi.org/project/database_wrapper/"
 
-[project.optional-dependencies]
-pgsql = ["database_wrapper_pgsql == 0.2.7"]
-mysql = ["database_wrapper_mysql == 0.2.7"]
-mssql = ["database_wrapper_mssql == 0.2.7"]
-sqlite = ["database_wrapper_sqlite == 0.2.7"]
-redis = ["database_wrapper_redis == 0.2.7"]
-all = ["database_wrapper[pgsql,mysql,mssql,sqlite,redis]"]
-dev = [
-    # Development
-    "ast-comments >= 1.1.2",
-    "codespell >= 2.2",
-    "build >= 1.2.1",
-    # Formatting & Types
-    "black >= 24.1.0",
-    "mypy >= 1.9.0",
-    "types-setuptools >= 61.0.0",
-    "types-pymssql >= 2.1.0",
-    "types-mysqlclient >= 2.2.0",
-    # Database drivers
-    "psycopg[binary] >= 3.2.0",
-    "psycopg[pool] >= 3.2.0",
-    "mysqlclient >= 2.2.2",
-    "pymssql >= 2.2.10"
-]
-
-# [tool.setuptools.packages.find]
-# where = ["src"]
-
 [tool.setuptools.package-data]
-database_wrapper = ["py.typed"]
+database_wrapper_redis = ["py.typed"]

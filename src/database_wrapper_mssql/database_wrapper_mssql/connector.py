@@ -61,8 +61,8 @@ class MSSQL(DatabaseBackend):
             port=self.config["port"],
             tds_version="7.0",
             as_dict=True,
-            timeout=self.connectionTimeout,
-            login_timeout=self.connectionTimeout,
+            timeout=self.connection_timeout,
+            login_timeout=self.connection_timeout,
             **self.config["kwargs"],
         )
         self.cursor = self.connection.cursor(as_dict=True)
@@ -81,11 +81,11 @@ class MSSQL(DatabaseBackend):
     ### Data ###
     ############
 
-    def lastInsertId(self) -> int:
+    def last_insert_id(self) -> int:
         assert self.cursor, "Cursor is not initialized"
         return self.cursor.lastrowid
 
-    def affectedRows(self) -> int:
+    def affected_rows(self) -> int:
         assert self.cursor, "Cursor is not initialized"
         return self.cursor.rowcount
 
