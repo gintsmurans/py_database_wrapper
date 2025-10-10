@@ -9,6 +9,8 @@ from zoneinfo import ZoneInfo
 
 class SerializeType(Enum):
     DATETIME = "datetime"
+    DATE = "date"
+    TIME = "time"
     JSON = "json"
     ENUM = "enum"
 
@@ -32,6 +34,18 @@ def json_encoder(obj: Any) -> Any:
 def serialize_value(value: Any, s_type: SerializeType) -> Any:
     if s_type == SerializeType.DATETIME:
         if not isinstance(value, datetime.datetime):
+            return value
+
+        return value.isoformat()
+
+    if s_type == SerializeType.DATE:
+        if not isinstance(value, datetime.date):
+            return value
+
+        return value.isoformat()
+
+    if s_type == SerializeType.TIME:
+        if not isinstance(value, datetime.time):
             return value
 
         return value.isoformat()
@@ -66,6 +80,18 @@ def deserialize_value(
             return datetime.datetime.fromtimestamp(timestamp, tz=timezone)
 
         return datetime.datetime.fromisoformat(value)
+
+    if s_type == SerializeType.DATE:
+        if isinstance(value, datetime.date):
+            return value
+
+        return datetime.date.fromisoformat(str(value))
+
+    if s_type == SerializeType.TIME:
+        if isinstance(value, datetime.time):
+            return value
+
+        return datetime.time.fromisoformat(str(value))
 
     if s_type == SerializeType.JSON:
         if isinstance(value, dict) or isinstance(value, list) or value is None:
