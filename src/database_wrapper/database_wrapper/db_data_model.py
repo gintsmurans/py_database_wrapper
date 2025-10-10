@@ -185,9 +185,7 @@ class DBDataModel:
         for field_name, field_obj in self.__dataclass_fields__.items():
             metadata = cast(MetadataDict, field_obj.metadata)
             assert (
-                "db_field" in metadata
-                and isinstance(metadata["db_field"], tuple)
-                and len(metadata["db_field"]) == 2
+                "db_field" in metadata and isinstance(metadata["db_field"], tuple) and len(metadata["db_field"]) == 2
             ), f"db_field metadata is not set for {field_name}"
             field_type: str = metadata["db_field"][1]
             schema["properties"][field_name] = {"type": field_type}
@@ -321,9 +319,7 @@ class DBDataModel:
                 serialize = metadata.get("serialize", None)
                 if serialize is not None:
                     if isinstance(serialize, SerializeType):
-                        store_data[field_name] = serialize_value(
-                            store_data[field_name], serialize
-                        )
+                        store_data[field_name] = serialize_value(store_data[field_name], serialize)
                     else:
                         store_data[field_name] = serialize(store_data[field_name])
 
@@ -347,9 +343,7 @@ class DBDataModel:
                 serialize = metadata.get("serialize", None)
                 if serialize is not None:
                     if isinstance(serialize, SerializeType):
-                        update_data[field_name] = serialize_value(
-                            update_data[field_name], serialize
-                        )
+                        update_data[field_name] = serialize_value(update_data[field_name], serialize)
                     else:
                         update_data[field_name] = serialize(update_data[field_name])
 
@@ -393,6 +387,26 @@ class DBDefaultsDataModel(DBDataModel):
         },
     )
     """updated_at should be present in all tables and is updated automatically"""
+
+    disabled_at: datetime.datetime = field(
+        default_factory=datetime.datetime.now,
+        metadata={
+            "db_field": ("disabled_at", "timestamptz"),
+            "store": False,
+            "update": False,
+            "serialize": SerializeType.DATETIME,
+        },
+    )
+
+    deleted_at: datetime.datetime = field(
+        default_factory=datetime.datetime.now,
+        metadata={
+            "db_field": ("deleted_at", "timestamptz"),
+            "store": False,
+            "update": False,
+            "serialize": SerializeType.DATETIME,
+        },
+    )
 
     enabled: bool = field(
         default=True,

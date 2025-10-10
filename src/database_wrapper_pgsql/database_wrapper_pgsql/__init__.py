@@ -24,6 +24,7 @@ from .connector import (
     PgConnectionTypeAsync,
     PgCursorTypeAsync,
 )
+from .pg_introspector import PostgresIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_pgsql")
@@ -47,4 +48,5 @@ __all__ = [
     "PgCursorTypeAsync",
     # Helpers
     "PgConfig",
+    "PostgresIntrospector",
 ]
