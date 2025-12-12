@@ -60,12 +60,13 @@ We are adding `--config-settings editable_mode=strict` for vscode to be able to 
 
 ## Implementation
 
-| Database | Sync | Async |
-| :------- | :--: | :---: |
-| pgsql    |  Y   |   Y   |
-| mysql    |  Y   |   N   |
-| mssql    |  Y   |   N   |
-| sqlite   |  N   |   N   |
+| Database | Sync | Async | Sync Pooling | Async Pooling | Introspection |
+| :------- | :--: | :---: | :----------: | :-----------: | :-----------: |
+| pgsql    |  Y   |   Y   |       Y      |      Y        |       B       |
+| mysql    |  Y   |   N   |       N      |      N        |       N       |
+| mssql    |  Y   |   N   |       N      |      N        |       N       |
+| sqlite   |  N   |   N   |       N      |      N        |       N       |
+| redis    |  Y   |   Y   |       Y      |      Y        |       N       |
 
 ## TODO
 
