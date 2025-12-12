@@ -130,7 +130,7 @@ class KVDbBase:
         timeout: int = 5,
         instance_name: str | None = None,
     ) -> None:
-        self.config = self.fillConfig(config)
+        self.config = self.fill_config(config)
         self.timeout = timeout
 
         self.pool = None
@@ -190,7 +190,7 @@ class KVDbBase:
     ### Helpers ###
     ###############
 
-    def fillConfig(self, config: RedisDefaultConfig) -> RedisConfig:
+    def fill_config(self, config: RedisDefaultConfig) -> RedisConfig:
         return RedisConfig(
             hostname=config["hostname"],
             port=int(config.get("port", 6379)),

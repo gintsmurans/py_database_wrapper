@@ -41,7 +41,7 @@ class DBWrapperAsync(DBWrapperMixin):
             raise ValueError("Id value is not set")
 
         # Get the record
-        res = self.fetch_all_records(
+        res = self.get_all(
             empty_data_class,
             id_key,
             id_value,
@@ -73,7 +73,7 @@ class DBWrapperAsync(DBWrapperMixin):
             DataModelType | None: The result of the query.
         """
         # Get the record
-        res = self.fetch_all_records(
+        res = self.get_all(
             empty_data_class,
             id_key,
             id_value,
@@ -85,7 +85,7 @@ class DBWrapperAsync(DBWrapperMixin):
         else:
             return None
 
-    async def fetch_all_records(
+    async def get_all(
         self,
         empty_data_class: DataModelType,
         id_key: str | None = None,
@@ -283,6 +283,20 @@ class DBWrapperAsync(DBWrapperMixin):
 
         return status
 
+    async def insert_data(
+        self,
+        record: DBDataModel,
+        store_data: dict[str, Any],
+    ) -> tuple[int, int]:
+        status = await self._insert(
+            record,
+            record.schema_name,
+            record.table_name,
+            store_data,
+            record.id_key,
+        )
+        return status
+
     async def _update(
         self,
         empty_data_class: DBDataModel,
@@ -310,9 +324,7 @@ class DBWrapperAsync(DBWrapperMixin):
 
         table_identifier = self.make_identifier(schema_name, table_name)
         update_key = self.make_identifier(empty_data_class.table_alias, id_key)
-        update_query = self._format_update_query(
-            table_identifier, update_key, update_data
-        )
+        update_query = self._format_update_query(table_identifier, update_key, update_data)
 
         # Log
         self.log_query(self.db_cursor, update_query, tuple(values))
@@ -330,9 +342,7 @@ class DBWrapperAsync(DBWrapperMixin):
     @overload
     async def update(self, records: list[DataModelType]) -> list[int]: ...
 
-    async def update(
-        self, records: DataModelType | list[DataModelType]
-    ) -> int | list[int]:
+    async def update(self, records: DataModelType | list[DataModelType]) -> int | list[int]:
         """
         Updates a record or a list of records in the database.
 
@@ -438,9 +448,7 @@ class DBWrapperAsync(DBWrapperMixin):
     @overload
     async def delete(self, records: list[DataModelType]) -> list[int]: ...
 
-    async def delete(
-        self, records: DataModelType | list[DataModelType]
-    ) -> int | list[int]:
+    async def delete(self, records: DataModelType | list[DataModelType]) -> int | list[int]:
         """
         Deletes a record or a list of records from the database.
 

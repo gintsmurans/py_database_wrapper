@@ -281,6 +281,21 @@ class DBWrapper(DBWrapperMixin):
 
         return status
 
+    def insert_data(
+        self,
+        record: DBDataModel,
+        store_data: dict[str, Any],
+    ) -> tuple[int, int]:
+        status = self._insert(
+            record,
+            record.schema_name,
+            record.table_name,
+            store_data,
+            record.id_key,
+        )
+
+        return status
+
     def _update(
         self,
         empty_data_class: DBDataModel,
@@ -308,9 +323,7 @@ class DBWrapper(DBWrapperMixin):
 
         table_identifier = self.make_identifier(schema_name, table_name)
         update_key = self.make_identifier(empty_data_class.table_alias, id_key)
-        update_query = self._format_update_query(
-            table_identifier, update_key, update_data
-        )
+        update_query = self._format_update_query(table_identifier, update_key, update_data)
 
         # Log
         self.log_query(self.db_cursor, update_query, tuple(values))
