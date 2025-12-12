@@ -134,9 +134,7 @@ class DBIntrospector:
             # Default value choice
             default = None
             default_factory = None
-            if c.is_nullable:
-                default = None
-            else:
+            if c.is_nullable == False:
                 # give some sane defaults for common not-nullables that aren't id/serial
                 if py_type is bool:
                     default = False
@@ -370,7 +368,7 @@ class DBIntrospector:
 
         return "\n".join(lines)
 
-    def save_to_file(self, class_model_source: str, filepath: str, overwrite: bool) -> str:
+    def save_to_file(self, class_model_source: str, filepath: str | Path, overwrite: bool) -> str:
         """
         Render `cls` to a Python source file and save it to `filepath`.
 

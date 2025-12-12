@@ -302,6 +302,12 @@ class RedisDBAsync(KVDbBase):
 
         self.context_connection = ContextVar("RedisDBAsync", default=None)
 
+    def __del__(self) -> None:
+        self.logger.debug("Dealloc")
+
+        # Just to be sure as async does not have __del__
+        del self._connection
+
     async def new_connection(self) -> RedisClientAsync:
         tries = 0
         while self.wait_for_connection and not self.shutdown_requested.is_set():
@@ -375,9 +381,7 @@ class RedisDBWithPool(KVDbBase):
         super().__init__(config=config, timeout=timeout, instance_name=instance_name)
 
         self.pool = RedisConnectionPool(
-            connection_class=(
-                RedisSSLConnection if self.config["ssl"] else RedisConnection
-            ),
+            connection_class=(RedisSSLConnection if self.config["ssl"] else RedisConnection),
             max_connections=self.config["maxconnections"],
             host=self.config["hostname"],
             port=self.config["port"],
@@ -448,9 +452,7 @@ class RedisDBWithPoolAsync(KVDbBase):
         super().__init__(config=config, timeout=timeout, instance_name=instance_name)
 
         self.pool = RedisConnectionPoolAsync(
-            connection_class=(
-                RedisSSLConnectionAsync if self.config["ssl"] else RedisConnectionAsync
-            ),
+            connection_class=(RedisSSLConnectionAsync if self.config["ssl"] else RedisConnectionAsync),
             max_connections=self.config["maxconnections"],
             host=self.config["hostname"],
             port=self.config["port"],
@@ -466,6 +468,13 @@ class RedisDBWithPoolAsync(KVDbBase):
         )
 
         self.context_connection = ContextVar("RedisDBWithPoolAsync", default=None)
+
+    def __del__(self) -> None:
+        self.logger.debug("Dealloc")
+
+        # Just to be sure as async does not have __del__
+        del self._connection
+        del self.pool
 
     async def new_connection(self) -> RedisClientAsync:
         tries = 0

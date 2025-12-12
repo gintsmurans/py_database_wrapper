@@ -11,6 +11,7 @@ import logging
 from .connector import (
     # Basics
     RedisConfig,
+    RedisDefaultConfig,
     # Connectors
     RedisDB,
     RedisDBAsync,
@@ -42,4 +43,5 @@ __all__ = [
     "RedisConnectionAsync",
     # Helpers
     "RedisConfig",
+    "RedisDefaultConfig",
 ]
