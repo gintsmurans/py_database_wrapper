@@ -56,21 +56,27 @@ To simplify common patterns, two classes with predefined fields are available:
 Includes standard fields for tracking state and history:
 * `created_at`: Timestamp (readonly).
 * `updated_at`: Timestamp (automatically updated on `update_data()`).
-* `disabled_at`: Timestamp (defaulting to now, but not stored by default).
-* `deleted_at`: Timestamp (defaulting to now, but not stored by default).
-* `enabled`: Boolean status.
-* `deleted`: Boolean status.
-
-#### DBDefaultsDataModelV2
-
-An alternative version where all timestamp fields are stored and updated by default:
-* `created_at`: Timestamp (readonly).
-* `updated_at`: Timestamp (automatically updated on `update_data()`).
-* `disabled_at`: Timestamp (stored and updated).
-* `deleted_at`: Timestamp (stored and updated).
+* `disabled_at`: Timestamp (stored and updated by default).
+* `deleted_at`: Timestamp (stored and updated by default).
+* `enabled`: Boolean status (deprecated).
+* `deleted`: Boolean status (deprecated).
 
 > [!NOTE]
-> `DBDefaultsDataModelV2` removes the `enabled` and `deleted` boolean flags in favor of using the `disabled_at` and `deleted_at` timestamps to determine state.
+> It is recommended to use the `disabled_at` and `deleted_at` timestamps to determine state instead of the deprecated `enabled` and `deleted` boolean flags.
+
+##### Selective Columns
+
+Subclasses of `DBDefaultsDataModel` can specify which of the 4 default columns should be present using the `_defaults_config` attribute:
+
+```python
+@dataclass
+class MyModel(DBDefaultsDataModel):
+    table_name: str = "my_table"
+    # Only include created_at and deleted_at
+    _defaults_config = ["created_at", "deleted_at"]
+```
+
+Supported column names: `created_at`, `updated_at`, `disabled_at`, `deleted_at`.
 
 
 ## Development

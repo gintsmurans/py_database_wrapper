@@ -1,11 +1,11 @@
-from enum import Enum
 import re
 import json
 import datetime
 import dataclasses
 
 from dataclasses import dataclass, field, asdict
-from typing import Any, Callable, Literal, NotRequired, Type, TypeVar, TypedDict, cast
+from enum import Enum
+from typing import Any, Callable, ClassVar, Literal, NotRequired, Type, TypeVar, TypedDict, cast
 
 from .serialization import (
     SerializeType,
@@ -156,15 +156,16 @@ class DBDataModel:
     def __str__(self) -> str:
         return self.to_json_string()
 
-    # Dict
     def dict_filter(self, pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         new_dict: dict[str, Any] = {}
-        for field in pairs:
-            class_field = self.__dataclass_fields__.get(field[0], None)
-            if class_field is not None:
-                metadata = cast(MetadataDict, class_field.metadata)
-                if not "exclude" in metadata or not metadata["exclude"]:
-                    new_dict[field[0]] = field[1]
+        for field_name, value in pairs:
+            class_field = self.__dataclass_fields__.get(field_name, None)
+            if class_field is None:
+                continue
+
+            metadata = cast(MetadataDict, class_field.metadata)
+            if not metadata.get("exclude", False):
+                new_dict[field_name] = value
 
         return new_dict
 
@@ -185,7 +186,9 @@ class DBDataModel:
         for field_name, field_obj in self.__dataclass_fields__.items():
             metadata = cast(MetadataDict, field_obj.metadata)
             assert (
-                "db_field" in metadata and isinstance(metadata["db_field"], tuple) and len(metadata["db_field"]) == 2
+                "db_field" in metadata
+                and isinstance(metadata["db_field"], tuple)
+                and len(metadata["db_field"]) == 2
             ), f"db_field metadata is not set for {field_name}"
             field_type: str = metadata["db_field"][1]
             schema["properties"][field_name] = {"type": field_type}
@@ -252,45 +255,35 @@ class DBDataModel:
 
     def validate(self) -> Literal[True] | str:
         """
-        True if the instance is valid, otherwise an error message.
+            True if the instance is valid, otherwise an error message.
         """
         raise NotImplementedError("`validate` is not implemented")
 
-    def set_store(self, field_name: str, enable: bool = True) -> None:
-        """
-        Enable/Disable storing a field (insert into database)
-        """
-        if field_name in self.__dataclass_fields__:
-            current_metadata = cast(
-                MetadataDict,
-                dict(self.__dataclass_fields__[field_name].metadata),
-            )
-            current_metadata["store"] = enable
-            self.__dataclass_fields__[field_name].metadata = current_metadata
+    ############################
+    ### Store/update policies ###
+    ############################
 
-    def set_update(self, field_name: str, enable: bool = True) -> None:
+    @classmethod
+    def _should_store(cls, field_name: str, metadata: MetadataDict) -> bool:
         """
-        Enable/Disable updating a field (update in database)
+        Decide whether this field should be included in INSERT payload.
+        Base behavior: rely on field metadata.
+        Subclasses can override.
         """
-        if field_name in self.__dataclass_fields__:
-            current_metadata = cast(
-                MetadataDict,
-                dict(self.__dataclass_fields__[field_name].metadata),
-            )
-            current_metadata["update"] = enable
-            self.__dataclass_fields__[field_name].metadata = current_metadata
+        return bool(metadata.get("store", False))
 
-    def set_exclude(self, field_name: str, enable: bool = True) -> None:
+    @classmethod
+    def _should_update(cls, field_name: str, metadata: MetadataDict) -> bool:
         """
-        Exclude a field from dict representation
+        Decide whether this field should be included in UPDATE payload.
+        Base behavior: rely on field metadata.
+        Subclasses can override.
         """
-        if field_name in self.__dataclass_fields__:
-            current_metadata = cast(
-                MetadataDict,
-                dict(self.__dataclass_fields__[field_name].metadata),
-            )
-            current_metadata["exclude"] = enable
-            self.__dataclass_fields__[field_name].metadata = current_metadata
+        return bool(metadata.get("update", False))
+
+    @classmethod
+    def _should_exclude(cls, field_name: str, metadata: MetadataDict) -> bool:
+        return bool(metadata.get("exclude", False))
 
     ########################
     ### Database methods ###
@@ -298,19 +291,19 @@ class DBDataModel:
 
     def query_base(self) -> Any:
         """
-        Base query for all queries
+            Base query for all queries
         """
         return None
 
     def store_data(self) -> dict[str, Any] | None:
         """
-        Store data to database
+            Store data to database
         """
         store_data: dict[str, Any] = {}
         for field_name, field_obj in self.__dataclass_fields__.items():
             metadata = cast(MetadataDict, field_obj.metadata)
-            if "store" in metadata and metadata["store"] == True:
-                store_data[field_name] = getattr(self, field_name)
+            if self.__class__._should_store(field_name, metadata):
+                value = getattr(self, field_name)
 
                 # If serialize is set, and serialize is a SerializeType,
                 # we use our serialization function.
@@ -319,22 +312,23 @@ class DBDataModel:
                 serialize = metadata.get("serialize", None)
                 if serialize is not None:
                     if isinstance(serialize, SerializeType):
-                        store_data[field_name] = serialize_value(store_data[field_name], serialize)
+                        value = serialize_value(value, serialize)
                     else:
-                        store_data[field_name] = serialize(store_data[field_name])
+                        value = serialize(value)
 
+                store_data[field_name] = value
         return store_data
 
     def update_data(self) -> dict[str, Any] | None:
         """
-        Update data to database
+            Update data to database
         """
 
         update_data: dict[str, Any] = {}
         for field_name, field_obj in self.__dataclass_fields__.items():
             metadata = cast(MetadataDict, field_obj.metadata)
-            if "update" in metadata and metadata["update"] == True:
-                update_data[field_name] = getattr(self, field_name)
+            if self.__class__._should_update(field_name, metadata):
+                value = getattr(self, field_name)
 
                 # If serialize is set, and serialize is a SerializeType,
                 # we use our serialization function.
@@ -343,30 +337,37 @@ class DBDataModel:
                 serialize = metadata.get("serialize", None)
                 if serialize is not None:
                     if isinstance(serialize, SerializeType):
-                        update_data[field_name] = serialize_value(update_data[field_name], serialize)
+                        value = serialize_value(value, serialize)
                     else:
-                        update_data[field_name] = serialize(update_data[field_name])
+                        value = serialize(value)
 
+                update_data[field_name] = value
         return update_data
 
 
 @dataclass
 class DBDefaultsDataModel(DBDataModel):
     """
-    This class includes default fields for all database models.
+    DBDataModel with conventional default columns.
+    Subclasses can set `_defaults_config` to select which defaults are active.
 
     Attributes:
     - created_at (datetime.datetime): The timestamp of when the instance was created.
     - updated_at (datetime.datetime): The timestamp of when the instance was last updated.
-    - enabled (bool): Whether the instance is enabled or not.
-    - deleted (bool): Whether the instance is deleted or not.
+    - disabled_at (datetime.datetime): The timestamp of when the instance was disabled.
+    - deleted_at (datetime.datetime): The timestamp of when the instance was deleted.
+    - enabled (bool): Whether the instance is enabled or not. Deprecated.
+    - deleted (bool): Whether the instance is deleted or not. Deprecated.
     """
+
+    # Subclasses override this as a class attribute, e.g.:
+    # _defaults_config = ["created_at", "updated_at"]
+    _defaults_config: ClassVar[list[str]] = ["created_at", "updated_at", "disabled_at", "deleted_at"]
 
     ######################
     ### Default fields ###
     ######################
 
-#
     created_at: datetime.datetime = field(
         default_factory=datetime.datetime.now,
         metadata=MetadataDict(
@@ -376,9 +377,7 @@ class DBDefaultsDataModel(DBDataModel):
             serialize=SerializeType.DATETIME,
         ),
     )
-    """created_at is readonly by default and should be present in all tables"""
 
-#
     updated_at: datetime.datetime = field(
         default_factory=datetime.datetime.now,
         metadata=MetadataDict(
@@ -388,30 +387,29 @@ class DBDefaultsDataModel(DBDataModel):
             serialize=SerializeType.DATETIME,
         ),
     )
-    """updated_at should be present in all tables and is updated automatically"""
 
-# full
-    disabled_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
+    # Important: default None, otherwise everything becomes disabled/deleted on insert.
+    disabled_at: datetime.datetime | None = field(
+        default=None,
         metadata=MetadataDict(
             db_field=("disabled_at", "timestamptz"),
-            store=False,
-            update=False,
+            store=True,
+            update=True,
             serialize=SerializeType.DATETIME,
         ),
     )
 
-#
-    deleted_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
+    deleted_at: datetime.datetime | None = field(
+        default=None,
         metadata=MetadataDict(
             db_field=("deleted_at", "timestamptz"),
-            store=False,
-            update=False,
+            store=True,
+            update=True,
             serialize=SerializeType.DATETIME,
         ),
     )
 
+    # @deprecated
     enabled: bool = field(
         default=True,
         metadata=MetadataDict(
@@ -420,6 +418,8 @@ class DBDefaultsDataModel(DBDataModel):
             update=False,
         ),
     )
+
+    # @deprecated
     deleted: bool = field(
         default=False,
         metadata=MetadataDict(
@@ -429,85 +429,28 @@ class DBDefaultsDataModel(DBDataModel):
         ),
     )
 
-    def update_data(self) -> dict[str, Any] | None:
-        """
-        Update data to database
-        """
+    ############################
+    ### Store/update policies ###
+    ############################
 
-        # Update updated_at
-        self.updated_at = datetime.datetime.now(datetime.UTC)
+    @classmethod
+    def _should_store(cls, field_name: str, metadata: MetadataDict) -> bool:
+        # For the 4 defaults, defer to _defaults_config.
+        if field_name in ("created_at", "updated_at", "disabled_at", "deleted_at"):
+            return field_name in cls._defaults_config
+        return super()._should_store(field_name, metadata)
 
-        return super().update_data()
-
-
-@dataclass
-class DBDefaultsDataModelV2(DBDataModel):
-    """
-    This class includes default fields for all database models.
-
-    Attributes:
-    - created_at (datetime.datetime): The timestamp of when the instance was created.
-    - updated_at (datetime.datetime): The timestamp of when the instance was last updated.
-    - enabled (bool): Whether the instance is enabled or not.
-    - deleted (bool): Whether the instance is deleted or not.
-    """
-
-    ######################
-    ### Default fields ###
-    ######################
-
-#
-    created_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
-        metadata=MetadataDict(
-            db_field=("created_at", "timestamptz"),
-            store=True,
-            update=False,
-            serialize=SerializeType.DATETIME,
-        ),
-    )
-    """created_at is readonly by default and should be present in all tables"""
-
-#
-    updated_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
-        metadata=MetadataDict(
-            db_field=("updated_at", "timestamptz"),
-            store=True,
-            update=True,
-            serialize=SerializeType.DATETIME,
-        ),
-    )
-    """updated_at should be present in all tables and is updated automatically"""
-
-#
-    disabled_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
-        metadata=MetadataDict(
-            db_field=("disabled_at", "timestamptz"),
-            store=True,
-            update=True,
-            serialize=SerializeType.DATETIME,
-        ),
-    )
-
-#
-    deleted_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
-        metadata=MetadataDict(
-            db_field=("deleted_at", "timestamptz"),
-            store=True,
-            update=True,
-            serialize=SerializeType.DATETIME,
-        ),
-    )
+    @classmethod
+    def _should_update(cls, field_name: str, metadata: MetadataDict) -> bool:
+        # created_at is never updated
+        if field_name == "created_at":
+            return False
+        if field_name in ("updated_at", "disabled_at", "deleted_at"):
+            return field_name in cls._defaults_config
+        return super()._should_update(field_name, metadata)
 
     def update_data(self) -> dict[str, Any] | None:
-        """
-        Update data to database
-        """
-
-        # Update updated_at
-        self.updated_at = datetime.datetime.now(datetime.UTC)
-
+        # Always refresh updated_at if present in this model
+        if "updated_at" in self.__dataclass_fields__ and "updated_at" in self._defaults_config:
+            self.updated_at = datetime.datetime.now(datetime.UTC)
         return super().update_data()
