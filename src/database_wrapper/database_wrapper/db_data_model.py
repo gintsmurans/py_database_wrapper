@@ -91,23 +91,23 @@ class DBDataModel:
     # Id should be readonly by default and should be always present if record exists
     id: int = field(
         default=0,
-        metadata={
-            "db_field": ("id", "bigint"),
-            "store": False,
-            "update": False,
-        },
+        metadata=MetadataDict(
+            db_field=("id", "bigint"),
+            store=False,
+            update=False,
+        ),
     )
     """id is readonly by default"""
 
     # Raw data
     raw_data: dict[str, Any] = field(
         default_factory=dict,
-        metadata={
-            "db_field": ("raw_data", "jsonb"),
-            "exclude": True,
-            "store": False,
-            "update": False,
-        },
+        metadata=MetadataDict(
+            db_field=("raw_data", "jsonb"),
+            exclude=True,
+            store=False,
+            update=False,
+        ),
     )
     """This is for storing temporary raw data"""
 
@@ -366,63 +366,140 @@ class DBDefaultsDataModel(DBDataModel):
     ### Default fields ###
     ######################
 
+#
     created_at: datetime.datetime = field(
         default_factory=datetime.datetime.now,
-        metadata={
-            "db_field": ("created_at", "timestamptz"),
-            "store": True,
-            "update": False,
-            "serialize": SerializeType.DATETIME,
-        },
+        metadata=MetadataDict(
+            db_field=("created_at", "timestamptz"),
+            store=True,
+            update=False,
+            serialize=SerializeType.DATETIME,
+        ),
     )
     """created_at is readonly by default and should be present in all tables"""
 
+#
     updated_at: datetime.datetime = field(
         default_factory=datetime.datetime.now,
-        metadata={
-            "db_field": ("updated_at", "timestamptz"),
-            "store": True,
-            "update": True,
-            "serialize": SerializeType.DATETIME,
-        },
+        metadata=MetadataDict(
+            db_field=("updated_at", "timestamptz"),
+            store=True,
+            update=True,
+            serialize=SerializeType.DATETIME,
+        ),
     )
     """updated_at should be present in all tables and is updated automatically"""
 
+# full
     disabled_at: datetime.datetime = field(
         default_factory=datetime.datetime.now,
-        metadata={
-            "db_field": ("disabled_at", "timestamptz"),
-            "store": False,
-            "update": False,
-            "serialize": SerializeType.DATETIME,
-        },
+        metadata=MetadataDict(
+            db_field=("disabled_at", "timestamptz"),
+            store=False,
+            update=False,
+            serialize=SerializeType.DATETIME,
+        ),
     )
 
+#
     deleted_at: datetime.datetime = field(
         default_factory=datetime.datetime.now,
-        metadata={
-            "db_field": ("deleted_at", "timestamptz"),
-            "store": False,
-            "update": False,
-            "serialize": SerializeType.DATETIME,
-        },
+        metadata=MetadataDict(
+            db_field=("deleted_at", "timestamptz"),
+            store=False,
+            update=False,
+            serialize=SerializeType.DATETIME,
+        ),
     )
 
     enabled: bool = field(
         default=True,
-        metadata={
-            "db_field": ("enabled", "boolean"),
-            "store": False,
-            "update": False,
-        },
+        metadata=MetadataDict(
+            db_field=("enabled", "boolean"),
+            store=False,
+            update=False,
+        ),
     )
     deleted: bool = field(
         default=False,
-        metadata={
-            "db_field": ("deleted", "boolean"),
-            "store": False,
-            "update": False,
-        },
+        metadata=MetadataDict(
+            db_field=("deleted", "boolean"),
+            store=False,
+            update=False,
+        ),
+    )
+
+    def update_data(self) -> dict[str, Any] | None:
+        """
+        Update data to database
+        """
+
+        # Update updated_at
+        self.updated_at = datetime.datetime.now(datetime.UTC)
+
+        return super().update_data()
+
+
+@dataclass
+class DBDefaultsDataModelV2(DBDataModel):
+    """
+    This class includes default fields for all database models.
+
+    Attributes:
+    - created_at (datetime.datetime): The timestamp of when the instance was created.
+    - updated_at (datetime.datetime): The timestamp of when the instance was last updated.
+    - enabled (bool): Whether the instance is enabled or not.
+    - deleted (bool): Whether the instance is deleted or not.
+    """
+
+    ######################
+    ### Default fields ###
+    ######################
+
+#
+    created_at: datetime.datetime = field(
+        default_factory=datetime.datetime.now,
+        metadata=MetadataDict(
+            db_field=("created_at", "timestamptz"),
+            store=True,
+            update=False,
+            serialize=SerializeType.DATETIME,
+        ),
+    )
+    """created_at is readonly by default and should be present in all tables"""
+
+#
+    updated_at: datetime.datetime = field(
+        default_factory=datetime.datetime.now,
+        metadata=MetadataDict(
+            db_field=("updated_at", "timestamptz"),
+            store=True,
+            update=True,
+            serialize=SerializeType.DATETIME,
+        ),
+    )
+    """updated_at should be present in all tables and is updated automatically"""
+
+#
+    disabled_at: datetime.datetime = field(
+        default_factory=datetime.datetime.now,
+        metadata=MetadataDict(
+            db_field=("disabled_at", "timestamptz"),
+            store=True,
+            update=True,
+            serialize=SerializeType.DATETIME,
+        ),
+    )
+
+#
+    deleted_at: datetime.datetime = field(
+        default_factory=datetime.datetime.now,
+        metadata=MetadataDict(
+            db_field=("deleted_at", "timestamptz"),
+            store=True,
+            update=True,
+            serialize=SerializeType.DATETIME,
+        ),
     )
 
     def update_data(self) -> dict[str, Any] | None:
