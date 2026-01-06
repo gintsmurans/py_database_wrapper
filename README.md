@@ -36,6 +36,42 @@ General usage is the same for all databases. The only difference is the import s
 * [database_wrapper_sqlite](src/database_wrapper_sqlite)
 * [database_wrapper_redis](src/database_wrapper_redis)
 
+## Data Models
+
+The project uses `dataclasses` to define data models. The base class for all models is `DBDataModel`.
+
+### DBDataModel
+
+`DBDataModel` provides the foundation for database-backed objects, including methods for:
+* Serialization/Deserialization to and from dictionaries and JSON.
+* Handling database fields via metadata.
+* `store_data()` and `update_data()` methods to filter fields for INSERT and UPDATE queries.
+
+### Default Field Models
+
+To simplify common patterns, two classes with predefined fields are available:
+
+#### DBDefaultsDataModel
+
+Includes standard fields for tracking state and history:
+* `created_at`: Timestamp (readonly).
+* `updated_at`: Timestamp (automatically updated on `update_data()`).
+* `disabled_at`: Timestamp (defaulting to now, but not stored by default).
+* `deleted_at`: Timestamp (defaulting to now, but not stored by default).
+* `enabled`: Boolean status.
+* `deleted`: Boolean status.
+
+#### DBDefaultsDataModelV2
+
+An alternative version where all timestamp fields are stored and updated by default:
+* `created_at`: Timestamp (readonly).
+* `updated_at`: Timestamp (automatically updated on `update_data()`).
+* `disabled_at`: Timestamp (stored and updated).
+* `deleted_at`: Timestamp (stored and updated).
+
+> [!NOTE]
+> `DBDefaultsDataModelV2` removes the `enabled` and `deleted` boolean flags in favor of using the `disabled_at` and `deleted_at` timestamps to determine state.
+
 
 ## Development
 

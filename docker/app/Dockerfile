@@ -48,7 +48,7 @@ ARG GIT_EMAIL
 # Install additional dependecies
 RUN apt-get update -yq \
     && apt-get install -yq --no-install-recommends openssh-client tree less git \
-        rsync gettext-base
+        rsync gettext-base procps
 
 # Setup git
 RUN git config --global user.email "$GIT_NAME" \
