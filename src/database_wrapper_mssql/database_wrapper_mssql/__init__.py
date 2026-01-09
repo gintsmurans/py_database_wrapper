@@ -8,7 +8,7 @@ Part of the database_wrapper package
 
 import logging
 
-from .connector import Mssql, MssqlConfig, MssqlConnection, MssqlCursor
+from .connector import Mssql, MssqlConfig, MssqlConnection, MssqlCursor, MssqlTypedDictCursor
 from .db_wrapper_mssql import DBWrapperMssql
 from .mssql_introspector import MssqlIntrospector
 
@@ -26,6 +26,7 @@ __all__ = [
     # Connection and Cursor types
     MssqlConnection,
     MssqlCursor,
+    MssqlTypedDictCursor,
     # Helpers
     MssqlConfig,
     MssqlIntrospector,

@@ -19,6 +19,6 @@ if logger.level == logging.NOTSET:
 
 __all__ = [
     # "DBWrapperSqlite",
-    "SqliteConfig",
-    "Sqlite",
+    SqliteConfig,
+    Sqlite,
 ]

@@ -8,7 +8,7 @@ Part of the database_wrapper package
 
 import logging
 
-from .connector import Mysql, MysqlConfig, MySqlConnection, MysqlTypedDictCursor
+from .connector import Mysql, MysqlConfig, MysqlConnection, MysqlDictCursor, MysqlTypedDictCursor
 from .db_wrapper_mysql import DBWrapperMysql
 
 # Set the logger to a quiet default, can be enabled if needed
@@ -23,7 +23,8 @@ __all__ = [
     # Connectors
     Mysql,
     # Connection and Cursor types
-    MySqlConnection,
+    MysqlConnection,
+    MysqlDictCursor,
     MysqlTypedDictCursor,
     # Helpers
     MysqlConfig,

@@ -1,7 +1,7 @@
 from typing import Any, NotRequired, TypedDict
 
-from MySQLdb.connections import Connection as MySqlConnection
-from MySQLdb.cursors import DictCursor as MySqlDictCursor
+from MySQLdb.connections import Connection as MysqlConnection
+from MySQLdb.cursors import DictCursor as MysqlDictCursor
 
 from database_wrapper import DatabaseBackend
 
@@ -17,7 +17,7 @@ class MysqlConfig(TypedDict):
     kwargs: NotRequired[dict[str, Any]]
 
 
-class MysqlTypedDictCursor(MySqlDictCursor):
+class MysqlTypedDictCursor(MysqlDictCursor):
     def fetchone(self) -> dict[str, Any] | None:
         return super().fetchone()
 
@@ -40,7 +40,7 @@ class Mysql(DatabaseBackend):
 
     config: MysqlConfig
 
-    connection: MySqlConnection
+    connection: MysqlConnection
     cursor: MysqlTypedDictCursor
 
     ##################
@@ -66,7 +66,7 @@ class Mysql(DatabaseBackend):
             self.config["kwargs"] = {}
 
         self.logger.debug("Connecting to DB")
-        self.connection = MySqlConnection(
+        self.connection = MysqlConnection(
             host=self.config["hostname"],
             user=self.config["username"],
             passwd=self.config["password"],
