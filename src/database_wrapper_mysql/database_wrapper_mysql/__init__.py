@@ -8,8 +8,8 @@ Part of the database_wrapper package
 
 import logging
 
-from .db_wrapper_mysql import DBWrapperMysql
 from .connector import MyConfig, MySQL, MySqlConnection, MySqlDictCursor
+from .db_wrapper_mysql import DBWrapperMysql
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_mysql")

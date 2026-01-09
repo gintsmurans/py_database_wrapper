@@ -9,19 +9,19 @@ Part of the database_wrapper package
 import logging
 
 from .connector import (
+    # Connection and Cursor types
+    RedisClient,
+    RedisClientAsync,
     # Basics
     RedisConfig,
-    RedisDefaultConfig,
+    RedisConnection,
+    RedisConnectionAsync,
     # Connectors
     RedisDB,
     RedisDBAsync,
     RedisDBWithPool,
     RedisDBWithPoolAsync,
-    # Connection and Cursor types
-    RedisClient,
-    RedisClientAsync,
-    RedisConnection,
-    RedisConnectionAsync,
+    RedisDefaultConfig,
 )
 
 # Set the logger to a quiet default, can be enabled if needed

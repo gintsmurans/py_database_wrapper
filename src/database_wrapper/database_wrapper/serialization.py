@@ -1,9 +1,8 @@
 import datetime
 import json
-
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Type
+from typing import Any
 from zoneinfo import ZoneInfo
 
 
@@ -61,7 +60,7 @@ def serialize_value(value: Any, s_type: SerializeType) -> Any:
 def deserialize_value(
     value: Any,
     s_type: SerializeType,
-    enum_class: Type[Enum] | None = None,
+    enum_class: type[Enum] | None = None,
     timezone: str | datetime.tzinfo | None = None,
 ) -> Any:
     if s_type == SerializeType.DATETIME:
@@ -95,7 +94,7 @@ def deserialize_value(
 
     if s_type == SerializeType.JSON:
         if isinstance(value, dict) or isinstance(value, list) or value is None:
-            return value  # type: ignore
+            return value
 
         return json.loads(value)
 

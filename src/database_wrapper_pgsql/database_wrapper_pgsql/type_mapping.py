@@ -1,13 +1,14 @@
 # type_mapping_pg.py
-from typing import Any, Optional, Tuple
-from decimal import Decimal
 import datetime
+from decimal import Decimal
+from typing import Any
+
 from database_wrapper import SerializeType
 
 # Flip this if you want lossless decimals
 USE_DECIMAL = False
 
-_PG_TO_PY_BASE: dict[str, Tuple[type, Optional[SerializeType]]] = {
+_PG_TO_PY_BASE: dict[str, tuple[type, SerializeType | None]] = {
     # integers
     "int2": (int, None),
     "int4": (int, None),
@@ -39,7 +40,7 @@ _PG_TO_PY_BASE: dict[str, Tuple[type, Optional[SerializeType]]] = {
 
 def map_db_type(
     db_type: str, *, length: int | None = None, precision: int | None = None, scale: int | None = None
-) -> tuple[type, Optional[SerializeType]]:
+) -> tuple[type, SerializeType | None]:
     t = db_type.lower()
     if t == "numeric":
         if USE_DECIMAL:

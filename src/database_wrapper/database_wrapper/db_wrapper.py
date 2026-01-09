@@ -1,8 +1,9 @@
-from typing import Generator, Any, overload
+from collections.abc import Generator
+from typing import Any, overload
 
+from .common import DataModelType, OrderByItem
 from .db_data_model import DBDataModel
 from .db_wrapper_mixin import DBWrapperMixin
-from .common import OrderByItem, DataModelType
 
 
 class DBWrapper(DBWrapperMixin):
@@ -230,8 +231,7 @@ class DBWrapper(DBWrapperMixin):
         )
 
     @overload
-    def insert(self, records: DataModelType) -> tuple[int, int]:  # type: ignore
-        ...
+    def insert(self, records: DataModelType) -> tuple[int, int]: ...
 
     @overload
     def insert(self, records: list[DataModelType]) -> list[tuple[int, int]]: ...
@@ -335,8 +335,7 @@ class DBWrapper(DBWrapperMixin):
         return affected_rows
 
     @overload
-    def update(self, records: DataModelType) -> int:  # type: ignore
-        ...
+    def update(self, records: DataModelType) -> int: ...
 
     @overload
     def update(self, records: list[DataModelType]) -> list[int]: ...
@@ -441,8 +440,7 @@ class DBWrapper(DBWrapperMixin):
         return affected_rows
 
     @overload
-    def delete(self, records: DataModelType) -> int:  # type: ignore
-        ...
+    def delete(self, records: DataModelType) -> int: ...
 
     @overload
     def delete(self, records: list[DataModelType]) -> list[int]: ...

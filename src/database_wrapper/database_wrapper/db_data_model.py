@@ -1,11 +1,11 @@
-import re
-import json
-import datetime
 import dataclasses
-
-from dataclasses import dataclass, field, asdict
+import datetime
+import json
+import re
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Callable, ClassVar, Literal, NotRequired, Type, TypeVar, TypedDict, cast
+from typing import Any, ClassVar, Literal, NotRequired, TypedDict, TypeVar, cast
 
 from .serialization import (
     SerializeType,
@@ -24,7 +24,7 @@ class MetadataDict(TypedDict):
     exclude: NotRequired[bool]
     serialize: NotRequired[Callable[[Any], Any] | SerializeType | None]
     deserialize: NotRequired[Callable[[Any], Any] | None]
-    enum_class: NotRequired[Type[Enum] | None]
+    enum_class: NotRequired[type[Enum] | None]
     timezone: NotRequired[str | datetime.tzinfo | None]
 
 
@@ -151,7 +151,7 @@ class DBDataModel:
 
     # String - representation
     def __repr__(self) -> str:
-        return "<%s %s>" % (self.__class__.__name__, self.__dict__)
+        return f"<{self.__class__.__name__} {self.__dict__}>"
 
     def __str__(self) -> str:
         return self.to_json_string()
@@ -186,9 +186,7 @@ class DBDataModel:
         for field_name, field_obj in self.__dataclass_fields__.items():
             metadata = cast(MetadataDict, field_obj.metadata)
             assert (
-                "db_field" in metadata
-                and isinstance(metadata["db_field"], tuple)
-                and len(metadata["db_field"]) == 2
+                "db_field" in metadata and isinstance(metadata["db_field"], tuple) and len(metadata["db_field"]) == 2
             ), f"db_field metadata is not set for {field_name}"
             field_type: str = metadata["db_field"][1]
             schema["properties"][field_name] = {"type": field_type}
@@ -255,7 +253,7 @@ class DBDataModel:
 
     def validate(self) -> Literal[True] | str:
         """
-            True if the instance is valid, otherwise an error message.
+        True if the instance is valid, otherwise an error message.
         """
         raise NotImplementedError("`validate` is not implemented")
 
@@ -291,13 +289,13 @@ class DBDataModel:
 
     def query_base(self) -> Any:
         """
-            Base query for all queries
+        Base query for all queries
         """
         return None
 
     def store_data(self) -> dict[str, Any] | None:
         """
-            Store data to database
+        Store data to database
         """
         store_data: dict[str, Any] = {}
         for field_name, field_obj in self.__dataclass_fields__.items():
@@ -321,7 +319,7 @@ class DBDataModel:
 
     def update_data(self) -> dict[str, Any] | None:
         """
-            Update data to database
+        Update data to database
         """
 
         update_data: dict[str, Any] = {}

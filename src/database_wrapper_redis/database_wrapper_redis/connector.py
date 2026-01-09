@@ -1,27 +1,20 @@
 import logging
-
 from contextvars import ContextVar
 from threading import Event
 from typing import Any, NotRequired, TypedDict
 
-from redis import (
-    Redis as RedisClient,
-    ConnectionPool as RedisConnectionPool,
-    SSLConnection as RedisSSLConnection,
-    Connection as RedisConnection,
-    exceptions as RedisExceptions,
-)
-from redis.asyncio import (
-    Redis as RedisClientAsync,
-    ConnectionPool as RedisConnectionPoolAsync,
-    SSLConnection as RedisSSLConnectionAsync,
-    Connection as RedisConnectionAsync,
-)
+from redis import Connection as RedisConnection
+from redis import ConnectionPool as RedisConnectionPool
+from redis import Redis as RedisClient
+from redis import SSLConnection as RedisSSLConnection
 from redis import exceptions as RedisExceptions
-from redis.retry import Retry as SyncRetry
+from redis.asyncio import Connection as RedisConnectionAsync
+from redis.asyncio import ConnectionPool as RedisConnectionPoolAsync
+from redis.asyncio import Redis as RedisClientAsync
+from redis.asyncio import SSLConnection as RedisSSLConnectionAsync
 from redis.asyncio.retry import Retry as AsyncRetry
 from redis.backoff import ExponentialWithJitterBackoff
-
+from redis.retry import Retry as SyncRetry
 
 MODULE_NAME = "py_shared_lib.libs.db.common..kv_conn"
 
@@ -265,13 +258,13 @@ class RedisDB(KVDbBase):
                     protocol=3,
                     decode_responses=True,
                 )
-                redis_conn.ping()  # type: ignore
+                redis_conn.ping()
                 self.logger.debug(f"{logBuffer}OK")
                 return redis_conn
 
             except RedisExceptions.RedisError as e:
                 if redis_conn:
-                    redis_conn.close()  # type: ignore
+                    redis_conn.close()
 
                 self.logger.error(f"{logBuffer}ERR ({e})")
                 self.shutdown_requested.wait(self.timeout)
@@ -311,7 +304,7 @@ class RedisDBAsync(KVDbBase):
     async def new_connection(self) -> RedisClientAsync:
         tries = 0
         while self.wait_for_connection and not self.shutdown_requested.is_set():
-            self.logger.debug(f"Attempting to connect to redis .. ", extra={"end": ""})
+            self.logger.debug("Attempting to connect to redis .. ", extra={"end": ""})
             redis_conn = None
             try:
                 redis_conn = RedisClientAsync(
@@ -330,7 +323,7 @@ class RedisDBAsync(KVDbBase):
                     protocol=3,
                     decode_responses=True,
                 )
-                await redis_conn.ping()  # type: ignore
+                await redis_conn.ping()
                 self.logger.debug("OK", extra={"clean": True})
                 return redis_conn
 
@@ -405,13 +398,13 @@ class RedisDBWithPool(KVDbBase):
             redis_conn = None
             try:
                 redis_conn = RedisClient(connection_pool=self.pool)
-                redis_conn.ping()  # type: ignore
+                redis_conn.ping()
                 self.logger.debug(f"{logBuffer}OK")
                 return redis_conn
 
             except RedisExceptions.RedisError as e:
                 if redis_conn:
-                    redis_conn.close()  # type: ignore
+                    redis_conn.close()
 
                 self.logger.error(f"{logBuffer}ERR ({e})")
                 self.shutdown_requested.wait(self.timeout)
@@ -479,11 +472,11 @@ class RedisDBWithPoolAsync(KVDbBase):
     async def new_connection(self) -> RedisClientAsync:
         tries = 0
         while self.wait_for_connection and not self.shutdown_requested.is_set():
-            self.logger.debug(f"Attempting to connect to redis .. ", extra={"end": ""})
+            self.logger.debug("Attempting to connect to redis .. ", extra={"end": ""})
             redis_conn = None
             try:
                 redis_conn = RedisClientAsync(connection_pool=self.pool)
-                await redis_conn.ping()  # type: ignore
+                await redis_conn.ping()
                 self.logger.debug("OK", extra={"clean": True})
                 return redis_conn
 

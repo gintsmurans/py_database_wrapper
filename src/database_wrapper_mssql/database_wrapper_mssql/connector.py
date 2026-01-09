@@ -1,10 +1,8 @@
 from typing import Any, NotRequired, TypedDict
 
-from pymssql import (
-    connect as MssqlConnect,
-    Connection as MssqlConnection,
-    Cursor as MssqlCursor,
-)
+from pymssql import Connection as MssqlConnection
+from pymssql import Cursor as MssqlCursor
+from pymssql import connect as MssqlConnect
 
 from database_wrapper import DatabaseBackend
 
@@ -93,12 +91,12 @@ class MSSQL(DatabaseBackend):
         """Commit DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Commit DB queries")
+        self.logger.debug("Commit DB queries")
         self.connection.commit()
 
     def rollback(self) -> None:
         """Rollback DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Rollback DB queries")
+        self.logger.debug("Rollback DB queries")
         self.connection.rollback()

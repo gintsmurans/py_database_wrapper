@@ -9,7 +9,7 @@ Part of the database_wrapper package
 import logging
 
 # from .db_wrapper_sqlite import DBWrapperSqlite
-from .connector import SqliteConfig, Sqlite
+from .connector import Sqlite, SqliteConfig
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_sqlite")

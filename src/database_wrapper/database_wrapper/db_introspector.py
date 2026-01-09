@@ -1,8 +1,9 @@
-from dataclasses import MISSING, dataclass, make_dataclass, field, fields as dc_fields
-from datetime import datetime, date
+from dataclasses import MISSING, dataclass, field, make_dataclass
+from dataclasses import fields as dc_fields
+from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Type, Union, get_origin, get_args
+from typing import Any, Union, get_args, get_origin
 
 from database_wrapper import DBDefaultsDataModel, MetadataDict, SerializeType
 
@@ -93,12 +94,12 @@ class DBIntrospector:
         self,
         table_name: str,
         *,
-        class_name: Optional[str] = None,
-        base: Type[DBDefaultsDataModel] = DBDefaultsDataModel,
-        enum_overrides: dict[str, Type[Enum]] | None = None,
+        class_name: str | None = None,
+        base: type[DBDefaultsDataModel] = DBDefaultsDataModel,
+        enum_overrides: dict[str, type[Enum]] | None = None,
         defaults_for_nullable: bool = True,
         include_id_field: bool = True,
-    ) -> Type[DBDefaultsDataModel]:
+    ) -> type[DBDefaultsDataModel]:
         (schema, table) = self.get_schema_table_name(table_name)
         cols = self.get_table_columns(schema, table)
         if not cols:
@@ -115,7 +116,7 @@ class DBIntrospector:
                 continue
 
             # Enums
-            enum_class: Optional[Type[Enum]] = None
+            enum_class: type[Enum] | None = None
             if c.enum_labels:
                 enum_class = enum_overrides.get(c.col_name)
                 if not enum_class:
@@ -127,14 +128,14 @@ class DBIntrospector:
 
             # Optional typing if nullable
             if c.is_nullable:
-                ann = Optional[py_type]  # type: ignore
+                ann: type[py_type] | None = py_type
             else:
-                ann = py_type  # type: ignore
+                ann = py_type
 
             # Default value choice
             default = None
             default_factory = None
-            if c.is_nullable == False:
+            if not c.is_nullable:
                 # give some sane defaults for common not-nullables that aren't id/serial
                 if py_type is bool:
                     default = False
@@ -156,7 +157,7 @@ class DBIntrospector:
                 elif py_type is set:
                     default_factory = set
                 elif py_type is bytes:
-                    default = bytes()
+                    default = b""
                 else:
                     # Leave unset so dataclass enforces passing it explicitly
                     default = None if defaults_for_nullable else None
@@ -202,15 +203,15 @@ class DBIntrospector:
         def _tableName(self) -> str:
             return table
 
-        setattr(cls, "schemaName", property(_schemaName))
-        setattr(cls, "tableName", property(_tableName))
+        cls.schemaName = property(_schemaName)
+        cls.tableName = property(_tableName)
 
         return cls
 
     # TODO: Need to improve handling of imports for external classes, including enums.
     def render_dataclass_source(
         self,
-        cls: Type,
+        cls: type,
         table_name: str,
         *,
         extra_imports: list[str] | None = None,
@@ -242,7 +243,7 @@ class DBIntrospector:
         dynamic_enums: list[tuple[str, list[tuple[str, Any]]]] = []
         external_enum_imports: set[tuple[str, str]] = set()
         for f in dc_fields(cls):
-            md: MetadataDict = dict(f.metadata) if f.metadata else {}  # type: ignore
+            md: MetadataDict = dict(f.metadata) if f.metadata else {}
             enum_class = md.get("enum_class")
             if enum_class:
                 mod = getattr(enum_class, "__module__", "")
@@ -250,7 +251,7 @@ class DBIntrospector:
                 # If it's the built-in Enum module (meaning we made it dynamically),
                 # embed it. Otherwise, import from its module.
                 if mod == "enum":
-                    members = [(m.name, m.value) for m in enum_class]  # type: ignore
+                    members = [(m.name, m.value) for m in enum_class]
                     dynamic_enums.append((name, members))
                 else:
                     external_enum_imports.add((mod, name))
@@ -298,7 +299,7 @@ class DBIntrospector:
 
         # Render fields (skip the inherited ones we know exist on base if they aren't present here)
         for f in dc_fields(cls):
-            md: MetadataDict = dict(f.metadata) if f.metadata else {}  # type: ignore
+            md: MetadataDict = dict(f.metadata) if f.metadata else {}
             # We always render all fields that exist in this dataclass (your make_dataclass created them)
             db_field = md.get("db_field", (f.name, "Any"))
             if not (isinstance(db_field, tuple) and len(db_field) == 2):
@@ -357,7 +358,7 @@ class DBIntrospector:
         lines.append("        out: dict[str, Any] = {}")
         lines.append("        # Explicitly list each field (stable order)")
         for f in dc_fields(cls):
-            md: MetadataDict = dict(f.metadata) if f.metadata else {}  # type: ignore
+            md: MetadataDict = dict(f.metadata) if f.metadata else {}
             serialize = md.get("serialize")
             key = f.name
             if serialize == SerializeType.DATETIME:

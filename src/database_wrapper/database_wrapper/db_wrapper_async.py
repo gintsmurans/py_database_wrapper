@@ -1,6 +1,7 @@
-from typing import AsyncGenerator, Any, overload
+from collections.abc import AsyncGenerator
+from typing import Any, overload
 
-from .common import OrderByItem, DataModelType
+from .common import DataModelType, OrderByItem
 from .db_data_model import DBDataModel
 from .db_wrapper_mixin import DBWrapperMixin
 
@@ -232,8 +233,7 @@ class DBWrapperAsync(DBWrapperMixin):
         )
 
     @overload
-    async def insert(self, records: DataModelType) -> tuple[int, int]:  # type: ignore
-        ...
+    async def insert(self, records: DataModelType) -> tuple[int, int]: ...
 
     @overload
     async def insert(self, records: list[DataModelType]) -> list[tuple[int, int]]: ...
@@ -336,8 +336,7 @@ class DBWrapperAsync(DBWrapperMixin):
         return affected_rows
 
     @overload
-    async def update(self, records: DataModelType) -> int:  # type: ignore
-        ...
+    async def update(self, records: DataModelType) -> int: ...
 
     @overload
     async def update(self, records: list[DataModelType]) -> list[int]: ...
@@ -442,8 +441,7 @@ class DBWrapperAsync(DBWrapperMixin):
         return affected_rows
 
     @overload
-    async def delete(self, records: DataModelType) -> int:  # type: ignore
-        ...
+    async def delete(self, records: DataModelType) -> int: ...
 
     @overload
     async def delete(self, records: list[DataModelType]) -> list[int]: ...

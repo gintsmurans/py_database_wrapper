@@ -1,9 +1,9 @@
-from typing import Dict, Any, Literal
-from typing import Any, Protocol, Sequence
+from collections.abc import Sequence
+from typing import Any, Literal, Protocol
 
 from psycopg.sql import Composable
 
-Row = Dict[str, Any]
+Row = dict[str, Any]
 
 
 class CursorABC(Protocol):

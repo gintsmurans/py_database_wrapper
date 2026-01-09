@@ -81,12 +81,12 @@ class MySQL(DatabaseBackend):
             **self.config["kwargs"],
         )
         # TODO: Typings issue
-        self.cursor = self.connection.cursor(MySqlDictCursor)  # type: ignore[mysql does not have valid type hint]
+        self.cursor = self.connection.cursor(MySqlDictCursor)
 
     def ping(self) -> bool:
         try:
-            self.cursor.execute("SELECT 1")  # type: ignore[mysql does not have valid type hint]
-            self.cursor.fetchone()  # type: ignore[mysql does not have valid type hint]
+            self.cursor.execute("SELECT 1")
+            self.cursor.fetchone()
         except Exception as e:
             self.logger.debug(f"Error while pinging the database: {e}")
             return False
@@ -111,7 +111,7 @@ class MySQL(DatabaseBackend):
 
         self.logger.debug("Commit DB queries..")
         # TODO: Typings issue
-        self.connection.commit()  # type: ignore[mysql does not have valid type hint]
+        self.connection.commit()
 
     def rollback(self) -> None:
         """Rollback DB queries"""
@@ -119,4 +119,4 @@ class MySQL(DatabaseBackend):
 
         self.logger.debug("Rollback DB queries..")
         # TODO: Typings issue
-        self.connection.rollback()  # type: ignore[mysql does not have valid type hint]
+        self.connection.rollback()

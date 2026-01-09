@@ -2,10 +2,11 @@ import logging
 from typing import Any
 
 from psycopg import sql
+
 from database_wrapper import DBWrapperAsync
 
-from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 from .connector import PgCursorTypeAsync
+from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 
 
 class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):

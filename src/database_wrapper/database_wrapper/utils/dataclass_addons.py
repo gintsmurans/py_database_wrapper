@@ -1,6 +1,7 @@
-from typing import Any, Callable, Type, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-AnyDataType = TypeVar("AnyDataType", bound=Type[Any])
+AnyDataType = TypeVar("AnyDataType", bound=type[Any])
 
 
 def ignore_unknown_kwargs() -> Callable[[AnyDataType], AnyDataType]:

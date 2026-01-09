@@ -1,9 +1,9 @@
 import logging
 import socket
-
-from typing import Any, Coroutine
-from threading import Event
+from collections.abc import Coroutine
 from contextvars import ContextVar
+from threading import Event
+from typing import Any
 
 
 class DatabaseBackend:

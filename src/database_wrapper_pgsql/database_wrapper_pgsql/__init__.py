@@ -8,22 +8,22 @@ Part of the database_wrapper package
 
 import logging
 
-from .db_wrapper_pgsql import DBWrapperPgSQL
-from .db_wrapper_pgsql_async import DBWrapperPgSQLAsync
 from .connector import (
     # Basics
     PgConfig,
+    # Connection and Cursor types
+    PgConnectionType,
+    PgConnectionTypeAsync,
+    PgCursorType,
+    PgCursorTypeAsync,
     # Connectors
     PgSQL,
     PgSQLAsync,
     PgSQLWithPooling,
     PgSQLWithPoolingAsync,
-    # Connection and Cursor types
-    PgConnectionType,
-    PgCursorType,
-    PgConnectionTypeAsync,
-    PgCursorTypeAsync,
 )
+from .db_wrapper_pgsql import DBWrapperPgSQL
+from .db_wrapper_pgsql_async import DBWrapperPgSQLAsync
 from .pg_introspector import PostgresIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed

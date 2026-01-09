@@ -1,8 +1,7 @@
 import logging
+from typing import Any, cast
 
-from typing import Type, cast, Any
-
-from .common import OrderByItem, NoParam, DataModelType
+from .common import DataModelType, NoParam, OrderByItem
 
 
 class DBWrapperMixin:
@@ -113,7 +112,7 @@ class DBWrapperMixin:
 
     def turn_data_into_model(
         self,
-        empty_data_class: Type[DataModelType],
+        empty_data_class: type[DataModelType],
         db_data: dict[str, Any],
     ) -> DataModelType:
         """
@@ -170,11 +169,8 @@ class DBWrapperMixin:
         if order_by is None:
             return None
 
-        order_list = [
-            f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-            for item in order_by
-        ]
-        return "ORDER BY %s" % ", ".join(order_list)
+        order_list = [f"{item[0]} {item[1] if len(item) > 1 and item[1] is not None else 'ASC'}" for item in order_by]
+        return "ORDER BY {}".format(", ".join(order_list))
 
     def limit_query(self, offset: int = 0, limit: int = 100) -> Any | None:
         """
@@ -204,36 +200,32 @@ class DBWrapperMixin:
             elif "$ends_with" in filter:
                 return (f"{key} LIKE %s", f"%{filter['$ends_with']}")
             elif "$min" in filter and "$max" not in filter:
-                return (f"{key} >= %s", filter["$min"])  # type: ignore
+                return (f"{key} >= %s", filter["$min"])
             elif "$max" in filter and "$min" not in filter:
-                return (f"{key} <= %s", filter["$max"])  # type: ignore
+                return (f"{key} <= %s", filter["$max"])
             elif "$min" in filter and "$max" in filter:
-                return (f"{key} BETWEEN %s AND %s", filter["$min"], filter["$max"])  # type: ignore
+                return (f"{key} BETWEEN %s AND %s", filter["$min"], filter["$max"])
             elif "$in" in filter:
                 in_filter_1: list[Any] = cast(list[Any], filter["$in"])
-                return (
-                    f"{key} IN (%s)" % ",".join(["%s"] * len(in_filter_1)),
-                ) + tuple(in_filter_1)
+                return (f"{key} IN (%s)" % ",".join(["%s"] * len(in_filter_1)),) + tuple(in_filter_1)
             elif "$not_in" in filter:
                 in_filter_2: list[Any] = cast(list[Any], filter["$in"])
-                return (
-                    f"{key} NOT IN (%s)" % ",".join(["%s"] * len(in_filter_2)),
-                ) + tuple(in_filter_2)
+                return (f"{key} NOT IN (%s)" % ",".join(["%s"] * len(in_filter_2)),) + tuple(in_filter_2)
             elif "$not" in filter:
-                return (f"{key} != %s", filter["$not"])  # type: ignore
+                return (f"{key} != %s", filter["$not"])
 
             elif "$gt" in filter:
-                return (f"{key} > %s", filter["$gt"])  # type: ignore
+                return (f"{key} > %s", filter["$gt"])
             elif "$gte" in filter:
-                return (f"{key} >= %s", filter["$gte"])  # type: ignore
+                return (f"{key} >= %s", filter["$gte"])
             elif "$lt" in filter:
-                return (f"{key} < %s", filter["$lt"])  # type: ignore
+                return (f"{key} < %s", filter["$lt"])
             elif "$lte" in filter:
-                return (f"{key} <= %s", filter["$lte"])  # type: ignore
+                return (f"{key} <= %s", filter["$lte"])
             elif "$is_null" in filter:
-                return (f"{key} IS NULL",)  # type: ignore
+                return (f"{key} IS NULL",)
             elif "$is_not_null" in filter:
-                return (f"{key} IS NOT NULL",)  # type: ignore
+                return (f"{key} IS NOT NULL",)
 
             raise NotImplementedError("Filter type not supported")
         elif type(filter) is str or type(filter) is int or type(filter) is float:
@@ -244,13 +236,9 @@ class DBWrapperMixin:
                 NoParam,
             )
         else:
-            raise NotImplementedError(
-                f"Filter type not supported: {key} = {type(filter)}"
-            )
+            raise NotImplementedError(f"Filter type not supported: {key} = {type(filter)}")
 
-    def create_filter(
-        self, filter: dict[str, Any] | None
-    ) -> tuple[Any, tuple[Any, ...]]:
+    def create_filter(self, filter: dict[str, Any] | None) -> tuple[Any, tuple[Any, ...]]:
         if filter is None or len(filter) == 0:
             return ("", tuple())
 
@@ -287,12 +275,7 @@ class DBWrapperMixin:
 
         columns = ", ".join(keys)
         values_placeholder = ", ".join(["%s"] * len(values))
-        return (
-            f"INSERT INTO {table_identifier} "
-            f"({columns}) "
-            f"VALUES ({values_placeholder}) "
-            f"RETURNING {return_key}"
-        )
+        return f"INSERT INTO {table_identifier} ({columns}) VALUES ({values_placeholder}) RETURNING {return_key}"
 
     def _format_update_query(
         self,

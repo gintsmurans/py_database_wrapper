@@ -1,7 +1,8 @@
 from typing import Any
 
 from psycopg import sql
-from database_wrapper import OrderByItem, NoParam
+
+from database_wrapper import NoParam, OrderByItem
 
 
 class DBWrapperPgSQLMixin:
@@ -69,11 +70,8 @@ class DBWrapperPgSQLMixin:
         if order_by is None:
             return None
 
-        order_list = [
-            f"{item[0]} {item[1] if len(item) > 1 and item[1] != None else 'ASC'}"
-            for item in order_by
-        ]
-        return sql.SQL("ORDER BY %s" % ", ".join(order_list))  # type: ignore
+        order_list = [f"{item[0]} {item[1] if len(item) > 1 and item[1] is not None else 'ASC'}" for item in order_by]
+        return sql.SQL("ORDER BY {}".format(", ".join(order_list)))
 
     def limit_query(
         self,
@@ -88,11 +86,9 @@ class DBWrapperPgSQLMixin:
     def format_filter(self, key: str, filter: Any) -> tuple[Any, ...]:
         # TODO: For now we assume that we have that method from DBWrapperMixin
         # TODO: Its 5am and I am tired, I will fix this later
-        return super().format_filter(key, filter)  # type: ignore
+        return super().format_filter(key, filter)
 
-    def create_filter(
-        self, filter: dict[str, Any] | None
-    ) -> tuple[sql.Composed | None, tuple[Any, ...]]:
+    def create_filter(self, filter: dict[str, Any] | None) -> tuple[sql.Composed | None, tuple[Any, ...]]:
         if filter is None or len(filter) == 0:
             return (None, tuple())
 
@@ -111,9 +107,8 @@ class DBWrapperPgSQLMixin:
         order: sql.SQL | sql.Composed | None,
         limit: sql.SQL | sql.Composed | None,
     ) -> sql.Composed:
-
         if isinstance(query, str):
-            query = sql.SQL(query)  # type: ignore
+            query = sql.SQL(query)
 
         query_parts: list[sql.Composable] = [query]
         if q_filter is not None:
@@ -136,9 +131,7 @@ class DBWrapperPgSQLMixin:
         keys = store_data.keys()
         values = list(store_data.values())
 
-        return sql.SQL(
-            "INSERT INTO {table} ({columns}) VALUES ({values}) RETURNING {id_key}"
-        ).format(
+        return sql.SQL("INSERT INTO {table} ({columns}) VALUES ({values}) RETURNING {id_key}").format(
             table=table_identifier,
             columns=sql.SQL(", ").join(map(sql.Identifier, keys)),
             values=sql.SQL(", ").join(sql.Placeholder() * len(values)),
@@ -152,9 +145,7 @@ class DBWrapperPgSQLMixin:
         update_data: dict[str, Any],
     ) -> sql.Composed:
         keys = update_data.keys()
-        set_clause = sql.SQL(", ").join(
-            sql.Identifier(key) + sql.SQL(" = %s") for key in keys
-        )
+        set_clause = sql.SQL(", ").join(sql.Identifier(key) + sql.SQL(" = %s") for key in keys)
         return sql.SQL("UPDATE {table} SET {set_clause} WHERE {id_key} = %s").format(
             table=table_identifier,
             set_clause=set_clause,

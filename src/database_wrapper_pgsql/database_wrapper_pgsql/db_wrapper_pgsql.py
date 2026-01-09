@@ -2,10 +2,11 @@ import logging
 from typing import Any
 
 from psycopg import Cursor, sql
+
 from database_wrapper import DBWrapper
 
-from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 from .connector import PgCursorType
+from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
 
 
 class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):

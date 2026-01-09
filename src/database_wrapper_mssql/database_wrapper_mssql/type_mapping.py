@@ -1,12 +1,12 @@
 # type_mapping_mssql.py
-from typing import Any, Optional, Tuple
-from decimal import Decimal
 import datetime
+from decimal import Decimal
+
 from database_wrapper import SerializeType
 
 USE_DECIMAL = False
 
-_MSSQL_TO_PY_BASE: dict[str, Tuple[type, Optional[SerializeType]]] = {
+_MSSQL_TO_PY_BASE: dict[str, tuple[type, SerializeType | None]] = {
     # integers
     "tinyint": (int, None),  # 0..255 (note!)
     "smallint": (int, None),
@@ -42,7 +42,7 @@ _MSSQL_TO_PY_BASE: dict[str, Tuple[type, Optional[SerializeType]]] = {
 
 def map_db_type(
     db_type: str, *, length: int | None = None, precision: int | None = None, scale: int | None = None
-) -> tuple[type, Optional[SerializeType]]:
+) -> tuple[type, SerializeType | None]:
     t = db_type.lower()
 
     # decimal/numeric with precision/scale

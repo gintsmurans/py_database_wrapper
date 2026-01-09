@@ -1,22 +1,16 @@
+from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
-from typing import Any, AsyncIterator, Iterator, NotRequired, TypedDict, cast
+from typing import Any, NotRequired, TypedDict, cast
 
-from psycopg import (
-    # Async
-    AsyncConnection as PgConnectionAsync,
-    AsyncCursor as PgCursorAsync,
-    AsyncTransaction,
-    # Sync
-    Connection as PgConnection,
-    Cursor as PgCursor,
-    Transaction,
-)
-from psycopg.rows import (
-    DictRow as PgDictRow,
-    dict_row as PgDictRowFactory,
-)
-from psycopg_pool import ConnectionPool, AsyncConnectionPool
+from psycopg import AsyncConnection as PgConnectionAsync  # Async
+from psycopg import AsyncCursor as PgCursorAsync
+from psycopg import AsyncTransaction, Transaction
+from psycopg import Connection as PgConnection  # Sync
+from psycopg import Cursor as PgCursor
+from psycopg.rows import DictRow as PgDictRow
+from psycopg.rows import dict_row as PgDictRowFactory
+from psycopg_pool import AsyncConnectionPool, ConnectionPool
 
 from database_wrapper import DatabaseBackend
 
@@ -97,7 +91,7 @@ class PgSQL(DatabaseBackend):
                 password=self.config["password"],
                 dbname=self.config["database"],
                 connect_timeout=self.connection_timeout,
-                row_factory=PgDictRowFactory,  # type: ignore
+                row_factory=PgDictRowFactory,
                 **self.config["kwargs"],
             ),
         )
@@ -147,14 +141,14 @@ class PgSQL(DatabaseBackend):
         """Commit DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Commit DB queries")
+        self.logger.debug("Commit DB queries")
         self.connection.commit()
 
     def rollback(self) -> None:
         """Rollback DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Rollback DB queries")
+        self.logger.debug("Rollback DB queries")
         self.connection.rollback()
 
 
@@ -216,7 +210,7 @@ class PgSQLAsync(DatabaseBackend):
             password=self.config["password"],
             dbname=self.config["database"],
             connect_timeout=self.connection_timeout,
-            row_factory=PgDictRowFactory,  # type: ignore
+            row_factory=PgDictRowFactory,
             **self.config["kwargs"],
         )
         self.cursor = self.connection.cursor(row_factory=PgDictRowFactory)
@@ -275,14 +269,14 @@ class PgSQLAsync(DatabaseBackend):
         """Commit DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Commit DB queries")
+        self.logger.debug("Commit DB queries")
         await self.connection.commit()
 
     async def rollback(self) -> None:
         """Rollback DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Rollback DB queries")
+        self.logger.debug("Rollback DB queries")
         await self.connection.rollback()
 
 
@@ -352,23 +346,23 @@ class PgSQLWithPooling(DatabaseBackend):
         super().__init__(db_config, connection_timeout, instance_name)
 
         # Set defaults
-        if not "port" in self.config or not self.config["port"]:
+        if "port" not in self.config or not self.config["port"]:
             self.config["port"] = 5432
 
-        if not "ssl" in self.config or not self.config["ssl"]:
+        if "ssl" not in self.config or not self.config["ssl"]:
             self.config["ssl"] = "prefer"
 
-        if not "kwargs" in self.config or not self.config["kwargs"]:
+        if "kwargs" not in self.config or not self.config["kwargs"]:
             self.config["kwargs"] = {}
 
-        if not "autocommit" in self.config["kwargs"]:
+        if "autocommit" not in self.config["kwargs"]:
             self.config["kwargs"]["autocommit"] = True
 
         # Connection pooling defaults
-        if not "maxconnections" in self.config or not self.config["maxconnections"]:
+        if "maxconnections" not in self.config or not self.config["maxconnections"]:
             self.config["maxconnections"] = 5
 
-        if not "pool_kwargs" in self.config or not self.config["pool_kwargs"]:
+        if "pool_kwargs" not in self.config or not self.config["pool_kwargs"]:
             self.config["pool_kwargs"] = {}
 
         conn_str = (
@@ -536,14 +530,14 @@ class PgSQLWithPooling(DatabaseBackend):
         """Commit DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Commit DB queries")
+        self.logger.debug("Commit DB queries")
         self.connection.commit()
 
     def rollback(self) -> None:
         """Rollback DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Rollback DB queries")
+        self.logger.debug("Rollback DB queries")
         self.connection.rollback()
 
 
@@ -594,9 +588,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     cursor: PgCursorTypeAsync | None
     """ Cursor to database """
 
-    context_connection_async: ContextVar[
-        tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None
-    ]
+    context_connection_async: ContextVar[tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None]
     """ Connection used in async context manager """
 
     ########################
@@ -620,23 +612,23 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         super().__init__(db_config, connection_timeout, instance_name)
 
         # Set defaults
-        if not "port" in self.config or not self.config["port"]:
+        if "port" not in self.config or not self.config["port"]:
             self.config["port"] = 5432
 
-        if not "ssl" in self.config or not self.config["ssl"]:
+        if "ssl" not in self.config or not self.config["ssl"]:
             self.config["ssl"] = "prefer"
 
-        if not "kwargs" in self.config or not self.config["kwargs"]:
+        if "kwargs" not in self.config or not self.config["kwargs"]:
             self.config["kwargs"] = {}
 
-        if not "autocommit" in self.config["kwargs"]:
+        if "autocommit" not in self.config["kwargs"]:
             self.config["kwargs"]["autocommit"] = True
 
         # Connection pooling defaults
-        if not "maxconnections" in self.config or not self.config["maxconnections"]:
+        if "maxconnections" not in self.config or not self.config["maxconnections"]:
             self.config["maxconnections"] = 5
 
-        if not "pool_kwargs" in self.config or not self.config["pool_kwargs"]:
+        if "pool_kwargs" not in self.config or not self.config["pool_kwargs"]:
             self.config["pool_kwargs"] = {}
 
         conn_str = (
@@ -720,9 +712,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         while not self.shutdown_requested.is_set():
             connection = None
             try:
-                connection = await self.pool_async.getconn(
-                    timeout=self.connection_timeout
-                )
+                connection = await self.pool_async.getconn(timeout=self.connection_timeout)
                 cursor = connection.cursor(row_factory=PgDictRowFactory)
 
                 # Lets do some socket magic
@@ -824,12 +814,12 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         """Commit DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Commit DB queries")
+        self.logger.debug("Commit DB queries")
         await self.connection.commit()
 
     async def rollback(self) -> None:
         """Rollback DB queries"""
         assert self.connection, "Connection is not initialized"
 
-        self.logger.debug(f"Rollback DB queries")
+        self.logger.debug("Rollback DB queries")
         await self.connection.rollback()
