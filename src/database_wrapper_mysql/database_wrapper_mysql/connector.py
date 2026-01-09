@@ -6,7 +6,7 @@ from MySQLdb.cursors import DictCursor as MySqlDictCursor
 from database_wrapper import DatabaseBackend
 
 
-class MyConfig(TypedDict):
+class MysqlConfig(TypedDict):
     hostname: str
     port: NotRequired[int]
     username: str
@@ -17,7 +17,7 @@ class MyConfig(TypedDict):
     kwargs: NotRequired[dict[str, Any]]
 
 
-class MySqlTypedDictCursor(MySqlDictCursor):
+class MysqlTypedDictCursor(MySqlDictCursor):
     def fetchone(self) -> dict[str, Any] | None:
         return super().fetchone()
 
@@ -25,12 +25,12 @@ class MySqlTypedDictCursor(MySqlDictCursor):
         return super().fetchall()
 
 
-class MySQL(DatabaseBackend):
+class Mysql(DatabaseBackend):
     """
     MySQL database backend
 
     :param config: Configuration for MySQL
-    :type config: MyConfig
+    :type config: MysqlConfig
 
     Defaults:
         port = 0 - See comment below
@@ -38,10 +38,10 @@ class MySQL(DatabaseBackend):
         collation = utf8_general_ci
     """
 
-    config: MyConfig
+    config: MysqlConfig
 
     connection: MySqlConnection
-    cursor: MySqlTypedDictCursor
+    cursor: MysqlTypedDictCursor
 
     ##################
     ### Connection ###
@@ -85,11 +85,11 @@ class MySQL(DatabaseBackend):
             use_unicode=True,
             charset=self.config["charset"],
             collation=self.config["collation"],
-            cursorclass=MySqlTypedDictCursor,
+            cursorclass=MysqlTypedDictCursor,
             **self.config["kwargs"],
         )
         # TODO: Typings issue
-        self.cursor = self.connection.cursor(MySqlTypedDictCursor)
+        self.cursor = self.connection.cursor(MysqlTypedDictCursor)
 
     def ping(self) -> bool:
         try:

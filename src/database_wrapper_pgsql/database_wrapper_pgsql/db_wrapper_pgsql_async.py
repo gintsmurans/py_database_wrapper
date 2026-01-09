@@ -6,10 +6,10 @@ from psycopg import sql
 from database_wrapper import DBWrapperAsync
 
 from .connector import PgCursorTypeAsync
-from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
+from .db_wrapper_pgsql_mixin import DBWrapperPgsqlMixin
 
 
-class DBWrapperPgSQLAsync(DBWrapperPgSQLMixin, DBWrapperAsync):
+class DBWrapperPgsqlAsync(DBWrapperPgsqlMixin, DBWrapperAsync):
     """
     Async database wrapper for postgres
 

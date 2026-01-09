@@ -6,13 +6,11 @@ from psycopg import Cursor, sql
 from database_wrapper import DBWrapper
 
 from .connector import PgCursorType
-from .db_wrapper_pgsql_mixin import DBWrapperPgSQLMixin
+from .db_wrapper_pgsql_mixin import DBWrapperPgsqlMixin
 
 
-class DBWrapperPgSQL(DBWrapperPgSQLMixin, DBWrapper):
-    """
-    Sync database wrapper for postgres
-    """
+class DBWrapperPgsql(DBWrapperPgsqlMixin, DBWrapper):
+    """Wrapper for PostgreSQL database"""
 
     db_cursor: PgCursorType | None
     """ PostgreSQL cursor object """

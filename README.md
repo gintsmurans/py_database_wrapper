@@ -121,5 +121,5 @@ We are adding `--config-settings editable_mode=strict` for vscode to be able to 
 - [ ] Add more tests
 - [ ] Add more usage examples
 - [ ] Create a better documentation
-- [ ] Add async support for MySQL and MSSQL - need to look into libraries that support this
+- [ ] Add async support for Mysql and Mssql - need to look into libraries that support this
 - [ ] Do we need more database support? If so, which ones?

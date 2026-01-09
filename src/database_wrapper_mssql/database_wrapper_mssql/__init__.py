@@ -1,5 +1,5 @@
 """
-database_wrapper_mssql package - MSSQL database wrapper
+database_wrapper_mssql package - Mssql database wrapper
 
 Part of the database_wrapper package
 """
@@ -8,8 +8,8 @@ Part of the database_wrapper package
 
 import logging
 
-from .connector import MSSQL, MssqlConfig, MssqlConnection, MssqlCursor
-from .db_wrapper_mssql import DBWrapperMSSQL
+from .connector import Mssql, MssqlConfig, MssqlConnection, MssqlCursor
+from .db_wrapper_mssql import DBWrapperMssql
 from .mssql_introspector import MssqlIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed
@@ -20,9 +20,9 @@ if logger.level == logging.NOTSET:
 
 __all__ = [
     # Wrappers
-    DBWrapperMSSQL,
+    DBWrapperMssql,
     # Connectors
-    MSSQL,
+    Mssql,
     # Connection and Cursor types
     MssqlConnection,
     MssqlCursor,

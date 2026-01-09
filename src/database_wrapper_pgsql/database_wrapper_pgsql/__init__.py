@@ -10,20 +10,21 @@ import logging
 
 from .connector import (
     # Basics
-    PgConfig,
-    # Connection and Cursor types
+    PgConnection,
     PgConnectionType,
     PgConnectionTypeAsync,
+    PgCursor,
     PgCursorType,
     PgCursorTypeAsync,
-    # Connectors
-    PgSQL,
-    PgSQLAsync,
-    PgSQLWithPooling,
-    PgSQLWithPoolingAsync,
+    PgDictRow,
+    Pgsql,
+    PgsqlAsync,
+    PgsqlConfig,
+    PgsqlWithPooling,
+    PgsqlWithPoolingAsync,
 )
-from .db_wrapper_pgsql import DBWrapperPgSQL
-from .db_wrapper_pgsql_async import DBWrapperPgSQLAsync
+from .db_wrapper_pgsql import DBWrapperPgsql
+from .db_wrapper_pgsql_async import DBWrapperPgsqlAsync
 from .pg_introspector import PostgresIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed
@@ -34,19 +35,22 @@ if logger.level == logging.NOTSET:
 
 __all__ = [
     # Wrappers
-    "DBWrapperPgSQL",
-    "DBWrapperPgSQLAsync",
+    DBWrapperPgsql,
+    DBWrapperPgsqlAsync,
     # Connectors
-    "PgSQL",
-    "PgSQLAsync",
-    "PgSQLWithPooling",
-    "PgSQLWithPoolingAsync",
+    Pgsql,
+    PgsqlAsync,
+    PgsqlWithPooling,
+    PgsqlWithPoolingAsync,
     # Connection and Cursor types
-    "PgConnectionType",
-    "PgCursorType",
-    "PgConnectionTypeAsync",
-    "PgCursorTypeAsync",
+    PgConnection,
+    PgConnectionType,
+    PgConnectionTypeAsync,
+    PgCursor,
+    PgCursorType,
+    PgCursorTypeAsync,
+    PgDictRow,
     # Helpers
-    "PgConfig",
-    "PostgresIntrospector",
+    PgsqlConfig,
+    PostgresIntrospector,
 ]

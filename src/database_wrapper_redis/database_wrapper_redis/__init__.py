@@ -1,5 +1,5 @@
 """
-database_wrapper_redis package - PostgreSQL database wrapper
+database_wrapper_redis package - Redis database wrapper
 
 Part of the database_wrapper package
 """
@@ -17,10 +17,10 @@ from .connector import (
     RedisConnection,
     RedisConnectionAsync,
     # Connectors
-    RedisDB,
-    RedisDBAsync,
-    RedisDBWithPool,
-    RedisDBWithPoolAsync,
+    RedisDb,
+    RedisDbAsync,
+    RedisDbWithPool,
+    RedisDbWithPoolAsync,
     RedisDefaultConfig,
 )
 
@@ -32,16 +32,16 @@ if logger.level == logging.NOTSET:
 
 __all__ = [
     # Connectors
-    "RedisDB",
-    "RedisDBAsync",
-    "RedisDBWithPool",
-    "RedisDBWithPoolAsync",
+    RedisDb,
+    RedisDbAsync,
+    RedisDbWithPool,
+    RedisDbWithPoolAsync,
     # Connection and Cursor types
-    "RedisClient",
-    "RedisClientAsync",
-    "RedisConnection",
-    "RedisConnectionAsync",
+    RedisClient,
+    RedisClientAsync,
+    RedisConnection,
+    RedisConnectionAsync,
     # Helpers
-    "RedisConfig",
-    "RedisDefaultConfig",
+    RedisConfig,
+    RedisDefaultConfig,
 ]

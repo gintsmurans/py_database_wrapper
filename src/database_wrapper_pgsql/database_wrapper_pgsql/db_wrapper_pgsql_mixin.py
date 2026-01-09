@@ -5,9 +5,9 @@ from psycopg import sql
 from database_wrapper import NoParam, OrderByItem
 
 
-class DBWrapperPgSQLMixin:
+class DBWrapperPgsqlMixin:
     """
-    Mixin for providing methods that can be used by both sync and async versions of the DBWrapperPgSQL class.
+    Mixin for providing methods that can be used by both sync and async versions of the DBWrapperPgsql class.
     """
 
     ######################

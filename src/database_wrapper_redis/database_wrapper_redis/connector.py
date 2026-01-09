@@ -217,7 +217,7 @@ class KVDbBase:
         ...
 
 
-class RedisDB(KVDbBase):
+class RedisDb(KVDbBase):
     context_connection: ContextVar[RedisClient | None]
 
     _connection: RedisClient
@@ -234,7 +234,7 @@ class RedisDB(KVDbBase):
     ) -> None:
         super().__init__(config=config, timeout=timeout, instance_name=instance_name)
 
-        self.context_connection = ContextVar("RedisDB", default=None)
+        self.context_connection = ContextVar("RedisDb", default=None)
 
     def new_connection(self) -> RedisClient:
         tries = 0
@@ -276,7 +276,7 @@ class RedisDB(KVDbBase):
         raise Exception("Cancelled connection creation")
 
 
-class RedisDBAsync(KVDbBase):
+class RedisDbAsync(KVDbBase):
     context_connection: ContextVar[RedisClientAsync | None]
 
     _connection: RedisClientAsync | None
@@ -293,7 +293,7 @@ class RedisDBAsync(KVDbBase):
     ) -> None:
         super().__init__(config=config, timeout=timeout, instance_name=instance_name)
 
-        self.context_connection = ContextVar("RedisDBAsync", default=None)
+        self.context_connection = ContextVar("RedisDbAsync", default=None)
 
     def __del__(self) -> None:
         self.logger.debug("Dealloc")
@@ -355,7 +355,7 @@ class RedisDBAsync(KVDbBase):
         self._connection = None
 
 
-class RedisDBWithPool(KVDbBase):
+class RedisDbWithPool(KVDbBase):
     pool: RedisConnectionPool
     context_connection: ContextVar[RedisClient | None]
 
@@ -389,7 +389,7 @@ class RedisDBWithPool(KVDbBase):
             decode_responses=True,
         )
 
-        self.context_connection = ContextVar("RedisDBWithPool", default=None)
+        self.context_connection = ContextVar("RedisDbWithPool", default=None)
 
     def new_connection(self) -> RedisClient:
         tries = 0
@@ -426,7 +426,7 @@ class RedisDBWithPool(KVDbBase):
         self.pool.disconnect()
 
 
-class RedisDBWithPoolAsync(KVDbBase):
+class RedisDbWithPoolAsync(KVDbBase):
     pool: RedisConnectionPoolAsync
     context_connection: ContextVar[RedisClientAsync | None]
 
@@ -460,7 +460,7 @@ class RedisDBWithPoolAsync(KVDbBase):
             decode_responses=True,
         )
 
-        self.context_connection = ContextVar("RedisDBWithPoolAsync", default=None)
+        self.context_connection = ContextVar("RedisDbWithPoolAsync", default=None)
 
     def __del__(self) -> None:
         self.logger.debug("Dealloc")

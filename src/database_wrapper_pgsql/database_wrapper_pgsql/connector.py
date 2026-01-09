@@ -21,7 +21,7 @@ PgConnectionTypeAsync = PgConnectionAsync[PgDictRow]
 PgCursorTypeAsync = PgCursorAsync[PgDictRow]
 
 
-class PgConfig(TypedDict):
+class PgsqlConfig(TypedDict):
     hostname: str
     port: NotRequired[int]
     username: str
@@ -35,7 +35,7 @@ class PgConfig(TypedDict):
     pool_kwargs: NotRequired[dict[str, Any]]
 
 
-class PgSQL(DatabaseBackend):
+class Pgsql(DatabaseBackend):
     """
     PostgreSQL database implementation.
 
@@ -45,7 +45,7 @@ class PgSQL(DatabaseBackend):
     Close is called automatically when class is destroyed.
 
     :param config: Configuration for PostgreSQL
-    :type config: PgConfig
+    :type config: PgsqlConfig
 
     Defaults:
         port = 5432
@@ -53,7 +53,7 @@ class PgSQL(DatabaseBackend):
 
     """
 
-    config: PgConfig
+    config: PgsqlConfig
 
     connection: PgConnectionType
     cursor: PgCursorType
@@ -152,7 +152,7 @@ class PgSQL(DatabaseBackend):
         self.connection.rollback()
 
 
-class PgSQLAsync(DatabaseBackend):
+class PgsqlAsync(DatabaseBackend):
     """
     PostgreSQL database async implementation.
 
@@ -163,7 +163,7 @@ class PgSQLAsync(DatabaseBackend):
     ! You need to call it manually in async environment.
 
     :param config: Configuration for PostgreSQL
-    :type config: PgConfig
+    :type config: PgsqlConfig
 
     Defaults:
         port = 5432
@@ -171,7 +171,7 @@ class PgSQLAsync(DatabaseBackend):
 
     """
 
-    config: PgConfig
+    config: PgsqlConfig
 
     connection: PgConnectionTypeAsync
     cursor: PgCursorTypeAsync
@@ -280,7 +280,7 @@ class PgSQLAsync(DatabaseBackend):
         await self.connection.rollback()
 
 
-class PgSQLWithPooling(DatabaseBackend):
+class PgsqlWithPooling(DatabaseBackend):
     """
     PostgreSQL database implementation with connection pooling.
 
@@ -292,13 +292,13 @@ class PgSQLWithPooling(DatabaseBackend):
     Or use context manager to get connection and return it back automatically,
     for example:
 
-        pool = PgSQLWithPooling(config)
+        pool = PgsqlWithPooling(config)
         pool.open_pool()
         with pool as (connection, cursor):
             cursor.execute("SELECT 1")
 
     :param config: Configuration for PostgreSQL
-    :type config: PgConfig
+    :type config: PgsqlConfig
     :param connection_timeout: Connection timeout
     :type connection_timeout: int
     :param instance_name: Name of the instance
@@ -310,7 +310,7 @@ class PgSQLWithPooling(DatabaseBackend):
         maxconnections = 5
     """
 
-    config: PgConfig
+    config: PgsqlConfig
     """ Configuration """
 
     pool: ConnectionPool[PgConnectionType]
@@ -331,7 +331,7 @@ class PgSQLWithPooling(DatabaseBackend):
 
     def __init__(
         self,
-        db_config: PgConfig,
+        db_config: PgsqlConfig,
         connection_timeout: int = 5,
         instance_name: str = "postgresql_pool",
     ) -> None:
@@ -541,7 +541,7 @@ class PgSQLWithPooling(DatabaseBackend):
         self.connection.rollback()
 
 
-class PgSQLWithPoolingAsync(DatabaseBackend):
+class PgsqlWithPoolingAsync(DatabaseBackend):
     """
     PostgreSQL database implementation with async connection pooling.
 
@@ -554,7 +554,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     Or use context manager to get connection and return it back automatically,
     for example:
 
-        pool = PgSQLWithPoolingAsync(config)
+        pool = PgsqlWithPoolingAsync(config)
         await pool.open_pool()
         async with pool as (connection, cursor):
             await cursor.execute("SELECT 1")
@@ -564,7 +564,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     ! You need to call `await close_pool()` manually in async environment.
 
     :param config: Configuration for PostgreSQL
-    :type config: PgConfig
+    :type config: PgsqlConfig
     :param connection_timeout: Connection timeout
     :type connection_timeout: int
     :param instance_name: Name of the instance
@@ -576,7 +576,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         maxconnections = 5
     """
 
-    config: PgConfig
+    config: PgsqlConfig
     """ Configuration """
 
     pool_async: AsyncConnectionPool[PgConnectionTypeAsync]
@@ -597,7 +597,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
 
     def __init__(
         self,
-        db_config: PgConfig,
+        db_config: PgsqlConfig,
         connection_timeout: int = 5,
         instance_name: str = "async_postgresql",
     ) -> None:

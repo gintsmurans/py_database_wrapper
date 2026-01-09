@@ -5,7 +5,7 @@ from database_wrapper import DBWrapper
 from .connector import MssqlTypedDictCursor
 
 
-class DBWrapperMSSQL(DBWrapper):
+class DBWrapperMssql(DBWrapper):
     """Database wrapper for mssql database"""
 
     db_cursor: MssqlTypedDictCursor | None

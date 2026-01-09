@@ -2,7 +2,7 @@
 
 _Part of the `database_wrapper` package._
 
-This python package is a database wrapper for [MSSQL](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) database.
+This python package is a database wrapper for [Mssql](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) database.
 
 ## Installation
 
@@ -13,9 +13,9 @@ pip install database_wrapper[mssql]
 ## Usage
 
 ```python
-from database_wrapper_mssql import MSSQL, DBWrapperMSSQL
+from database_wrapper_mssql import Mssql, DBWrapperMssql
 
-db = MSSQL({
+db = Mssql({
     "hostname": "localhost",
     "port": "1433",
     "username": "sa",
@@ -23,7 +23,7 @@ db = MSSQL({
     "database": "master"
 })
 db.open()
-dbWrapper = DBWrapperMSSQL(dbCursor=db.cursor)
+dbWrapper = DBWrapperMssql(dbCursor=db.cursor)
 
 # Simple query
 aModel = MyModel()

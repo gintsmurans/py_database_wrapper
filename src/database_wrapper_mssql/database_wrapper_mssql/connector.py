@@ -31,11 +31,11 @@ class MssqlTypedDictCursor(MssqlCursor):
         return super().__next__()  # type: ignore
 
 
-class MSSQL(DatabaseBackend):
+class Mssql(DatabaseBackend):
     """
-    MSSQL database backend
+    Mssql database backend
 
-    :param config: Configuration for MSSQL
+    :param config: Configuration for Mssql
     :type config: MssqlConfig
 
     Defaults:
