@@ -1,4 +1,4 @@
-from typing import Any, NotRequired, TypedDict
+from typing import Any, NotRequired, TypedDict, cast
 
 from pymssql import Connection as MssqlConnection
 from pymssql import Cursor as MssqlCursor
@@ -7,7 +7,7 @@ from pymssql import connect as MssqlConnect
 from database_wrapper import DatabaseBackend
 
 
-class MsConfig(TypedDict):
+class MssqlConfig(TypedDict):
     hostname: str
     port: NotRequired[str]
     username: str
@@ -17,22 +17,36 @@ class MsConfig(TypedDict):
     kwargs: NotRequired[dict[str, Any]]
 
 
+class MssqlTypedDictCursor(MssqlCursor):
+    def fetchone(self) -> dict[str, Any] | None:
+        return super().fetchone()  # type: ignore
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        return super().fetchall()  # type: ignore
+
+    def __iter__(self) -> "MssqlTypedDictCursor":
+        return self
+
+    def __next__(self) -> dict[str, Any]:
+        return super().__next__()  # type: ignore
+
+
 class MSSQL(DatabaseBackend):
     """
     MSSQL database backend
 
     :param config: Configuration for MSSQL
-    :type config: MsConfig
+    :type config: MssqlConfig
 
     Defaults:
         port = 1433
         tds_version = 7.0
     """
 
-    config: MsConfig
+    config: MssqlConfig
 
     connection: MssqlConnection
-    cursor: MssqlCursor
+    cursor: MssqlTypedDictCursor
 
     ##################
     ### Connection ###
@@ -63,7 +77,7 @@ class MSSQL(DatabaseBackend):
             login_timeout=self.connection_timeout,
             **self.config["kwargs"],
         )
-        self.cursor = self.connection.cursor(as_dict=True)
+        self.cursor = cast(MssqlTypedDictCursor, self.connection.cursor(as_dict=True))
 
     def ping(self) -> bool:
         try:

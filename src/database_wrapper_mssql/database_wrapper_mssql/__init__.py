@@ -8,9 +8,9 @@ Part of the database_wrapper package
 
 import logging
 
-from .connector import MSSQL, MsConfig, MssqlConnection, MssqlCursor
+from .connector import MSSQL, MssqlConfig, MssqlConnection, MssqlCursor
 from .db_wrapper_mssql import DBWrapperMSSQL
-from .mssql_introspector import MSSQLIntrospector
+from .mssql_introspector import MssqlIntrospector
 
 # Set the logger to a quiet default, can be enabled if needed
 logger = logging.getLogger("database_wrapper_mssql")
@@ -20,13 +20,13 @@ if logger.level == logging.NOTSET:
 
 __all__ = [
     # Wrappers
-    "DBWrapperMSSQL",
+    DBWrapperMSSQL,
     # Connectors
-    "MSSQL",
+    MSSQL,
     # Connection and Cursor types
-    "MssqlConnection",
-    "MssqlCursor",
+    MssqlConnection,
+    MssqlCursor,
     # Helpers
-    "MsConfig",
-    "MSSQLIntrospector",
+    MssqlConfig,
+    MssqlIntrospector,
 ]

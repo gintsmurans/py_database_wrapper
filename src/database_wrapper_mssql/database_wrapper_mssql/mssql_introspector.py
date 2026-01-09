@@ -7,7 +7,7 @@ from database_wrapper import ColumnMetaIntrospector, DBIntrospector
 from .type_mapping import map_db_type  # your existing mapper
 
 
-class MSSQLIntrospector(DBIntrospector):
+class MssqlIntrospector(DBIntrospector):
     conn: pyodbc.Connection
 
     def map_db_type(self, db_type: str):
