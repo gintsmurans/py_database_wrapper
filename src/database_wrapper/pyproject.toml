@@ -4,14 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "database_wrapper"
-version = "0.2.14"
+version = "0.2.15"
 description = "A Different Approach to Database Wrappers in Python"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "GNU General Public License v3.0 (GPL-3.0)"}
-authors = [
-    {name = "Gints Murans", email = "gm@gm.lv"}
-]
+license = { text = "GNU General Public License v3.0 (GPL-3.0)" }
+authors = [{ name = "Gints Murans", email = "gm@gm.lv" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -31,9 +29,18 @@ classifiers = [
     "Topic :: Database",
     "Topic :: Database :: Front-Ends",
     "Topic :: Software Development",
-    "Topic :: Software Development :: Libraries :: Python Modules"
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-keywords = ["database", "wrapper", "python", "pgsql", "mysql", "mssql", "sqlite", "redis"]
+keywords = [
+    "database",
+    "wrapper",
+    "python",
+    "pgsql",
+    "mysql",
+    "mssql",
+    "sqlite",
+    "redis",
+]
 dependencies = []
 
 [project.urls]
@@ -45,28 +52,32 @@ Code = "https://github.com/gintsmurans/py_database_wrapper"
 Download = "https://pypi.org/project/database_wrapper/"
 
 [project.optional-dependencies]
-pgsql = ["database_wrapper_pgsql == 0.2.14"]
-mysql = ["database_wrapper_mysql == 0.2.14"]
-mssql = ["database_wrapper_mssql == 0.2.14"]
-sqlite = ["database_wrapper_sqlite == 0.2.14"]
-redis = ["database_wrapper_redis == 0.2.14"]
+pgsql = ["database_wrapper_pgsql == 0.2.15"]
+mysql = ["database_wrapper_mysql == 0.2.15"]
+mssql = ["database_wrapper_mssql == 0.2.15"]
+sqlite = ["database_wrapper_sqlite == 0.2.15"]
+redis = ["database_wrapper_redis == 0.2.15"]
 all = ["database_wrapper[pgsql,mysql,mssql,sqlite,redis]"]
 dev = [
     # Development
     "ast-comments >= 1.1.2",
     "codespell >= 2.2",
     "build >= 1.2.1",
-    # Formatting & Types
-    "black >= 24.1.0",
-    "mypy >= 1.9.0",
+
+    # Formatting
+    "pyrefly",
+    "ruff",
+
+    # Type hints
     "types-setuptools >= 61.0.0",
     "types-pymssql >= 2.1.0",
     "types-mysqlclient >= 2.2.0",
+
     # Database drivers
     "psycopg[binary] >= 3.2.0",
     "psycopg[pool] >= 3.2.0",
     "mysqlclient >= 2.2.2",
-    "pymssql >= 2.2.10"
+    "pymssql >= 2.2.10",
 ]
 
 # [tool.setuptools.packages.find]

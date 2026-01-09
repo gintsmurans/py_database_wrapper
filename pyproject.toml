@@ -3,23 +3,32 @@ requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
-source = [
-    "src/database_wrapper"
-]
-
-[tool.mypy]
-files = [
-    "src/database_wrapper/database_wrapper",
-    "src/database_wrapper/database_wrapper_pgsql",
-    "src/database_wrapper/database_wrapper_mysql",
-    "src/database_wrapper/database_wrapper_mssql",
-    "src/database_wrapper/database_wrapper_sqlite",
-    "src/database_wrapper/database_wrapper_redis",
-]
-warn_unused_ignores = true
-show_error_codes = true
-strict = true
+source = ["src/database_wrapper"]
 
 [tool.codespell]
 ignore-words-list = "alot,ans,ba,fo,te,erro,varning"
 skip = "build,_build,.tox,.mypy_cache,.venv,pq.c,_psycopg.c,*.html"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# For some reason this beeds to be here to show errors in VSCode
+[tool.pyrefly]
+site-package-path = [
+    "/srv/venv/lib64/python3.13/site-packages",
+    "src/database_wrapper/",
+    "src/database_wrapper_pgsql/",
+    "src/database_wrapper_mysql/",
+    "src/database_wrapper_mssql/",
+    "src/database_wrapper_sqlite/",
+    "src/database_wrapper_redis/",
+]

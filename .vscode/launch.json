@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "appArgs",
+            "type": "promptString",
+            "description": "Arguments for XXX",
+            "default": ""
+        }
+    ],
+    "configurations": [
+        {
+            "name": "TODO: Run XXX (prompt args)",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/XXX",
+            "python": "/srv/venv/bin/python3",
+            "args": "${input:appArgs}",
+            "console": "integratedTerminal"
+        }
+    ]
+}

@@ -15,33 +15,56 @@
     "customizations": {
         "vscode": {
             "settings": {
-                "terminal.integrated.env.linux": {
-                    "PATH": "${containerEnv:PATH}"
-                },
-
                 "python.defaultInterpreterPath": "/srv/venv/bin/python3",
-                "python.languageServer": "Pylance",
+                "python.formatting.provider": "none",
+                "python.languageServer": "meta.pyrefly",
                 "python.analysis.typeCheckingMode": "strict",
                 "python.analysis.autoImportCompletions": true,
-                "python.analysis.extraPaths": [
-                    "src/database_wrapper/",
-                    "src/database_wrapper_pgsql/",
-                    "src/database_wrapper_mysql/",
-                    "src/database_wrapper_mssql/",
-                    "src/database_wrapper_sqlite/",
-                    "src/database_wrapper_redis/"
-                ],
                 "[python]": {
                     "editor.formatOnSave": true,
-                    "editor.defaultFormatter": "ms-python.black-formatter"
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                },
+                "editor.codeActionsOnSave": {
+                    "source.fixAll.ruff": true
                 }
             },
             "extensions": [
-                "ms-python.python", // Python
-                "ms-python.vscode-pylance", // Python autocomplete
-                "ms-python.black-formatter", // Python formatter
+                "ms-python.python", // Python language support
+                "ms-python.debugpy", // Python debugger
+                "meta.pyrefly", // Python type checker, autocomplete and language smarts
+                "charliermarsh.ruff", // Linter and formatter
+                "redhat.vscode-yaml", // YAML
                 "tamasfe.even-better-toml", // TOML
+                "mikestead.dotenv", // .env file support
+                "aaron-bond.better-comments", // Better comments
                 "github.copilot" // Github co-pilot
+            ]
+        },
+        "antigravity": {
+            "settings": {
+                "python.defaultInterpreterPath": "/srv/venv/bin/python3",
+                "python.formatting.provider": "none",
+                "python.languageServer": "meta.pyrefly",
+                "python.analysis.typeCheckingMode": "strict",
+                "python.analysis.autoImportCompletions": true,
+                "[python]": {
+                    "editor.formatOnSave": true,
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                },
+                "editor.codeActionsOnSave": {
+                    "source.fixAll.ruff": true
+                },
+                "ruff.fixAll": true
+            },
+            "extensions": [
+                "ms-python.python", // Python language support
+                "ms-python.debugpy", // Python debugger
+                "meta.pyrefly", // Python type checker, autocomplete and language smarts
+                "charliermarsh.ruff", // Linter and formatter
+                "redhat.vscode-yaml", // YAML
+                "tamasfe.even-better-toml", // TOML
+                "mikestead.dotenv", // .env file support
+                "aaron-bond.better-comments" // Better comments
             ]
         }
     }
