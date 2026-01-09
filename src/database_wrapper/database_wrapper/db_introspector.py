@@ -5,7 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union, get_args, get_origin
 
-from database_wrapper import DBDefaultsDataModel, MetadataDict, SerializeType
+from .db_data_model import DBDefaultsDataModel, MetadataDict
+from .serialization import SerializeType
 
 
 def type_to_str(t: Any) -> str:
