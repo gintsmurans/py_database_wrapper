@@ -17,6 +17,14 @@ class MyConfig(TypedDict):
     kwargs: NotRequired[dict[str, Any]]
 
 
+class MySqlTypedDictCursor(MySqlDictCursor):
+    def fetchone(self) -> dict[str, Any] | None:
+        return super().fetchone()
+
+    def fetchall(self) -> tuple[dict[str, Any], ...]:
+        return super().fetchall()
+
+
 class MySQL(DatabaseBackend):
     """
     MySQL database backend
@@ -33,7 +41,7 @@ class MySQL(DatabaseBackend):
     config: MyConfig
 
     connection: MySqlConnection
-    cursor: MySqlDictCursor
+    cursor: MySqlTypedDictCursor
 
     ##################
     ### Connection ###
@@ -77,11 +85,11 @@ class MySQL(DatabaseBackend):
             use_unicode=True,
             charset=self.config["charset"],
             collation=self.config["collation"],
-            cursorclass=MySqlDictCursor,
+            cursorclass=MySqlTypedDictCursor,
             **self.config["kwargs"],
         )
         # TODO: Typings issue
-        self.cursor = self.connection.cursor(MySqlDictCursor)
+        self.cursor = self.connection.cursor(MySqlTypedDictCursor)
 
     def ping(self) -> bool:
         try:
