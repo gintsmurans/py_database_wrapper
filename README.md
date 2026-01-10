@@ -107,7 +107,7 @@ We are adding `--config-settings editable_mode=strict` for vscode to be able to 
 | pgsql    |  Y   |   Y   |       Y      |      Y        |       B       |
 | mysql    |  Y   |   N   |       N      |      N        |       N       |
 | mssql    |  Y   |   N   |       N      |      N        |       N       |
-| sqlite   |  N   |   N   |       N      |      N        |       N       |
+| sqlite   |  Y   |   N   |       -      |      -        |       N       |
 | redis    |  Y   |   Y   |       Y      |      Y        |       N       |
 
 ## TODO
