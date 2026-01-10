@@ -10,6 +10,11 @@ This python package is a database wrapper for [Mssql](https://www.microsoft.com/
 pip install database_wrapper[mssql]
 ```
 
+### Prerequisites
+
+- [pymssql](https://www.pymssql.org/)
+- [pyodbc](https://pypi.org/project/pyodbc/) - currently this is used for introspection and only installed in development environment
+
 ## Usage
 
 ```python
