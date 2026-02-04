@@ -1,7 +1,7 @@
 ############
 ### Base ###
 ############
-FROM debian:bookworm AS base
+FROM debian:trixie-slim AS base
 MAINTAINER gm@gm.lv
 
 # Avoid interactive cli blockers

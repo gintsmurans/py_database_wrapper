@@ -350,9 +350,13 @@ class RedisDbAsync(KVDbBase):
         """
         Close connection to the database.
         """
-        if self._connection:
-            await self._connection.aclose()
-        self._connection = None
+        try:
+            if self._connection:
+                await self._connection.aclose()
+        except Exception as e:
+            self.logger.debug(f"Error while closing connection: {e}")
+        finally:
+            self._connection = None
 
 
 class RedisDbWithPool(KVDbBase):

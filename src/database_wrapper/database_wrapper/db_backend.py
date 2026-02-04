@@ -148,14 +148,22 @@ class DatabaseBackend:
 
     def close(self) -> Any:
         """Close connections"""
-        if self.cursor:
-            self.logger.debug("Closing cursor")
-            self.cursor.close()
+        try:
+            if self.cursor:
+                self.logger.debug("Closing cursor")
+                self.cursor.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing cursor: {e}")
+        finally:
             self.cursor = None
 
-        if self.connection:
-            self.logger.debug("Closing connection")
-            self.connection.close()
+        try:
+            if self.connection:
+                self.logger.debug("Closing connection")
+                self.connection.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing connection: {e}")
+        finally:
             self.connection = None
 
     def new_connection(self) -> Any:
@@ -228,9 +236,7 @@ class DatabaseBackend:
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
         # To set timeout for an RTO you must set TCP_USER_TIMEOUT timeout
         # (in milliseconds) for socket.
-        s.setsockopt(
-            socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connection_timeout * 1000
-        )
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connection_timeout * 1000)
 
     ####################
     ### Transactions ###

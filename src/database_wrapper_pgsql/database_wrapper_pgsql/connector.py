@@ -220,13 +220,23 @@ class PgsqlAsync(DatabaseBackend):
 
     async def close(self) -> Any:
         """Close connections"""
-        if self.cursor:
-            self.logger.debug("Closing cursor")
-            await self.cursor.close()
+        try:
+            if hasattr(self, "cursor") and self.cursor:
+                self.logger.debug("Closing cursor")
+                await self.cursor.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing cursor: {e}")
+        finally:
+            self.cursor = None
 
-        if self.connection:
-            self.logger.debug("Closing connection")
-            await self.connection.close()
+        try:
+            if hasattr(self, "connection") and self.connection:
+                self.logger.debug("Closing connection")
+                await self.connection.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing connection: {e}")
+        finally:
+            self.connection = None
 
     async def ping(self) -> bool:
         try:
