@@ -90,9 +90,7 @@ class DatabaseBackend:
         self.cursor = None
         self.shutdownRequested = Event()
         self.contextConnection = ContextVar(f"db_connection_{self.name}", default=None)
-        self.contextConnectionAsync = ContextVar(
-            f"db_connection_{self.name}_async", default=None
-        )
+        self.contextConnectionAsync = ContextVar(f"db_connection_{self.name}_async", default=None)
 
     def __del__(self) -> None:
         """What to do when class is destroyed"""
@@ -147,14 +145,22 @@ class DatabaseBackend:
 
     def close(self) -> Any:
         """Close connections"""
-        if self.cursor:
-            self.logger.debug("Closing cursor")
-            self.cursor.close()
+        try:
+            if self.cursor:
+                self.logger.debug("Closing cursor")
+                self.cursor.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing cursor: {e}")
+        finally:
             self.cursor = None
 
-        if self.connection:
-            self.logger.debug("Closing connection")
-            self.connection.close()
+        try:
+            if self.connection:
+                self.logger.debug("Closing connection")
+                self.connection.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing connection: {e}")
+        finally:
             self.connection = None
 
     def newConnection(self) -> Any:
@@ -227,9 +233,7 @@ class DatabaseBackend:
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
         # To set timeout for an RTO you must set TCP_USER_TIMEOUT timeout
         # (in milliseconds) for socket.
-        s.setsockopt(
-            socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connectionTimeout * 1000
-        )
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.connectionTimeout * 1000)
 
     ####################
     ### Transactions ###

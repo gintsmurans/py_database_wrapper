@@ -226,13 +226,23 @@ class PgSQLAsync(DatabaseBackend):
 
     async def close(self) -> Any:
         """Close connections"""
-        if self.cursor:
-            self.logger.debug("Closing cursor")
-            await self.cursor.close()
+        try:
+            if self.cursor:
+                self.logger.debug("Closing cursor")
+                await self.cursor.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing cursor: {e}")
+        finally:
+            self.cursor = None
 
-        if self.connection:
-            self.logger.debug("Closing connection")
-            await self.connection.close()
+        try:
+            if self.connection:
+                self.logger.debug("Closing connection")
+                await self.connection.close()
+        except Exception as e:
+            self.logger.debug(f"Error while closing connection: {e}")
+        finally:
+            self.connection = None
 
     async def ping(self) -> bool:
         try:
@@ -594,9 +604,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
     cursor: PgCursorTypeAsync | None
     """ Cursor to database """
 
-    contextConnectionAsync: ContextVar[
-        tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None
-    ]
+    contextConnectionAsync: ContextVar[tuple[PgConnectionTypeAsync, PgCursorTypeAsync] | None]
     """ Connection used in async context manager """
 
     ########################
@@ -720,9 +728,7 @@ class PgSQLWithPoolingAsync(DatabaseBackend):
         while not self.shutdownRequested.is_set():
             connection = None
             try:
-                connection = await self.poolAsync.getconn(
-                    timeout=self.connectionTimeout
-                )
+                connection = await self.poolAsync.getconn(timeout=self.connectionTimeout)
                 cursor = connection.cursor(row_factory=PgDictRowFactory)
 
                 # Lets do some socket magic
