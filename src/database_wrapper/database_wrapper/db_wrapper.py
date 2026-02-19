@@ -33,7 +33,7 @@ class DBWrapper(DBWrapperMixin):
         """
         # Figure out the id key and value
         id_key = empty_data_class.id_key
-        id_value = empty_data_class.id
+        id_value = empty_data_class.id_value
         if not id_key:
             raise ValueError("Id key is not set")
         if not id_value:
@@ -272,7 +272,7 @@ class DBWrapper(DBWrapperMixin):
                 store_id_key,
             )
             if res:
-                row.id = res[0]  # update the id of the row
+                setattr(row, store_id_key, res[0])  # update the id of the row
 
             status.append(res)
 
@@ -361,7 +361,7 @@ class DBWrapper(DBWrapperMixin):
         for row in records:
             update_data = row.update_data()
             update_id_key = row.id_key
-            update_id_value = row.id
+            update_id_value = row.id_value
             if not update_data or not update_id_key or not update_id_value:
                 continue
 
@@ -391,7 +391,7 @@ class DBWrapper(DBWrapperMixin):
         update_id_value: Any = None,
     ) -> int:
         update_id_key = update_id_key or record.id_key
-        update_id_value = update_id_value or record.id
+        update_id_value = update_id_value or record.id_value
         status = self._update(
             record,
             record.schema_name,
@@ -465,7 +465,7 @@ class DBWrapper(DBWrapperMixin):
 
         for row in records:
             delete_id_key = row.id_key
-            delete_id_value = row.id
+            delete_id_value = row.id_value
             if not delete_id_key or not delete_id_value:
                 continue
 
