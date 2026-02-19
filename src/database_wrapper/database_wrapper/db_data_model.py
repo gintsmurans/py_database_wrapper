@@ -257,6 +257,15 @@ class DBDataModel:
         """
         raise NotImplementedError("`validate` is not implemented")
 
+    def set_id_value(self, id_value: Any) -> None:
+        """
+        Set the value of the primary key for the current instance.
+
+        Args:
+            id_value (Any): The value to set for the primary key.
+        """
+        setattr(self, self.id_key, id_value)
+
     ############################
     ### Store/update policies ###
     ############################
