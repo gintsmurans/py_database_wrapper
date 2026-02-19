@@ -34,7 +34,7 @@ class DBWrapperAsync(DBWrapperMixin):
         """
         # Figure out the id key and value
         idKey = emptyDataClass.idKey
-        idValue = emptyDataClass.id
+        idValue = emptyDataClass.idValue
         if not idKey:
             raise ValueError("Id key is not set")
         if not idValue:
@@ -264,7 +264,7 @@ class DBWrapperAsync(DBWrapperMixin):
                 storeIdKey,
             )
             if res:
-                row.id = res[0]  # update the id of the row
+                setattr(row, storeIdKey, res[0])  # update the id of the row
 
             status.append(res)
 
@@ -341,7 +341,7 @@ class DBWrapperAsync(DBWrapperMixin):
         for row in records:
             updateData = row.updateData()
             updateIdKey = row.idKey
-            updateIdValue = row.id
+            updateIdValue = row.idValue
             if not updateData or not updateIdKey or not updateIdValue:
                 continue
 
@@ -371,7 +371,7 @@ class DBWrapperAsync(DBWrapperMixin):
         updateIdValue: Any = None,
     ) -> int:
         updateIdKey = updateIdKey or record.idKey
-        updateIdValue = updateIdValue or record.id
+        updateIdValue = updateIdValue or record.idValue
         status = await self._update(
             record,
             record.schemaName,
@@ -448,7 +448,7 @@ class DBWrapperAsync(DBWrapperMixin):
 
         for row in records:
             deleteIdKey = row.idKey
-            deleteIdValue = row.id
+            deleteIdValue = row.idValue
             if not deleteIdKey or not deleteIdValue:
                 continue
 

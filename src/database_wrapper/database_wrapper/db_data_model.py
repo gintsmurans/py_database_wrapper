@@ -163,7 +163,7 @@ class DBDataModel:
             classField = self.__dataclass_fields__.get(field[0], None)
             if classField is not None:
                 metadata = cast(MetadataDict, classField.metadata)
-                if not "exclude" in metadata or not metadata["exclude"]:
+                if "exclude" not in metadata or not metadata["exclude"]:
                     newDict[field[0]] = field[1]
 
         return newDict
@@ -293,6 +293,15 @@ class DBDataModel:
             )
             currentMetadata["exclude"] = enable
             self.__dataclass_fields__[fieldName].metadata = currentMetadata
+
+    def setIdValue(self, idValue: Any) -> None:
+        """
+        Set the value of the primary key for the current instance.
+
+        Args:
+            idValue (Any): The value to set for the primary key.
+        """
+        setattr(self, self.idKey, idValue)
 
     ########################
     ### Database methods ###
