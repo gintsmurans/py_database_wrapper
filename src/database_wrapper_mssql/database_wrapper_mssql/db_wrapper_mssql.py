@@ -49,7 +49,7 @@ class DBWrapperMSSQL(DBWrapper):
     ### Query methods ###
     #####################
 
-    async def getByKey(
+    def getByKey(
         self,
         emptyDataClass: DataModelType,
         idKey: str,
@@ -78,7 +78,7 @@ class DBWrapperMSSQL(DBWrapper):
             limit=1,
             customQuery=customQuery,
         )
-        async for row in res:
+        for row in res:
             return row
         else:
             return None
