@@ -36,8 +36,7 @@
                 "redhat.vscode-yaml", // YAML
                 "tamasfe.even-better-toml", // TOML
                 "mikestead.dotenv", // .env file support
-                "aaron-bond.better-comments", // Better comments
-                "github.copilot" // Github co-pilot
+                "aaron-bond.better-comments" // Better comments
             ]
         },
         "antigravity": {

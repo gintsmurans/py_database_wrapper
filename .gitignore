@@ -11,6 +11,7 @@ docker/*/data/
 ### Tmp, Cache and Bootstrap ###
 ################################
 /tmp/
+/docs/tasks/
 
 ##############
 ### Python ###
