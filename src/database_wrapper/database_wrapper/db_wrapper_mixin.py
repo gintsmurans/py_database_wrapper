@@ -228,13 +228,8 @@ class DBWrapperMixin:
                 return (f"{key} IS NOT NULL",)
 
             raise NotImplementedError("Filter type not supported")
-        elif type(filter) is str or type(filter) is int or type(filter) is float:
+        elif isinstance(filter, (bool, str, int, float)):
             return (f"{key} = %s", filter)
-        elif type(filter) is bool:
-            return (
-                f"{key} = %s",
-                1 if filter else 0,
-            )
         else:
             raise NotImplementedError(f"Filter type not supported: {key} = {type(filter)}")
 
