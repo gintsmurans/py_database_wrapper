@@ -71,7 +71,7 @@ class Mssql(DatabaseBackend):
             password=self.config["password"],
             database=self.config["database"],
             port=self.config["port"],
-            tds_version="7.0",
+            tds_version=self.config["tds_version"],
             as_dict=True,
             timeout=self.connection_timeout,
             login_timeout=self.connection_timeout,

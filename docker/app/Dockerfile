@@ -51,8 +51,8 @@ RUN apt-get update -yq \
         rsync gettext-base procps
 
 # Setup git
-RUN git config --global user.email "$GIT_NAME" \
-    && git config --global user.name "$GIT_EMAIL" \
+RUN git config --global user.email "$GIT_EMAIL" \
+    && git config --global user.name "$GIT_NAME" \
     && git config --global pull.rebase true \
     && git config --global --add safe.directory /srv/app
 

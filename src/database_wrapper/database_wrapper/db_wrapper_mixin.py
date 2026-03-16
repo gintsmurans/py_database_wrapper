@@ -209,7 +209,7 @@ class DBWrapperMixin:
                 in_filter_1: list[Any] = cast(list[Any], filter["$in"])
                 return (f"{key} IN (%s)" % ",".join(["%s"] * len(in_filter_1)),) + tuple(in_filter_1)
             elif "$not_in" in filter:
-                in_filter_2: list[Any] = cast(list[Any], filter["$in"])
+                in_filter_2: list[Any] = cast(list[Any], filter["$not_in"])
                 return (f"{key} NOT IN (%s)" % ",".join(["%s"] * len(in_filter_2)),) + tuple(in_filter_2)
             elif "$not" in filter:
                 return (f"{key} != %s", filter["$not"])
@@ -232,8 +232,8 @@ class DBWrapperMixin:
             return (f"{key} = %s", filter)
         elif type(filter) is bool:
             return (
-                f"{key} = TRUE" if filter else f"{key} = FALSE",
-                NoParam,
+                f"{key} = %s",
+                1 if filter else 0,
             )
         else:
             raise NotImplementedError(f"Filter type not supported: {key} = {type(filter)}")

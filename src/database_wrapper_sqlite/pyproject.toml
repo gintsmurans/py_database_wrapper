@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "database_wrapper_sqlite"
 version = "0.2.26"
-description = "database_wrapper for PostgreSQL database"
+description = "database_wrapper for SQLite database"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "GNU General Public License v3.0 (GPL-3.0)" }

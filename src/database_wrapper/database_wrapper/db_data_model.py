@@ -376,7 +376,7 @@ class DBDefaultsDataModel(DBDataModel):
     ######################
 
     created_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
         metadata=MetadataDict(
             db_field=("created_at", "timestamptz"),
             store=True,
@@ -386,7 +386,7 @@ class DBDefaultsDataModel(DBDataModel):
     )
 
     updated_at: datetime.datetime = field(
-        default_factory=datetime.datetime.now,
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
         metadata=MetadataDict(
             db_field=("updated_at", "timestamptz"),
             store=True,

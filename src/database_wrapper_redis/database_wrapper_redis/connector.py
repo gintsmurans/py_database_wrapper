@@ -456,7 +456,7 @@ class RedisDbWithPoolAsync(KVDbBase):
             username=self.config["username"],
             password=self.config["password"],
             db=self.config["database"],
-            socket_connect_timeout=timeout,
+            socket_connect_timeout=self.timeout,
             socket_keepalive=True,
             retry_on_timeout=False,
             retry=False,

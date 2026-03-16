@@ -70,8 +70,14 @@ class DBWrapperPgsqlMixin:
         if order_by is None:
             return None
 
-        order_list = [f"{item[0]} {item[1] if len(item) > 1 and item[1] is not None else 'ASC'}" for item in order_by]
-        return sql.SQL("ORDER BY {}".format(", ".join(order_list)))
+        order_list = [
+            sql.SQL("{} {}").format(
+                sql.Identifier(item[0]),
+                sql.SQL(item[1] if len(item) > 1 and item[1] is not None else "ASC"),
+            )
+            for item in order_by
+        ]
+        return sql.SQL("ORDER BY ") + sql.SQL(", ").join(order_list)
 
     def limit_query(
         self,

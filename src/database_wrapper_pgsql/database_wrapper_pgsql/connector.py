@@ -123,6 +123,7 @@ class Pgsql(DatabaseBackend):
         if db_conn:
             with db_conn.transaction() as trans:
                 yield trans
+                return
 
         assert self.connection, "Connection is not initialized"
         with self.connection.transaction() as trans:
@@ -261,6 +262,7 @@ class PgsqlAsync(DatabaseBackend):
         if db_conn:
             async with db_conn.transaction() as trans:
                 yield trans
+                return
 
         assert self.connection, "Connection is not initialized"
         async with self.connection.transaction() as trans:
@@ -522,6 +524,7 @@ class PgsqlWithPooling(DatabaseBackend):
         if db_conn:
             with db_conn.transaction() as trans:
                 yield trans
+                return
 
         assert self.connection, "Connection is not initialized"
         with self.connection.transaction() as trans:
@@ -684,7 +687,7 @@ class PgsqlWithPoolingAsync(DatabaseBackend):
         # Close async pool
         self.logger.debug("Closing connection pool")
         await self.close()
-        if hasattr(self, "poolAsync") and self.pool_async.closed is False:
+        if hasattr(self, "pool_async") and self.pool_async.closed is False:
             await self.pool_async.close()
 
     async def open(self) -> None:
@@ -806,6 +809,7 @@ class PgsqlWithPoolingAsync(DatabaseBackend):
         if db_conn:
             async with db_conn.transaction() as trans:
                 yield trans
+                return
 
         assert self.connection, "Connection is not initialized"
         async with self.connection.transaction() as trans:

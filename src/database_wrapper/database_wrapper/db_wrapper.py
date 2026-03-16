@@ -277,7 +277,7 @@ class DBWrapper(DBWrapperMixin):
             status.append(res)
 
         if one_record:
-            return status[0]
+            return status[0] if status else (0, 0)
 
         return status
 
@@ -379,7 +379,7 @@ class DBWrapper(DBWrapperMixin):
             )
 
         if one_record:
-            return status[0]
+            return status[0] if status else 0
 
         return status
 
@@ -482,6 +482,6 @@ class DBWrapper(DBWrapperMixin):
             )
 
         if one_record:
-            return status[0]
+            return status[0] if status else 0
 
         return status
