@@ -10,10 +10,60 @@ services:
       args:
         - GIT_NAME
         - GIT_EMAIL
+        - LOCAL_USER_ID
+        - LOCAL_GROUP_ID
     secrets:
       - user_ssh_key
     volumes:
       - ./:/srv/app
+
+  # Redis (for integration tests)
+  redis:
+    image: redis:7-alpine
+    container_name: py_database_wrapper_redis
+    profiles:
+      - integration
+    ports:
+      - "6379:6379"
+
+  # PostgreSQL (for integration tests)
+  postgres:
+    image: postgres:17-alpine
+    container_name: py_database_wrapper_postgres
+    profiles:
+      - integration
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    ports:
+      - "5432:5432"
+
+  # MariaDB (for integration tests)
+  mariadb:
+    image: mariadb:11
+    container_name: py_database_wrapper_mariadb
+    profiles:
+      - integration
+    environment:
+      MARIADB_ROOT_PASSWORD: test
+      MARIADB_DATABASE: test
+      MARIADB_USER: test
+      MARIADB_PASSWORD: test
+    ports:
+      - "3306:3306"
+
+  # MSSQL (for integration tests)
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: py_database_wrapper_mssql
+    profiles:
+      - integration
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Test@12345"
+    ports:
+      - "1433:1433"
 
 secrets:
   user_ssh_key:

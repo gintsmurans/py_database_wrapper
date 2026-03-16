@@ -16,8 +16,6 @@ from redis.asyncio.retry import Retry as AsyncRetry
 from redis.backoff import ExponentialWithJitterBackoff
 from redis.retry import Retry as SyncRetry
 
-MODULE_NAME = "py_shared_lib.libs.db.common..kv_conn"
-
 
 class RedisDefaultConfig(TypedDict):
     hostname: str

@@ -8,6 +8,7 @@
         "develop"
     ],
     "shutdownAction": "none",
+    "remoteUser": "appuser",
     "workspaceFolder": "/srv/app",
     "remoteEnv": {
         "PATH": "${containerEnv:PATH}"
