@@ -47,6 +47,17 @@ if [ $(git diff-index --cached --name-only --diff-filter=ACMR $COMMIT | grep \\.
     echo
 fi
 
+# Style check with ruff
+echo
+echo "*Running ruff style checks... "
+ruff check "$BASE_PATH/src"
+if [ "$?" != "0" ]; then
+    echo "!!! ERROR: $COMMIT $file"
+    exit 1
+fi
+echo "Done"
+echo
+
 # Bump patch version
 echo "*Bumping patch version.. "
 ./scripts/bump_version.bash patch
