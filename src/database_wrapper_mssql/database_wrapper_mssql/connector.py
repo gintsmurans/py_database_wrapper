@@ -57,11 +57,24 @@ class Mssql(DatabaseBackend):
     ##################
 
     def _snapshot_fds(self) -> set[int]:
-        """Snapshot current open file descriptors (Linux only)."""
+        """Snapshot current open file descriptors (Linux only).
+
+        Filters out phantom FDs: os.listdir("/proc/self/fd") opens its own
+        directory FD which appears in the listing but is closed by the time
+        we try to validate it. Only include FDs that os.fstat can reach.
+        """
+        result: set[int] = set()
         try:
-            return set(int(fd) for fd in os.listdir("/proc/self/fd"))
+            for entry in os.listdir("/proc/self/fd"):
+                fd = int(entry)
+                try:
+                    os.fstat(fd)
+                    result.add(fd)
+                except OSError:
+                    pass
         except OSError:
-            return set()
+            pass
+        return result
 
     def open(self) -> None:
         # Free resources
