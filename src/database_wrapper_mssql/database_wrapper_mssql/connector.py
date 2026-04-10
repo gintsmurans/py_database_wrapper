@@ -1,5 +1,4 @@
 import os
-import stat
 from typing import Any, NotRequired, TypedDict, cast
 
 from pymssql import Connection as MssqlConnection
@@ -123,10 +122,8 @@ class Mssql(DatabaseBackend):
         if hasattr(self, "_connection_fds"):
             for fd in self._connection_fds:
                 try:
-                    fd_stat = os.fstat(fd)
-                    if stat.S_ISSOCK(fd_stat.st_mode) or stat.S_ISFIFO(fd_stat.st_mode):
-                        os.close(fd)
-                        self.logger.warning(f"Force-closed leaked FD {fd} from pymssql")
+                    os.close(fd)
+                    self.logger.warning(f"Force-closed leaked FD {fd} from pymssql")
                 except OSError:
                     pass
             self._connection_fds = set()
